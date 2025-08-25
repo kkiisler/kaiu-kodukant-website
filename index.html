@@ -361,10 +361,7 @@
             }
         }
         
-        /* Smooth Scrolling */
-        html {
-            scroll-behavior: smooth;
-        }
+        /* Smooth scrolling removed - conflicts with SPA navigation */
         
         /* Focus Styles */
         .page-link:focus,
@@ -1372,13 +1369,16 @@
             }
 
             function showPage(targetId) {
+                // Hide all pages
                 pageContents.forEach(page => page.classList.add('hidden'));
+                
+                // Show target page
                 const targetPage = document.getElementById(targetId);
                 if (targetPage) {
                     targetPage.classList.remove('hidden');
-                    window.scrollTo(0, 0);
                 }
 
+                // Update navigation active state
                 navLinks.forEach(link => {
                     link.classList.remove('active');
                     if (link.getAttribute('href') === `#${targetId}`) {
@@ -1386,6 +1386,17 @@
                     }
                 });
                 
+                // Scroll to top - immediate and reliable
+                window.scrollTo(0, 0);
+                document.documentElement.scrollTop = 0;
+                document.body.scrollTop = 0;
+                
+                // Also try with a small delay to ensure DOM is ready
+                setTimeout(() => {
+                    window.scrollTo(0, 0);
+                }, 50);
+                
+                // Initialize page-specific features
                 if (targetId === 'sundmused') initializeCalendar();
                 if (targetId === 'galerii') initializeGallery();
             }
