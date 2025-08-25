@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTÜ Kaiu Kodukant</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com/"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    
+    <!-- reCAPTCHA script -->
+    <!-- reCAPTCHA script - Replace YOUR_RECAPTCHA_SITE_KEY with actual key -->
+    <script src="https://www.google.com/recaptcha/api.js?render=YOUR_RECAPTCHA_SITE_KEY"></script>
+
+    <!-- Custom Styles & Tailwind Configuration -->
+    <style>
+        /* Applying custom font and colors via Tailwind config */
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        background: {
+                            primary: '#fefefe',
+                            secondary: '#ffffff',
+                            tertiary: '#f8fafc',
+                        },
+                        text: {
+                            primary: '#1f2937',
+                            secondary: '#4b5563',
+                            tertiary: '#6b7280',
+                            subtle: '#9ca3af',
+                        },
+                        accent: {
+                            primary: '#d4b896', // Warm beige
+                            secondary: '#b8956a', // Darker beige
+                            tertiary: '#e67e22', // Warm orange
+                            quaternary: '#27ae60', // Forest green
+                            quinary: '#3498db', // Sky blue
+                        },
+                        brand: {
+                            primary: '#2563eb', // Professional blue
+                            secondary: '#1d4ed8',
+                            tertiary: '#1e40af',
+                        }
+                    },
+                    spacing: {
+                        'block': '1.2rem',
+                    },
+                    maxWidth: {
+                       'content': '620px',
+                       'wide': '1280px',
+                    }
+                }
+            }
+        }
+
+        /* Beautiful Typography System */
+        h1 {
+            font-size: clamp(2.75rem, 4vw, 4rem);
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            line-height: 1.1;
+            color: #1a1a1a;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+        }
+        h2 {
+            font-size: clamp(2rem, 3vw, 2.75rem);
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #1a1a1a;
+            letter-spacing: -0.01em;
+            margin-bottom: 1.25rem;
+        }
+        h3 {
+            font-size: clamp(1.5rem, 2.5vw, 2rem);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            line-height: 1.3;
+            color: #2a2a2a;
+            margin-bottom: 1rem;
+        }
+        h4 {
+            font-size: clamp(1.25rem, 2vw, 1.5rem);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            line-height: 1.4;
+            color: #2a2a2a;
+            margin-bottom: 0.75rem;
+        }
+        h5 {
+            font-size: 1.125rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            line-height: 1.4;
+            color: #2a2a2a;
+            margin-bottom: 0.5rem;
+        }
+        h6 {
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            line-height: 1.4;
+            color: #2a2a2a;
+            margin-bottom: 0.5rem;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.125rem;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #374151;
+            background-color: #fefefe;
+        }
+        
+        p {
+            margin-bottom: 1rem;
+            color: #4b5563;
+        }
+        
+        p.lead {
+            font-size: 1.25rem;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #6b7280;
+        }
+        
+        strong {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .global-padding {
+            padding-left: clamp(1.5rem, 8vw, 8rem);
+            padding-right: clamp(1.5rem, 8vw, 8rem);
+        }
+        .global-padding-y {
+             padding-top: clamp(3rem, 8vw, 6rem);
+             padding-bottom: clamp(3rem, 8vw, 6rem);
+        }
+        
+        /* Beautiful Sections */
+        .section-card {
+            background: #ffffff;
+            border-radius: 1rem;
+            padding: 2.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            transition: all 0.3s ease;
+        }
+        
+        .section-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transform: translateY(-1px);
+        }
+        
+        .hero-overlay {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.9) 0%, rgba(29, 78, 216, 0.85) 100%);
+        }
+        /* Enhanced Navigation */
+        .nav-link {
+            position: relative;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            color: #d4b896;
+        }
+        
+        .nav-link.active {
+            color: #d4b896;
+            font-weight: 500;
+        }
+        
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #d4b896;
+            border-radius: 1px;
+        }
+        /* FullCalendar Customization */
+        .fc-event {
+            cursor: pointer;
+            border: 1px solid #c2a990 !important;
+            background-color: #cfcabe !important;
+            color: #111111 !important;
+        }
+        .fc-event:hover {
+            opacity: 0.8;
+        }
+        .fc-daygrid-event {
+            white-space: normal !important;
+            align-items: normal !important;
+        }
+        .fc .fc-button-primary {
+            background-color: #111111 !important;
+            border-color: #111111 !important;
+        }
+        .fc .fc-button-primary:hover {
+            background-color: #636363 !important;
+            border-color: #636363 !important;
+        }
+        .fc .fc-toolbar-title {
+            font-size: clamp(1.39rem, 1.39rem + ((1vw - 0.2rem) * 0.767), 1.85rem) !important;
+        }
+        /* Gallery Lightbox Styles */
+        .lightbox-img {
+            max-width: 90vw;
+            max-height: 80vh;
+        }
+        
+        /* Beautiful Form Styles */
+        .form-container {
+            max-width: 540px;
+            margin: 0 auto;
+        }
+        
+        .form-field {
+            margin-bottom: 1.75rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.925rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.6rem;
+            letter-spacing: 0.01em;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background-color: #ffffff;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 140px;
+        }
+        
+        .form-button {
+            width: 100%;
+            background: #111111;
+            color: #ffffff;
+            font-weight: 600;
+            padding: 1.125rem 2rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            letter-spacing: 0.01em;
+        }
+        
+        .form-button:hover:not(:disabled) {
+            background: #374151;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-button:active:not(:disabled) {
+            transform: translateY(-1px);
+        }
+        
+        .form-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-error {
+            color: #dc2626;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .form-error.show {
+            display: block;
+        }
+        
+        .form-message {
+            padding: 1.25rem 1.5rem;
+            border-radius: 0.75rem;
+            margin-top: 1.5rem;
+            font-size: 0.925rem;
+            font-weight: 500;
+            border: 2px solid;
+        }
+        
+        .form-message.success {
+            background-color: rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.2);
+            color: #047857;
+        }
+        
+        .form-message.error {
+            background-color: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+        }
+        
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            margin-left: 0.75rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Improvements */
+        @media (max-width: 768px) {
+            .section-card {
+                padding: 1.5rem;
+            }
+            
+            .global-padding-y {
+                padding-top: clamp(2rem, 6vw, 4rem);
+                padding-bottom: clamp(2rem, 6vw, 4rem);
+            }
+            
+            .form-container {
+                max-width: 100%;
+            }
+        }
+        
+        /* Smooth Scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Focus Styles */
+        .page-link:focus,
+        .nav-link:focus {
+            outline: 2px solid #2563eb;
+            outline-offset: 2px;
+            border-radius: 0.25rem;
+        }
+        
+        /* Loading Animation */
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Improved Gallery Styles */
+        .album-card {
+            transition: all 0.3s ease;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        
+        .album-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .photo-thumbnail {
+            transition: all 0.3s ease;
+        }
+        
+        .photo-thumbnail:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-background-primary text-text-primary">
+
+    <!-- Header -->
+    <header class="bg-background-primary/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200">
+        <nav class="global-padding max-w-wide mx-auto flex items-center justify-between py-4">
+            <a href="#esileht" class="page-link">
+                <img src="https://kaiukodukant.ee/wp-content/uploads/2025/03/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
+            </a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#esileht" class="page-link nav-link font-medium hover:underline active">Esileht</a>
+                <a href="#sundmused" class="page-link nav-link font-medium hover:underline">Sündmused</a>
+                <a href="#galerii" class="page-link nav-link font-medium hover:underline">Galerii</a>
+                <a href="#meist" class="page-link nav-link font-medium hover:underline">Meist</a>
+                <a href="#kontakt" class="page-link nav-link font-medium hover:underline">Kontakt</a>
+                <a href="#liikmeks" class="page-link bg-text-primary text-background-primary px-4 py-2.5 rounded-md text-sm font-medium hover:bg-text-secondary transition-colors">Saa liikmeks</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-button" class="md:hidden">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden global-padding pb-4">
+            <a href="#esileht" class="block py-2 page-link-mobile nav-link active">Esileht</a>
+            <a href="#sundmused" class="block py-2 page-link-mobile nav-link">Sündmused</a>
+            <a href="#galerii" class="block py-2 page-link-mobile nav-link">Galerii</a>
+            <a href="#meist" class="block py-2 page-link-mobile nav-link">Meist</a>
+            <a href="#kontakt" class="block py-2 page-link-mobile nav-link">Kontakt</a>
+            <a href="#liikmeks" class="block mt-4 text-center bg-text-primary text-background-primary px-4 py-2.5 rounded-md text-sm font-medium hover:bg-text-secondary transition-colors page-link-mobile">Saa liikmeks</a>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- Homepage -->
+        <div id="esileht" class="page-content">
+            <!-- Hero Section -->
+            <section class="relative bg-gray-300 h-[60vh] min-h-[400px] flex items-center justify-center text-center text-white">
+                <img src="https://s3.pilw.io/kaiukodukant/media/hero_image.jpeg" class="absolute inset-0 w-full h-full object-cover" alt="Kaiu koolihoov" style="object-position: center 55%;">
+                <div class="absolute inset-0 bg-black/50"></div>
+                <div class="relative global-padding">
+                    <h1 class="text-white mb-6">Tere tulemast MTÜ Kaiu Kodukant kodulehele!</h1>
+                    <p class="max-w-3xl mx-auto text-lg md:text-xl text-gray-200 mb-8 leading-relaxed">Edendame koos kohalikku elu, hoiame oma kodukandi pärandit ja loome parema elukeskkonna kõigile.</p>
+                    <a href="#liikmeks" class="page-link inline-block border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-200">
+                        Astu liikmeks
+                    </a>
+                </div>
+            </section>
+            <!-- Introduction Section -->
+            <section class="global-padding global-padding-y bg-gray-50">
+                <div class="max-w-4xl mx-auto">
+                    <div class="section-card text-center">
+                        <h2 class="text-center">Meie Missioon</h2>
+                        <p class="text-xl leading-relaxed max-w-3xl mx-auto">MTÜ Kaiu Kodukant on mittetulundusühing, mille eesmärk on <strong>edendada kohalikku elu</strong>, algatades ja toetades Kaiu kandi kogukonna tegevusi.</p>
+                        <p class="mt-4 max-w-3xl mx-auto text-gray-600">Meie tegevuse siht on tõsta kohalikku heaolu ja parandada elukeskkonda. Tegutseme Rapla maakonnas Kaiu alevikus ja suuname kogu oma tulu põhikirjaliste eesmärkide saavutamisse.</p>
+                        
+                        <!-- Stats or highlights -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 pt-8 border-t border-gray-200">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-gray-800 mb-2">üle 50</div>
+                                <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Kogukonna Liiget</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-gray-800 mb-2">2022</div>
+                                <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Asutamisaasta</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-gray-800 mb-2">Kaiu</div>
+                                <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Rapla Maakond</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Events -->
+        <div id="sundmused" class="page-content hidden">
+            <section class="global-padding global-padding-y">
+                <div class="max-w-wide mx-auto">
+                    <div class="text-center mb-16">
+                         <h1 class="mb-6">Sündmused</h1>
+                         <p class="text-xl max-w-2xl mx-auto text-gray-600">Siit leiad meie tulevased üritused ja kogukonna kokkusaamised. Osale kaasa ja tule meie üritustele!</p>
+                    </div>
+                    <div class="section-card">
+                        <div id='calendar-container'>
+                            <div id='calendar'></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick info cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                        <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-4">
+                                    <h4 class="text-gray-900 font-semibold">Regulaarsed kokkusaamised</h4>
+                                    <p class="text-gray-600 text-sm mt-1">Juhatus koguneb igal kuul, et planeerida kogukonna tegevusi</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-4">
+                                    <h4 class="text-gray-900 font-semibold">Kogukonna üritused</h4>
+                                    <p class="text-gray-600 text-sm mt-1">Suvefestivalid, korrastustööd ja muud kogunemised</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Gallery -->
+        <div id="galerii" class="page-content hidden">
+            <section class="global-padding global-padding-y">
+                <div id="gallery-container" class="max-w-wide mx-auto">
+                    <!-- Album View -->
+                    <div id="album-view">
+                        <div class="text-center mb-16">
+                            <h1 class="mb-6">Galerii</h1>
+                            <p class="text-xl max-w-2xl mx-auto text-gray-600">Meie tegemised ja üritused piltides. Siit leiad fotosid kogukonna üritustest ja ühisest tegevusest.</p>
+                        </div>
+                        <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <!-- Albums will be loaded here by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Photo View -->
+                    <div id="photo-view" class="hidden">
+                        <button id="back-to-albums" class="mb-8 inline-flex items-center bg-white border border-gray-300 rounded-lg px-4 py-3 text-text-secondary hover:text-text-primary hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                            </svg>
+                            Tagasi albumite juurde
+                        </button>
+                        <div class="text-center mb-12">
+                            <h1 id="photo-album-title" class="mb-4"></h1>
+                            <p id="photo-album-description" class="text-xl max-w-3xl mx-auto text-gray-600"></p>
+                        </div>
+                        <div id="photo-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                            <!-- Photos will be loaded here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- About Us -->
+        <div id="meist" class="page-content hidden">
+            <section class="global-padding global-padding-y">
+                <div class="max-w-content mx-auto space-y-16">
+                    <div class="text-center">
+                        <h1>Meist</h1>
+                    </div>
+                    <!-- Section 1 -->
+                    <div>
+                        <h2>Kes me oleme?</h2>
+                        <ul class="mt-6 space-y-4 text-text-secondary">
+                            <li><strong>Ametlik nimi:</strong> MTÜ Kaiu Kodukant.</li>
+                            <li><strong>Asutatud:</strong> Ühingu põhikiri on kinnitatud 10. oktoobril 2022. a asutamiskoosolekul.</li>
+                            <li><strong>Asukoht:</strong> Meie juriidiline aadress on Kaare tn 7-7, Kaiu alevik, Rapla vald, Rapla maakond, 79301.</li>
+                            <li><strong>Tegutsemisvorm:</strong> Oleme tavaline mittetulundusühing, mis järgib oma tegevuses kodanikuühenduste eetilise tegevuse üldtunnustatud põhimõtteid.</li>
+                        </ul>
+                    </div>
+                    <!-- Section 2 -->
+                    <div>
+                        <h2>Meie eesmärgid 🎯</h2>
+                        <div class="mt-6 grid sm:grid-cols-2 gap-6">
+                            <div class="bg-background-secondary p-6 rounded-lg border border-gray-200">
+                                <h3 class="text-xl">Kogukonna edendamine</h3>
+                                <p class="mt-2 text-text-secondary">Algatada ja toetada Kaiu kandi kogukonna tegevusi, et tõsta kohalikku heaolu ja parandada elukeskkonda.</p>
+                            </div>
+                            <div class="bg-background-secondary p-6 rounded-lg border border-gray-200">
+                                <h3 class="text-xl">Väärtuste propageerimine</h3>
+                                <p class="mt-2 text-text-secondary">Toetada ettevõtmisi, mis väärtustavad eetilisi tõekspidamisi ja hüvede tasakaalustatumat jaotust ühiskonnas.</p>
+                            </div>
+                            <div class="bg-background-secondary p-6 rounded-lg border border-gray-200">
+                                <h3 class="text-xl">Tervis ja keskkond</h3>
+                                <p class="mt-2 text-text-secondary">Toetada kogukonna ja tervise arengut ning propageerida keskkonnasäästlikku eluviisi, pakkudes ka koolitusi ja kursuseid.</p>
+                            </div>
+                             <div class="bg-background-secondary p-6 rounded-lg border border-gray-200">
+                                <h3 class="text-xl">Pärandi hoidmine</h3>
+                                <p class="mt-2 text-text-secondary">Algatada ja ellu viia projekte, mis on suunatud looduskeskkonna, kultuuri- ning ajalooväärtuste hoidmisele, kaitsele ja taastamisele.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Become a Member -->
+        <div id="liikmeks" class="page-content hidden">
+             <section class="global-padding global-padding-y bg-gray-50">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-center mb-16">
+                        <h1 class="mb-6">Liitu meiega!</h1>
+                        <p class="text-xl max-w-3xl mx-auto text-gray-700">Meil on siiralt hea meel, et soovid panustada Kaiu kandi arengusse! Täites alloleva vormi, esitad omapoolse avalduse astuda MTÜ Kaiu Kodukant liikmeks.</p>
+                        <p class="mt-4 text-gray-600">Juhatus vaatab sinu soovi esimesel võimalusel üle ja kinnitab liikmeks astumise e-posti teel.</p>
+                    </div>
+                    
+                    <!-- Benefits Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                        <div class="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
+                            <div class="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                            </div>
+                            <h4 class="text-gray-900 font-semibold mb-2">Kogukonna hääl</h4>
+                            <p class="text-gray-600 text-sm">Osale otsuste langetamises ja mõjuta oma kodukandi tulevikku</p>
+                        </div>
+                        <div class="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
+                            <div class="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <h4 class="text-gray-900 font-semibold mb-2">Üritused</h4>
+                            <p class="text-gray-600 text-sm">Ligipääs kõigile MTÜ üritustele ja tegevustele</p>
+                        </div>
+                        <div class="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
+                            <div class="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <h4 class="text-gray-900 font-semibold mb-2">Mõju</h4>
+                            <p class="text-gray-600 text-sm">Aita kaasa positiivsete muudatuste elluviimisele</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Membership Form -->
+                    <div class="section-card">
+                        <div class="form-container">
+                            <form id="membership-form">
+                                <div class="form-field">
+                                    <label for="member-name" class="form-label">Nimi *</label>
+                                    <input type="text" id="member-name" name="name" required class="form-input">
+                                    <div class="form-error">Palun sisesta oma nimi.</div>
+                                </div>
+                                
+                                <div class="form-field">
+                                    <label for="member-email" class="form-label">E-posti aadress *</label>
+                                    <input type="email" id="member-email" name="email" required class="form-input">
+                                    <div class="form-error">Palun sisesta kehtiv e-posti aadress.</div>
+                                </div>
+                                
+                                <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 my-8 text-center">
+                                    <p class="text-gray-700 mb-2">Edasine info MTÜ tegemiste kohta saabub Sulle e-posti teel.</p>
+                                    <div class="text-2xl font-bold text-gray-900 mb-2">Liikmemaks</div>
+                                    <p class="text-gray-800"><span class="text-3xl font-bold text-gray-900">20€</span> aastas</p>
+                                    <p class="text-gray-600 text-sm mt-1">Pensionäridel 10€</p>
+                                    <p class="mt-4 font-semibold text-gray-800">Aitäh, et oled meiega! 😊</p>
+                                </div>
+
+                                <button type="submit" class="form-button" id="membership-submit">
+                                    <span id="membership-button-text">Saada liikmestaotlus</span>
+                                    <div class="spinner" id="membership-spinner" style="display: none;"></div>
+                                </button>
+                            </form>
+                            <div id="membership-message"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Contact -->
+        <div id="kontakt" class="page-content hidden">
+             <section class="global-padding global-padding-y">
+                <div class="max-w-6xl mx-auto">
+                    <div class="text-center mb-16">
+                        <h1 class="mb-6">Võta meiega ühendust</h1>
+                        <p class="text-xl max-w-2xl mx-auto text-gray-600">Kas sul on küsimusi või soovid rohkem teada saada? Võta julgelt ühendust!</p>
+                    </div>
+                    
+                    <div class="grid lg:grid-cols-2 gap-12">
+                        <!-- Contact Info & Form -->
+                        <div class="space-y-8">
+                            <!-- Contact Information -->
+                            <div class="section-card">
+                                <h3 class="mb-6">Kontaktandmed</h3>
+                                <div class="space-y-4">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+                                            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-900">Aadress</p>
+                                            <p class="text-gray-600">Kaare tn 7-7, Kaiu alevik<br/>Rapla vald, Rapla maakond, 79301</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+                                            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-900">E-post</p>
+                                            <a href="mailto:info@kaiukodukant.ee" class="text-gray-800 hover:text-gray-900 hover:underline">info@kaiukodukant.ee</a>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+                                            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-900">Vastame</p>
+                                            <p class="text-gray-600">2-3 tööpäeva jooksul</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Contact Form -->
+                            <div class="section-card">
+                                <h3 class="mb-6">Saada meile sõnum</h3>
+                                <div class="form-container max-w-none">
+                                    <form id="contact-form">
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div class="form-field">
+                                                <label for="contact-name" class="form-label">Nimi *</label>
+                                                <input type="text" id="contact-name" name="name" required class="form-input">
+                                                <div class="form-error">Palun sisesta oma nimi.</div>
+                                            </div>
+                                            
+                                            <div class="form-field">
+                                                <label for="contact-email" class="form-label">E-post *</label>
+                                                <input type="email" id="contact-email" name="email" required class="form-input">
+                                                <div class="form-error">Palun sisesta kehtiv e-posti aadress.</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-field">
+                                            <label for="contact-subject" class="form-label">Teema</label>
+                                            <input type="text" id="contact-subject" name="subject" class="form-input" placeholder="Milles saame aidata?">
+                                        </div>
+                                        
+                                        <div class="form-field">
+                                            <label for="contact-message" class="form-label">Sõnum *</label>
+                                            <textarea id="contact-message" name="message" required class="form-input form-textarea" placeholder="Kirjuta oma sõnum siia..."></textarea>
+                                            <div class="form-error">Palun sisesta oma sõnum.</div>
+                                        </div>
+                                        
+                                        <button type="submit" class="form-button" id="contact-submit">
+                                            <span id="contact-button-text">Saada sõnum</span>
+                                            <div class="spinner" id="contact-spinner" style="display: none;"></div>
+                                        </button>
+                                    </form>
+                                    <div id="contact-message"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Map -->
+                        <div class="h-[500px] lg:h-full">
+                            <div class="section-card h-full p-0 overflow-hidden">
+                                <iframe src="https://www.google.com/maps/embed?pb=!1m18!m12!1m3!1d8213.91181816041!2d25.0359868460144!3d59.03058883582109!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46931b9d42555555%3A0x2f7c0d0e0a0b0c0d!2sKaiu%2C%2C%2079301%20Rapla%20maakond!5e0!3m2!1set!2see!4v1695132869445!5m2!1set!2see" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Event Detail Modal -->
+    <div id="event-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity duration-300" onclick="closeModal(event)">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 relative" onclick="event.stopPropagation()">
+            <button id="close-modal-button" class="absolute top-3 right-3 text-gray-400 hover:text-black w-8 h-8 flex items-center justify-center text-2xl rounded-full hover:bg-gray-100">&times;</button>
+            <h2 id="modal-title" class="text-2xl md:text-3xl font-bold text-text-primary pr-8"></h2>
+            <p id="modal-time" class="text-text-secondary mt-2"></p>
+            <hr class="my-4">
+            <div id="modal-description" class="mt-4 text-text-secondary prose"></div>
+            <p id="modal-location" class="mt-4 text-sm text-text-secondary font-semibold"></p>
+        </div>
+    </div>
+    
+    <!-- Gallery Lightbox Modal -->
+    <div id="lightbox" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity duration-300">
+        <button id="lightbox-close" class="absolute top-4 right-4 text-white/80 hover:text-white w-10 h-10 flex items-center justify-center text-4xl">&times;</button>
+        <button id="lightbox-prev" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white w-12 h-12 flex items-center justify-center text-5xl">&lsaquo;</button>
+        <button id="lightbox-next" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white w-12 h-12 flex items-center justify-center text-5xl">&rsaquo;</button>
+        <div class="text-center">
+            <img id="lightbox-img" src="" alt="Galerii pilt" class="lightbox-img object-contain w-auto h-auto rounded-lg shadow-2xl">
+            <p id="lightbox-caption" class="mt-4 text-white/90 text-lg"></p>
+        </div>
+    </div>
+
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white relative overflow-hidden">
+        <!-- Decorative background -->
+        <div class="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900"></div>
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500"></div>
+        
+        <div class="relative global-padding py-16 max-w-wide mx-auto">
+            <div class="grid md:grid-cols-4 gap-8">
+                <!-- Column 1 - Brand -->
+                <div class="md:col-span-2 space-y-6">
+                    <img src="https://kaiukodukant.ee/wp-content/uploads/2025/03/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" class="h-12 w-auto" style="filter: brightness(0) invert(1);">
+                    <p class="text-gray-300 text-lg leading-relaxed max-w-md">Edendame Kaiu kandi kogukonnaelu ja hoiame meie kodukoha väärtusi tulevastele põlvedele.</p>
+                    <div class="flex items-center space-x-6">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-white">2022</div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide">Asutatud</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-white">50+</div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide">Liiget</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-white">Kaiu</div>
+                            <div class="text-xs text-gray-400 uppercase tracking-wide">Asukoht</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Column 2 - Navigation -->
+                <div>
+                    <h4 class="font-semibold text-white mb-6 text-lg">Navigatsioon</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#esileht" class="page-link text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                            <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Esileht
+                        </a></li>
+                        <li><a href="#sundmused" class="page-link text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                            <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Sündmused
+                        </a></li>
+                        <li><a href="#galerii" class="page-link text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                            <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Galerii
+                        </a></li>
+                        <li><a href="#meist" class="page-link text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                            <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Meist
+                        </a></li>
+                        <li><a href="#kontakt" class="page-link text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                            <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Kontakt
+                        </a></li>
+                        <li><a href="#liikmeks" class="page-link text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200 flex items-center group">
+                            <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-blue-300 transition-colors duration-200"></span>Saa liikmeks
+                        </a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 3 - Contact & Social -->
+                <div>
+                    <h4 class="font-semibold text-white mb-6 text-lg">Kontakt</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-gray-300 mb-2">
+                                <strong class="text-white">E-post:</strong><br/>
+                                <a href="mailto:info@kaiukodukant.ee" class="text-blue-400 hover:text-blue-300 transition-colors duration-200">info@kaiukodukant.ee</a>
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-gray-300">
+                                <strong class="text-white">Aadress:</strong><br/>
+                                Kaare tn 7-7, Kaiu alevik<br/>
+                                Rapla vald, 79301
+                            </p>
+                        </div>
+                        
+                        <div class="pt-4">
+                            <h5 class="font-medium text-white mb-3">Jälgi meid</h5>
+                            <div class="flex space-x-3">
+                                <a href="#" aria-label="Facebook" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-blue-600 transition-all duration-200">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" /></svg>
+                                </a>
+                                <a href="#" aria-label="Instagram" class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-pink-600 transition-all duration-200">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.024.06 1.378.06 3.808s-.012 2.784-.06 3.808c-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.024.048-1.378.06-3.808.06s-2.784-.013-3.808-.06c-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.048-1.024-.06-1.378-.06-3.808s.012-2.784.06-3.808c.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 016.345 2.525c.636-.247 1.363-.416 2.427-.465C9.793 2.013 10.147 2 12.315 2zm-1.161 1.545c-1.003.046-1.634.21-2.174.417a3.414 3.414 0 00-1.256.813 3.414 3.414 0 00-.813 1.256c-.207.54-.371 1.171-.417 2.174-.046 1.002-.058 1.332-.058 3.71s.012 2.708.058 3.71c.046 1.003.21 1.634.417 2.174a3.414 3.414 0 00.813 1.256 3.414 3.414 0 001.256.813c.54.207 1.171.371 2.174.417 1.002.046 1.332.058 3.71.058s2.708-.012 3.71-.058c1.003-.046 1.634-.21 2.174-.417a3.414 3.414 0 001.256-.813 3.414 3.414 0 00.813-1.256c.207-.54.371-1.171-.417-2.174.046-1.002.058-1.332-.058-3.71s-.012-2.708-.058-3.71c-.046-1.003-.21-1.634-.417-2.174a3.414 3.414 0 00-.813-1.256 3.414 3.414 0 00-1.256-.813c-.54-.207-1.171-.371-2.174-.417-1.002-.046-1.332-.058-3.71-.058s-2.708.012-3.71.058zM12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5zM12 14a2 2 0 110-4 2 2 0 010 4zm6.4-8.85a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4z" clip-rule="evenodd" /></svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-12 pt-8 border-t border-gray-700">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400 text-sm">&copy; 2024 MTÜ Kaiu Kodukant. Kõik õigused kaitstud.</p>
+                    <p class="text-gray-500 text-xs mt-2 md:mt-0">Veebileht loodud armastusega kogukonna jaoks</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for SPA Navigation & Features -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pageLinks = document.querySelectorAll('.page-link');
+            const mobilePageLinks = document.querySelectorAll('.page-link-mobile');
+            const pageContents = document.querySelectorAll('.page-content');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            // Calendar variables
+            let calendar;
+            let calendarInitialized = false;
+            const calendarEl = document.getElementById('calendar');
+            
+            // Event Modal variables
+            const eventModal = document.getElementById('event-modal');
+            const closeEventModalButton = document.getElementById('close-modal-button');
+
+            // Gallery variables
+            const albumView = document.getElementById('album-view');
+            const photoView = document.getElementById('photo-view');
+            const albumGrid = document.getElementById('album-grid');
+            const photoGrid = document.getElementById('photo-grid');
+            const backToAlbumsButton = document.getElementById('back-to-albums');
+            let galleryInitialized = false;
+            let lightboxPhotos = [];
+            let currentLightboxIndex = 0;
+            let currentAlbumTitle = '';
+            let currentAlbumDescription = '';
+            
+            // Lightbox variables
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+            const lightboxCaption = document.getElementById('lightbox-caption');
+            const lightboxClose = document.getElementById('lightbox-close');
+            const lightboxPrev = document.getElementById('lightbox-prev');
+            const lightboxNext = document.getElementById('lightbox-next');
+
+
+            function initializeCalendar() {
+                if (calendarInitialized) return;
+                
+                // Show loading message
+                calendarEl.innerHTML = '<p class="text-center text-text-secondary p-8">Sündmuste laadimine...</p>';
+
+                calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'et',
+                    firstDay: 1,
+                    allDaySlot: false,
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek'
+                    },
+                    buttonText: { today: 'Täna', month: 'Kuu', week: 'Nädal' },
+                    events: function(fetchInfo, successCallback, failureCallback) {
+                        loadCalendarEvents(successCallback, failureCallback);
+                    },
+                    eventClick: info => {
+                        info.jsEvent.preventDefault();
+                        showEventModal(info.event);
+                    },
+                    eventDidMount: function(info) {
+                        // Apply custom styling
+                        info.el.style.backgroundColor = '#cfcabe';
+                        info.el.style.borderColor = '#c2a990';
+                        info.el.style.color = '#111111';
+                    }
+                });
+                calendar.render();
+                calendarInitialized = true;
+            }
+            
+            function loadCalendarEvents(successCallback, failureCallback) {
+                if (GOOGLE_APPS_SCRIPT_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_URL') {
+                    console.warn('Calendar not configured - using example events');
+                    loadExampleCalendarEvents(successCallback);
+                    return;
+                }
+                
+                fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=calendar`, {
+                    method: 'GET',
+                    mode: 'cors'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        console.log(`Loaded ${data.events.length} calendar events${data.cached ? ' (cached)' : ''}`);
+                        successCallback(data.events);
+                    } else {
+                        console.error('Calendar API error:', data.message);
+                        loadExampleCalendarEvents(successCallback);
+                    }
+                })
+                .catch(error => {
+                    console.error('Calendar fetch error:', error);
+                    loadExampleCalendarEvents(successCallback);
+                });
+            }
+            
+            function loadExampleCalendarEvents(successCallback) {
+                const exampleEvents = [
+                    {
+                        id: '1',
+                        title: 'Näidisündmus - Kogukonna koosolek',
+                        start: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + 'T18:00:00',
+                        end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] + 'T20:00:00',
+                        description: 'See on näidisündmus, kuna kalendri backend pole veel seadistatud.',
+                        location: 'Kaiu Kultuurimaja',
+                        backgroundColor: '#cfcabe',
+                        borderColor: '#c2a990',
+                        textColor: '#111111'
+                    },
+                    {
+                        id: '2',
+                        title: 'Suvefestival',
+                        start: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        allDay: true,
+                        description: 'Traditsioonilne suvefestival kogu perele.',
+                        location: 'Kaiu keskväljak',
+                        backgroundColor: '#cfcabe',
+                        borderColor: '#c2a990',
+                        textColor: '#111111'
+                    }
+                ];
+                successCallback(exampleEvents);
+            }
+            
+            function showEventModal(event) {
+                document.getElementById('modal-title').textContent = event.title;
+                const start = event.start;
+                const end = event.end;
+                const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+                let timeString = start.toLocaleString('et-EE', options);
+                if (end && !event.allDay) {
+                    timeString += (start.toDateString() !== end.toDateString())
+                        ? ' - ' + end.toLocaleString('et-EE', options)
+                        : ' - ' + end.toLocaleTimeString('et-EE', { hour: '2-digit', minute: '2-digit', hour12: false });
+                }
+                document.getElementById('modal-time').textContent = timeString;
+                document.getElementById('modal-description').innerHTML = event.extendedProps.description || '<p>Täpsem kirjeldus puudub.</p>';
+                const locationEl = document.getElementById('modal-location');
+                const location = event.extendedProps.location;
+                locationEl.innerHTML = location ? `📍&nbsp; ${location}` : '';
+                locationEl.classList.toggle('hidden', !location);
+                eventModal.classList.remove('hidden');
+                eventModal.classList.add('flex');
+            }
+            
+            function displayAlbums(albums) {
+                albumGrid.innerHTML = ''; // Clear loading message
+                
+                if (albums.length === 0) {
+                    albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galeriis pole veel albumeid.</p>';
+                    return;
+                }
+                
+                albums.forEach(album => {
+                    const albumEl = document.createElement('div');
+                    albumEl.className = 'album-card cursor-pointer bg-white border border-gray-200 hover:border-gray-300 group';
+                    albumEl.innerHTML = `
+                        <div class="overflow-hidden aspect-square bg-gray-200">
+                            <img src="${album.coverImageUrl}" alt="${album.title}" 
+                                 class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                                 loading="lazy">
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">${album.title}</h3>
+                            <div class="flex items-center justify-between text-sm text-gray-600 mb-3">
+                                <span class="font-medium">${album.date}</span>
+                                <span class="bg-gray-100 px-3 py-1 rounded-full">${album.imageCount} pilti</span>
+                            </div>
+                            ${album.description ? `<p class="text-gray-600 text-sm leading-relaxed">${album.description}</p>` : ''}
+                        </div>
+                    `;
+                    albumEl.addEventListener('click', () => loadAlbum(album.id, album.title, album.description));
+                    albumGrid.appendChild(albumEl);
+                });
+            }
+
+            function loadExampleGalleryData() {
+                const exampleAlbums = [
+                    {
+                        id: 'example1',
+                        title: 'Suvefestival 2024 (Näidis)',
+                        date: '15. juuli 2024',
+                        description: 'Traditsioonilne suvefestival kogu perele',
+                        coverImageUrl: 'https://placehold.co/600x400/cfcabe/111111?text=Suvefestival',
+                        imageCount: 8
+                    },
+                    {
+                        id: 'example2',
+                        title: 'Kevadkorrastus 2024 (Näidis)',
+                        date: '20. aprill 2024',
+                        description: 'Kogukonna ühine kevadkorrastus',
+                        coverImageUrl: 'https://placehold.co/600x400/cfcabe/111111?text=Kevadkorrastus',
+                        imageCount: 12
+                    }
+                ];
+                albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galerii backend pole veel seadistatud. Näidisgalerii:</p>';
+                setTimeout(() => displayAlbums(exampleAlbums), 500);
+            }
+
+            async function initializeGallery() {
+                if (galleryInitialized) return;
+                galleryInitialized = true; // Prevent re-initialization
+                albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galeriide laadimine...</p>';
+                
+                if (GOOGLE_APPS_SCRIPT_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_URL') {
+                    console.warn('Gallery not configured - using example albums');
+                    loadExampleGalleryData();
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=gallery`, {
+                        method: 'GET',
+                        mode: 'cors'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        console.log(`Loaded ${data.albums.length} albums${data.cached ? ' (cached)' : ''}`);
+                        displayAlbums(data.albums);
+                    } else {
+                        console.error('Gallery API error:', data.message);
+                        loadExampleGalleryData();
+                    }
+                    
+                } catch (error) {
+                    console.error('Error loading gallery:', error);
+                    loadExampleGalleryData();
+                }
+            }
+
+            function displayAlbumPhotos(photos) {
+                document.getElementById('photo-album-title').textContent = currentAlbumTitle;
+                document.getElementById('photo-album-description').textContent = currentAlbumDescription;
+
+                photoGrid.innerHTML = '';
+                lightboxPhotos = [];
+
+                if (photos.length === 0) {
+                    photoGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Selles albumis pole veel pilte.</p>';
+                    return;
+                }
+
+                photos.forEach((photo, index) => {
+                    lightboxPhotos.push({ 
+                        src: photo.url, 
+                        caption: photo.caption || photo.name
+                    });
+
+                    const photoEl = document.createElement('div');
+                    photoEl.className = 'photo-thumbnail cursor-pointer overflow-hidden rounded-lg aspect-square bg-gray-200 border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300';
+                    photoEl.innerHTML = `
+                        <img src="${photo.thumbnailUrl}" alt="${photo.caption || photo.name}" 
+                             loading="lazy" 
+                             class="object-cover w-full h-full"
+                             data-full-url="${photo.url}">
+                    `;
+                    photoEl.addEventListener('click', () => openLightbox(index));
+                    photoGrid.appendChild(photoEl);
+                });
+                
+                // Set up lazy loading for new images
+                if (window.observeGalleryImages) {
+                    setTimeout(() => window.observeGalleryImages(), 100);
+                }
+            }
+            
+            function loadExampleAlbumData(albumId, title, description) {
+                currentAlbumTitle = title;
+                currentAlbumDescription = description;
+                
+                const examplePhotos = [
+                    {
+                        id: 'ex1',
+                        name: 'pilt1.jpg',
+                        url: 'https://placehold.co/800x600/cfcabe/111111?text=Näidispilt+1',
+                        thumbnailUrl: 'https://placehold.co/400x300/cfcabe/111111?text=Näidispilt+1',
+                        caption: 'Näidispilt 1'
+                    },
+                    {
+                        id: 'ex2',
+                        name: 'pilt2.jpg',
+                        url: 'https://placehold.co/800x600/cfcabe/111111?text=Näidispilt+2',
+                        thumbnailUrl: 'https://placehold.co/400x300/cfcabe/111111?text=Näidispilt+2',
+                        caption: 'Näidispilt 2'
+                    },
+                    {
+                        id: 'ex3',
+                        name: 'pilt3.jpg',
+                        url: 'https://placehold.co/800x600/cfcabe/111111?text=Näidispilt+3',
+                        thumbnailUrl: 'https://placehold.co/400x300/cfcabe/111111?text=Näidispilt+3',
+                        caption: 'Näidispilt 3'
+                    },
+                    {
+                        id: 'ex4',
+                        name: 'pilt4.jpg',
+                        url: 'https://placehold.co/800x600/cfcabe/111111?text=Näidispilt+4',
+                        thumbnailUrl: 'https://placehold.co/400x300/cfcabe/111111?text=Näidispilt+4',
+                        caption: 'Näidispilt 4'
+                    }
+                ];
+                displayAlbumPhotos(examplePhotos);
+            }
+
+            async function loadAlbum(albumId, title, description) {
+                albumView.classList.add('hidden');
+                photoView.classList.remove('hidden');
+                window.scrollTo(0, 0);
+                photoGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Piltide laadimine...</p>';
+                
+                // Store album info for display
+                currentAlbumTitle = title;
+                currentAlbumDescription = description;
+                
+                // Handle example albums
+                if (albumId.startsWith('example')) {
+                    loadExampleAlbumData(albumId, title, description);
+                    return;
+                }
+                
+                if (GOOGLE_APPS_SCRIPT_URL === 'YOUR_DEPLOYED_APPS_SCRIPT_URL') {
+                    console.warn('Gallery not configured - using example photos');
+                    loadExampleAlbumData(albumId, title, description);
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=album&id=${encodeURIComponent(albumId)}`, {
+                        method: 'GET',
+                        mode: 'cors'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        console.log(`Loaded ${data.photos.length} photos${data.cached ? ' (cached)' : ''}`);
+                        displayAlbumPhotos(data.photos);
+                    } else {
+                        console.error('Album API error:', data.message);
+                        loadExampleAlbumData(albumId, title, description);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error loading album:', error);
+                    loadExampleAlbumData(albumId, title, description);
+                }
+            }
+            
+            function openLightbox(index) {
+                currentLightboxIndex = index;
+                updateLightboxContent();
+                lightbox.classList.remove('hidden');
+                lightbox.classList.add('flex');
+            }
+
+            function updateLightboxContent() {
+                const photo = lightboxPhotos[currentLightboxIndex];
+                
+                // Show loading state
+                lightboxImg.style.opacity = '0.5';
+                lightboxImg.src = photo.src;
+                lightboxCaption.textContent = photo.caption || '';
+                
+                // Handle image load
+                lightboxImg.onload = function() {
+                    lightboxImg.style.opacity = '1';
+                };
+            }
+            
+            function setupImageLazyLoading() {
+                // Intersection Observer for lazy loading images
+                if ('IntersectionObserver' in window) {
+                    const imageObserver = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                const img = entry.target;
+                                const fullUrl = img.getAttribute('data-full-url');
+                                
+                                // Preload full resolution image for smoother lightbox experience
+                                if (fullUrl && fullUrl !== img.src) {
+                                    const fullImg = new Image();
+                                    fullImg.src = fullUrl;
+                                }
+                                
+                                imageObserver.unobserve(img);
+                            }
+                        });
+                    }, {
+                        rootMargin: '100px 0px', // Start loading 100px before image comes into view
+                        threshold: 0.1
+                    });
+                    
+                    // Observe all gallery images
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const images = document.querySelectorAll('[data-full-url]');
+                        images.forEach(img => imageObserver.observe(img));
+                    });
+                    
+                    // Re-observe images when new photos are loaded
+                    window.observeGalleryImages = function() {
+                        const images = document.querySelectorAll('[data-full-url]:not([data-observed])');
+                        images.forEach(img => {
+                            imageObserver.observe(img);
+                            img.setAttribute('data-observed', 'true');
+                        });
+                    };
+                }
+            }
+
+            function showPage(targetId) {
+                pageContents.forEach(page => page.classList.add('hidden'));
+                const targetPage = document.getElementById(targetId);
+                if (targetPage) {
+                    targetPage.classList.remove('hidden');
+                    window.scrollTo(0, 0);
+                }
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${targetId}`) {
+                        link.classList.add('active');
+                    }
+                });
+                
+                if (targetId === 'sundmused') initializeCalendar();
+                if (targetId === 'galerii') initializeGallery();
+            }
+
+            function handleLinkClick(event) {
+                event.preventDefault();
+                const targetId = event.currentTarget.getAttribute('href').substring(1);
+                showPage(targetId);
+                window.location.hash = targetId;
+            }
+
+            pageLinks.forEach(link => link.addEventListener('click', handleLinkClick));
+            
+            mobilePageLinks.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    handleLinkClick(event);
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            mobileMenuButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+            
+            // Event Modal closing
+            window.closeModal = event => {
+                if (event.target === eventModal) {
+                    eventModal.classList.add('hidden');
+                    eventModal.classList.remove('flex');
+                }
+            };
+            closeEventModalButton.addEventListener('click', () => {
+                 eventModal.classList.add('hidden');
+                 eventModal.classList.remove('flex');
+            });
+
+            // Gallery logic
+            backToAlbumsButton.addEventListener('click', () => {
+                photoView.classList.add('hidden');
+                albumView.classList.remove('hidden');
+            });
+
+            // Lightbox closing and navigation
+            lightboxClose.addEventListener('click', () => {
+                lightbox.classList.add('hidden');
+                lightbox.classList.remove('flex');
+            });
+            lightboxPrev.addEventListener('click', () => {
+                currentLightboxIndex = (currentLightboxIndex - 1 + lightboxPhotos.length) % lightboxPhotos.length;
+                updateLightboxContent();
+            });
+             lightboxNext.addEventListener('click', () => {
+                currentLightboxIndex = (currentLightboxIndex + 1) % lightboxPhotos.length;
+                updateLightboxContent();
+            });
+
+
+            // Form configuration
+            const GOOGLE_APPS_SCRIPT_URL = 'YOUR_DEPLOYED_APPS_SCRIPT_URL'; // !!! Replace with your deployed Google Apps Script URL !!!
+            const RECAPTCHA_SITE_KEY = 'YOUR_RECAPTCHA_SITE_KEY'; // !!! Replace with your reCAPTCHA site key !!!
+            
+            // Initialize features
+            initializeForms();
+            setupImageLazyLoading();
+            
+            function initializeForms() {
+                // Membership form
+                const membershipForm = document.getElementById('membership-form');
+                if (membershipForm) {
+                    membershipForm.addEventListener('submit', function(e) {
+                        handleFormSubmit(e, 'membership', membershipForm);
+                    });
+                }
+                
+                // Contact form
+                const contactForm = document.getElementById('contact-form');
+                if (contactForm) {
+                    contactForm.addEventListener('submit', function(e) {
+                        handleFormSubmit(e, 'contact', contactForm);
+                    });
+                }
+            }
+            
+            function handleFormSubmit(event, formType, form) {
+                event.preventDefault();
+                
+                // Validate form
+                if (!validateForm(form)) {
+                    return;
+                }
+                
+                // Show loading state
+                setFormLoading(formType, true);
+                clearFormMessage(formType);
+                
+                // Execute reCAPTCHA and submit
+                if (typeof grecaptcha !== 'undefined' && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_SITE_KEY') {
+                    grecaptcha.ready(function() {
+                        grecaptcha.execute(RECAPTCHA_SITE_KEY, {action: 'submit_form'}).then(function(token) {
+                            submitFormData(formType, form, token);
+                        }).catch(function(error) {
+                            console.error('reCAPTCHA error:', error);
+                            showFormMessage(formType, 'Turvakontroll ebaõnnestus. Palun proovi lehte uuesti laadida.', 'error');
+                            setFormLoading(formType, false);
+                        });
+                    });
+                } else {
+                    // If reCAPTCHA is not configured, show error
+                    showFormMessage(formType, 'Vorm pole õigesti seadistatud. Palun võta ühendust administraatoriga.', 'error');
+                    setFormLoading(formType, false);
+                }
+            }
+            
+            function validateForm(form) {
+                let isValid = true;
+                const requiredFields = form.querySelectorAll('[required]');
+                
+                requiredFields.forEach(field => {
+                    const errorElement = field.parentNode.querySelector('.form-error');
+                    
+                    if (!field.value.trim()) {
+                        isValid = false;
+                        errorElement.classList.add('show');
+                        field.style.borderColor = '#dc2626';
+                    } else if (field.type === 'email' && !isValidEmail(field.value)) {
+                        isValid = false;
+                        errorElement.textContent = 'Palun sisesta kehtiv e-posti aadress.';
+                        errorElement.classList.add('show');
+                        field.style.borderColor = '#dc2626';
+                    } else {
+                        errorElement.classList.remove('show');
+                        field.style.borderColor = '#d1d5db';
+                    }
+                });
+                
+                return isValid;
+            }
+            
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+            
+            function submitFormData(formType, form, recaptchaToken) {
+                const formData = new FormData(form);
+                formData.append('formType', formType);
+                formData.append('recaptchaToken', recaptchaToken);
+                
+                fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: formData
+                })
+                .then(() => {
+                    // Success (we can't read the response in no-cors mode)
+                    form.reset();
+                    const successMessage = formType === 'membership' 
+                        ? 'Aitäh! Sinu liikmestaotus on vastu võetud. Juhatus vaatab taotluse üle ja kinnitab liikmeks astumise e-posti teel.'
+                        : 'Aitäh! Sinu sõnum on edastatud. Võtame Sinuga peatselt ühendust.';
+                    showFormMessage(formType, successMessage, 'success');
+                })
+                .catch((error) => {
+                    console.error('Form submission error:', error);
+                    showFormMessage(formType, 'Vabandust, sõnumi saatmisel tekkis viga. Palun proovi hiljem uuesti.', 'error');
+                })
+                .finally(() => {
+                    setFormLoading(formType, false);
+                });
+            }
+            
+            function setFormLoading(formType, loading) {
+                const button = document.getElementById(`${formType}-submit`);
+                const buttonText = document.getElementById(`${formType}-button-text`);
+                const spinner = document.getElementById(`${formType}-spinner`);
+                
+                if (loading) {
+                    button.disabled = true;
+                    buttonText.textContent = 'Saadan...';
+                    spinner.style.display = 'inline-block';
+                } else {
+                    button.disabled = false;
+                    buttonText.textContent = formType === 'membership' ? 'Saada avaldus' : 'Saada sõnum';
+                    spinner.style.display = 'none';
+                }
+            }
+            
+            function showFormMessage(formType, message, type) {
+                const messageContainer = document.getElementById(`${formType}-message`);
+                messageContainer.innerHTML = `<div class="form-message ${type}">${message}</div>`;
+                
+                // Auto-hide success messages after 10 seconds
+                if (type === 'success') {
+                    setTimeout(() => {
+                        messageContainer.innerHTML = '';
+                    }, 10000);
+                }
+            }
+            
+            function clearFormMessage(formType) {
+                const messageContainer = document.getElementById(`${formType}-message`);
+                messageContainer.innerHTML = '';
+            }
+            
+            // Clear validation errors on input
+            document.addEventListener('input', function(e) {
+                if (e.target.hasAttribute('required')) {
+                    const errorElement = e.target.parentNode.querySelector('.form-error');
+                    if (e.target.value.trim()) {
+                        errorElement.classList.remove('show');
+                        e.target.style.borderColor = '#d1d5db';
+                    }
+                }
+            });
+
+
+            // Initial page load
+            const initialHash = window.location.hash.substring(1);
+            if (initialHash && document.getElementById(initialHash)) {
+                showPage(initialHash);
+            } else {
+                showPage('esileht');
+            }
+        });
+    </script>
+
+</body>
+</html>
