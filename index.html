@@ -406,6 +406,15 @@
         .photo-thumbnail:hover {
             transform: scale(1.05);
         }
+        
+        /* Page Title Component */
+        .page-title-component {
+            background-color: #f9f8f6;
+            text-align: center;
+            padding: clamp(3rem, 8vw, 5rem) 1.5rem;
+            border-bottom: 1px solid #e5e2de;
+            margin-bottom: clamp(3rem, 8vw, 6rem);
+        }
     </style>
 </head>
 <body class="bg-background-primary text-text-primary">
@@ -486,12 +495,12 @@
 
         <!-- Events -->
         <div id="sundmused" class="page-content hidden">
-            <section class="global-padding global-padding-y">
+            <div class="page-title-component">
+                <p class="lead max-w-2xl mx-auto">Siit leiad meie tulevased üritused ja kogukonna kokkusaamised. Osale kaasa ja tule meie üritustele!</p>
+            </div>
+            
+            <section class="global-padding">
                 <div class="max-w-wide mx-auto">
-                    <div class="text-center mb-16">
-                         <h1 class="mb-6">Sündmused</h1>
-                         <p class="text-xl max-w-2xl mx-auto text-gray-600">Siit leiad meie tulevased üritused ja kogukonna kokkusaamised. Osale kaasa ja tule meie üritustele!</p>
-                    </div>
                     <div class="section-card">
                         <div id='calendar-container'>
                             <div id='calendar'></div>
@@ -533,14 +542,14 @@
 
         <!-- Gallery -->
         <div id="galerii" class="page-content hidden">
-            <section class="global-padding global-padding-y">
+            <div class="page-title-component">
+                <p class="lead max-w-2xl mx-auto">Meie tegemised ja üritused piltides. Siit leiad fotosid kogukonna üritustest ja ühisest tegevusest.</p>
+            </div>
+            
+            <section class="global-padding">
                 <div id="gallery-container" class="max-w-wide mx-auto">
                     <!-- Album View -->
                     <div id="album-view">
-                        <div class="text-center mb-16">
-                            <h1 class="mb-6">Galerii</h1>
-                            <p class="text-xl max-w-2xl mx-auto text-gray-600">Meie tegemised ja üritused piltides. Siit leiad fotosid kogukonna üritustest ja ühisest tegevusest.</p>
-                        </div>
                         <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                             <!-- Albums will be loaded here by JavaScript -->
                         </div>
@@ -568,40 +577,59 @@
 
         <!-- About Us -->
         <div id="meist" class="page-content hidden">
-            <section class="global-padding global-padding-y">
-                <div class="max-w-content mx-auto space-y-16">
-                    <div class="text-center">
-                        <h1>Meist</h1>
-                    </div>
-                    <!-- Section 1 -->
-                    <div>
-                        <h2>Kes me oleme?</h2>
+            <div class="page-title-component">
+                <p class="lead max-w-3xl mx-auto">MTÜ Kaiu Kodukant on enamat kui lihtsalt ühing – see on meie kogukonna süda, mis on pühendunud kodukandi elu edendamisele, pärandi hoidmisele ja helgema tuleviku loomisele.</p>
+            </div>
+            
+            <section class="global-padding">
+                <div class="max-w-wide mx-auto">
+                    <div class="grid lg:grid-cols-5 gap-12 lg:gap-16">
+                        <!-- Left Column: Who We Are -->
+                        <div class="lg:col-span-2">
+                            <div class="section-card h-full">
+                                <h3 class="text-xl font-semibold text-text-primary mb-4">Kes me oleme?</h3>
                         <ul class="mt-6 space-y-4 text-text-secondary">
                             <li><strong>Ametlik nimi:</strong> MTÜ Kaiu Kodukant.</li>
                             <li><strong>Asutatud:</strong> Ühingu põhikiri on kinnitatud 10. oktoobril 2022. a asutamiskoosolekul.</li>
                             <li><strong>Asukoht:</strong> Meie juriidiline aadress on Kaare tn 7-7, Kaiu alevik, Rapla vald, Rapla maakond, 79301.</li>
                             <li><strong>Tegutsemisvorm:</strong> Oleme tavaline mittetulundusühing, mis järgib oma tegevuses kodanikuühenduste eetilise tegevuse üldtunnustatud põhimõtteid.</li>
                         </ul>
-                    </div>
-                    <!-- Section 2 -->
-                    <div>
-                        <h2>Meie eesmärgid 🎯</h2>
-                        <div class="mt-6 grid sm:grid-cols-2 gap-6">
-                            <div class="bg-background-secondary p-6 rounded-lg border border-gray-200">
-                                <h3 class="text-xl">Kogukonna edendamine</h3>
-                                <p class="mt-2 text-text-secondary">Algatada ja toetada Kaiu kandi kogukonna tegevusi, et tõsta kohalikku heaolu ja parandada elukeskkonda.</p>
                             </div>
-                            <div class="bg-background-secondary p-6 rounded-lg border border-gray-200">
-                                <h3 class="text-xl">Väärtuste propageerimine</h3>
-                                <p class="mt-2 text-text-secondary">Toetada ettevõtmisi, mis väärtustavad eetilisi tõekspidamisi ja hüvede tasakaalustatumat jaotust ühiskonnas.</p>
+                        </div>
+                        
+                        <!-- Right Column: Our Goals -->
+                        <div class="lg:col-span-3">
+                            <div class="section-card h-full">
+                                <h2 class="mb-8 text-center lg:text-left">Meie eesmärgid</h2>
+                        <div class="space-y-8">
+                            <div class="border-l-4 border-brand-primary pl-6">
+                                <h3 class="text-lg font-semibold text-text-primary mb-2">Kogukonna edendamine</h3>
+                                <p class="text-text-secondary">Algatame ja toetame Kaiu kandi kogukonna tegevusi, et tõsta kohalikku heaolu ja parandada elukeskkonda.</p>
                             </div>
-                            <div class="bg-background-secondary p-6 rounded-lg border border-gray-200">
-                                <h3 class="text-xl">Tervis ja keskkond</h3>
-                                <p class="mt-2 text-text-secondary">Toetada kogukonna ja tervise arengut ning propageerida keskkonnasäästlikku eluviisi, pakkudes ka koolitusi ja kursuseid.</p>
+                            
+                            <div class="border-l-4 border-brand-primary pl-6">
+                                <h3 class="text-lg font-semibold text-text-primary mb-2">Väärtuste propageerimine</h3>
+                                <p class="text-text-secondary">Toetame ettevõtmisi, mis väärtustavad eetilisi tõekspidamisi ja hüvede tasakaalustatumat jaotust ühiskonnas.</p>
                             </div>
-                             <div class="bg-background-secondary p-6 rounded-lg border border-gray-200">
-                                <h3 class="text-xl">Pärandi hoidmine</h3>
-                                <p class="mt-2 text-text-secondary">Algatada ja ellu viia projekte, mis on suunatud looduskeskkonna, kultuuri- ning ajalooväärtuste hoidmisele, kaitsele ja taastamisele.</p>
+                            
+                            <div class="border-l-4 border-brand-primary pl-6">
+                                <h3 class="text-lg font-semibold text-text-primary mb-2">Tervis ja keskkond</h3>
+                                <p class="text-text-secondary">Toetame kogukonna tervise arengut ning propageerime keskkonnasäästlikku eluviisi, pakkudes koolitusi ja kursuseid.</p>
+                            </div>
+                            
+                            <div class="border-l-4 border-brand-primary pl-6">
+                                <h3 class="text-lg font-semibold text-text-primary mb-2">Pärandi hoidmine</h3>
+                                <p class="text-text-secondary">Algatame ja viime ellu projekte, mis hoiavad, kaitsevad ja taastavad looduskeskkonda ning kultuuri- ja ajalooväärtusi.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Call to action -->
+                        <div class="mt-12 pt-8 border-t border-brand-border text-center">
+                            <p class="text-text-secondary mb-4">Kas soovid panustada oma kogukonna arengusse?</p>
+                            <a href="#liikmeks" class="page-link inline-flex items-center bg-brand-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-primary_hover transition-all duration-200">
+                                Liitu meiega
+                            </a>
+                        </div>
                             </div>
                         </div>
                     </div>
@@ -611,7 +639,12 @@
 
         <!-- Become a Member -->
         <div id="liikmeks" class="page-content hidden">
-             <section class="global-padding global-padding-y bg-gray-50">
+            <div class="page-title-component">
+                <p class="text-xl max-w-3xl mx-auto text-gray-700">Meil on siiralt hea meel, et soovid panustada Kaiu kandi arengusse! Täites alloleva vormi, esitad omapoolse avalduse astuda MTÜ Kaiu Kodukant liikmeks.</p>
+                <p class="mt-4 text-gray-600">Juhatus vaatab sinu soovi esimesel võimalusel üle ja kinnitab liikmeks astumise e-posti teel.</p>
+            </div>
+            
+             <section class="global-padding bg-gray-50">
                 <div class="max-w-4xl mx-auto">
                     <div class="text-center mb-16">
                         <h1 class="mb-6">Liitu meiega!</h1>
@@ -688,7 +721,11 @@
 
         <!-- Contact -->
         <div id="kontakt" class="page-content hidden">
-             <section class="global-padding global-padding-y">
+            <div class="page-title-component">
+                <p class="text-xl max-w-2xl mx-auto text-gray-600">Kas sul on küsimusi või soovid rohkem teada saada? Võta julgelt ühendust!</p>
+            </div>
+            
+             <section class="global-padding">
                 <div class="max-w-6xl mx-auto">
                     <div class="text-center mb-16">
                         <h1 class="mb-6">Võta meiega ühendust</h1>
@@ -699,7 +736,7 @@
                         <!-- Contact Info & Form -->
                         <div class="space-y-8">
                             <!-- Contact Information -->
-                            <div class="section-card">
+                            <div class="section-card h-full">
                                 <h3 class="mb-6">Kontaktandmed</h3>
                                 <div class="space-y-4">
                                     <div class="flex items-start">
@@ -742,7 +779,7 @@
                             </div>
                             
                             <!-- Contact Form -->
-                            <div class="section-card">
+                            <div class="section-card h-full">
                                 <h3 class="mb-6">Saada meile sõnum</h3>
                                 <div class="form-container max-w-none">
                                     <form id="contact-form">
