@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Esileht - MTÜ Kaiu Kodukant</title>
+    <title>Galerii - MTÜ Kaiu Kodukant</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com/"></script>
@@ -71,9 +71,9 @@
                 <img src="https://kaiukodukant.ee/wp-content/uploads/2025/03/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
             </a>
             <div class="hidden md:flex items-center space-x-8">
-                <a href="index.html" class="nav-link font-medium hover:underline active">Esileht</a>
+                <a href="index.html" class="nav-link font-medium hover:underline">Esileht</a>
                 <a href="events.html" class="nav-link font-medium hover:underline">Sündmused</a>
-                <a href="gallery.html" class="nav-link font-medium hover:underline">Galerii</a>
+                <a href="gallery.html" class="nav-link font-medium hover:underline active">Galerii</a>
                 <a href="about.html" class="nav-link font-medium hover:underline">Meist</a>
                 <a href="contact.html" class="nav-link font-medium hover:underline">Kontakt</a>
                 <a href="contact.html#liikmeks" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors">Saa liikmeks</a>
@@ -85,57 +85,62 @@
         </nav>
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden global-padding pb-4">
-            <a href="index.html" class="block py-2 mobile-nav-link active">Esileht</a>
+            <a href="index.html" class="block py-2 mobile-nav-link">Esileht</a>
             <a href="events.html" class="block py-2 mobile-nav-link">Sündmused</a>
-            <a href="gallery.html" class="block py-2 mobile-nav-link">Galerii</a>
+            <a href="gallery.html" class="block py-2 mobile-nav-link active">Galerii</a>
             <a href="about.html" class="block py-2 mobile-nav-link">Meist</a>
             <a href="contact.html" class="block py-2 mobile-nav-link">Kontakt</a>
             <a href="contact.html#liikmeks" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link">Saa liikmeks</a>
         </div>
     </header>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <main>
-        <!-- Hero Section -->
-        <section class="relative bg-gray-300 h-[60vh] min-h-[400px] flex items-center justify-center text-center text-white">
-            <img src="https://s3.pilw.io/kaiukodukant/media/hero_image.jpeg" class="absolute inset-0 w-full h-full object-cover" alt="Kaiu koolihoov" style="object-position: center 55%;">
-            <div class="absolute inset-0 bg-black/50"></div>
-            <div class="relative global-padding">
-                <h1 class="text-white mb-6">Tere tulemast MTÜ Kaiu Kodukant kodulehele!</h1>
-                <p class="max-w-3xl mx-auto text-lg md:text-xl text-gray-200 mb-8 leading-relaxed">Edendame koos kohalikku elu, hoiame oma kodukandi pärandit ja loome parema elukeskkonna kõigile.</p>
-                <a href="contact.html#liikmeks" class="inline-block bg-white bg-opacity-10 backdrop-blur border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-200">
-                    Astu liikmeks
-                </a>
-            </div>
-        </section>
+        <!-- Page Title -->
+        <div class="page-title-component">
+            <h1>Galerii</h1>
+            <p class="lead max-w-2xl mx-auto">Meie tegemised ja üritused piltides. Siit leiad fotosid kogukonna üritustest ja ühisest tegevusest.</p>
+        </div>
         
-        <!-- Introduction Section -->
-        <section class="global-padding global-padding-y bg-gray-50">
-            <div class="max-w-4xl mx-auto">
-                <div class="section-card text-center">
-                    <h2 class="text-center">Meie Missioon</h2>
-                    <p class="text-xl leading-relaxed max-w-3xl mx-auto">MTÜ Kaiu Kodukant on mittetulundusühing, mille eesmärk on <strong>edendada kohalikku elu</strong>, algatades ja toetades Kaiu kandi kogukonna tegevusi.</p>
-                    <p class="mt-4 max-w-3xl mx-auto text-gray-600">Meie tegevuse siht on tõsta kohalikku heaolu ja parandada elukeskkonda. Tegutseme Rapla maakonnas Kaiu alevikus ja suuname kogu oma tulu põhikirjaliste eesmärkide saavutamisse.</p>
-                    
-                    <!-- Stats or highlights -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 pt-8 border-t border-gray-200">
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-gray-800 mb-2">üle 50</div>
-                            <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Kogukonna liikme</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-gray-800 mb-2">2022</div>
-                            <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Asutamisaasta</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-gray-800 mb-2">Kaiu</div>
-                            <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Rapla Maakond</div>
-                        </div>
+        <section class="global-padding">
+            <div id="gallery-container" class="max-w-wide mx-auto">
+                <!-- Album View -->
+                <div id="album-view">
+                    <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Albums will be loaded here by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Photo View -->
+                <div id="photo-view" class="hidden">
+                    <button id="back-to-albums" class="mb-8 inline-flex items-center bg-white border border-gray-300 rounded-lg px-4 py-3 text-text-secondary hover:text-text-primary hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Tagasi albumite juurde
+                    </button>
+                    <div class="text-center mb-12">
+                        <h2 id="photo-album-title" class="mb-4"></h2>
+                        <p id="photo-album-description" class="text-xl max-w-3xl mx-auto text-gray-600"></p>
+                    </div>
+                    <div id="photo-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        <!-- Photos will be loaded here by JavaScript -->
                     </div>
                 </div>
             </div>
         </section>
     </main>
+
+    <!-- Gallery Lightbox Modal -->
+    <div id="lightbox" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity duration-300">
+        <button id="lightbox-close" class="absolute top-4 right-4 text-white/80 hover:text-white w-10 h-10 flex items-center justify-center text-4xl">&times;</button>
+        <button id="lightbox-prev" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white w-12 h-12 flex items-center justify-center text-5xl">&lsaquo;</button>
+        <button id="lightbox-next" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white w-12 h-12 flex items-center justify-center text-5xl">&rsaquo;</button>
+        <div class="text-center">
+            <img id="lightbox-img" src="" alt="Galerii pilt" class="lightbox-img object-contain w-auto h-auto rounded-lg shadow-2xl">
+            <p id="lightbox-caption" class="mt-4 text-white/90 text-lg"></p>
+        </div>
+    </div>
 
     <!-- Footer with complete information -->
     <footer class="bg-gray-900 text-white relative overflow-hidden">
@@ -232,7 +237,8 @@
         </div>
     </footer>
 
-    <!-- Common JavaScript -->
+    <!-- JavaScript -->
     <script src="js/common.js"></script>
+    <script src="js/gallery.js"></script>
 </body>
 </html>

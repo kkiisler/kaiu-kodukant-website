@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Esileht - MTÜ Kaiu Kodukant</title>
+    <title>Saa liikmeks - MTÜ Kaiu Kodukant</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com/"></script>
@@ -12,6 +12,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- reCAPTCHA script - Replace YOUR_RECAPTCHA_SITE_KEY with actual key -->
+    <script src="https://www.google.com/recaptcha/api.js?render=YOUR_RECAPTCHA_SITE_KEY"></script>
     
     <!-- Tailwind Configuration -->
     <script>
@@ -71,12 +74,12 @@
                 <img src="https://kaiukodukant.ee/wp-content/uploads/2025/03/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
             </a>
             <div class="hidden md:flex items-center space-x-8">
-                <a href="index.html" class="nav-link font-medium hover:underline active">Esileht</a>
+                <a href="index.html" class="nav-link font-medium hover:underline">Esileht</a>
                 <a href="events.html" class="nav-link font-medium hover:underline">Sündmused</a>
                 <a href="gallery.html" class="nav-link font-medium hover:underline">Galerii</a>
                 <a href="about.html" class="nav-link font-medium hover:underline">Meist</a>
                 <a href="contact.html" class="nav-link font-medium hover:underline">Kontakt</a>
-                <a href="contact.html#liikmeks" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors">Saa liikmeks</a>
+                <a href="membership.html" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors active">Saa liikmeks</a>
             </div>
             <!-- Mobile Menu Button -->
             <button id="hamburger-menu" class="md:hidden">
@@ -85,52 +88,85 @@
         </nav>
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden global-padding pb-4">
-            <a href="index.html" class="block py-2 mobile-nav-link active">Esileht</a>
+            <a href="index.html" class="block py-2 mobile-nav-link">Esileht</a>
             <a href="events.html" class="block py-2 mobile-nav-link">Sündmused</a>
             <a href="gallery.html" class="block py-2 mobile-nav-link">Galerii</a>
             <a href="about.html" class="block py-2 mobile-nav-link">Meist</a>
             <a href="contact.html" class="block py-2 mobile-nav-link">Kontakt</a>
-            <a href="contact.html#liikmeks" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link">Saa liikmeks</a>
+            <a href="membership.html" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link active">Saa liikmeks</a>
         </div>
     </header>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <main>
-        <!-- Hero Section -->
-        <section class="relative bg-gray-300 h-[60vh] min-h-[400px] flex items-center justify-center text-center text-white">
-            <img src="https://s3.pilw.io/kaiukodukant/media/hero_image.jpeg" class="absolute inset-0 w-full h-full object-cover" alt="Kaiu koolihoov" style="object-position: center 55%;">
-            <div class="absolute inset-0 bg-black/50"></div>
-            <div class="relative global-padding">
-                <h1 class="text-white mb-6">Tere tulemast MTÜ Kaiu Kodukant kodulehele!</h1>
-                <p class="max-w-3xl mx-auto text-lg md:text-xl text-gray-200 mb-8 leading-relaxed">Edendame koos kohalikku elu, hoiame oma kodukandi pärandit ja loome parema elukeskkonna kõigile.</p>
-                <a href="contact.html#liikmeks" class="inline-block bg-white bg-opacity-10 backdrop-blur border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-200">
-                    Astu liikmeks
-                </a>
-            </div>
-        </section>
+        <!-- Membership Section -->
+        <div class="page-title-component">
+            <h1>Saa liikmeks</h1>
+            <p class="text-xl max-w-3xl mx-auto text-gray-700">Meil on siiralt hea meel, et soovid panustada Kaiu kandi arengusse! Täites alloleva vormi, esitad omapoolse avalduse astuda MTÜ Kaiu Kodukant liikmeks.</p>
+            <p class="mt-4 text-gray-600">Juhatus vaatab sinu soovi esimesel võimalusel üle ja kinnitab liikmeks astumise e-posti teel.</p>
+        </div>
         
-        <!-- Introduction Section -->
-        <section class="global-padding global-padding-y bg-gray-50">
+        <section class="global-padding bg-gray-50">
             <div class="max-w-4xl mx-auto">
-                <div class="section-card text-center">
-                    <h2 class="text-center">Meie Missioon</h2>
-                    <p class="text-xl leading-relaxed max-w-3xl mx-auto">MTÜ Kaiu Kodukant on mittetulundusühing, mille eesmärk on <strong>edendada kohalikku elu</strong>, algatades ja toetades Kaiu kandi kogukonna tegevusi.</p>
-                    <p class="mt-4 max-w-3xl mx-auto text-gray-600">Meie tegevuse siht on tõsta kohalikku heaolu ja parandada elukeskkonda. Tegutseme Rapla maakonnas Kaiu alevikus ja suuname kogu oma tulu põhikirjaliste eesmärkide saavutamisse.</p>
-                    
-                    <!-- Stats or highlights -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 pt-8 border-t border-gray-200">
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-gray-800 mb-2">üle 50</div>
-                            <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Kogukonna liikme</div>
+                <!-- Benefits Section -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    <div class="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
+                        <div class="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
                         </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-gray-800 mb-2">2022</div>
-                            <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Asutamisaasta</div>
+                        <h4 class="text-gray-900 font-semibold mb-2">Kogukonna hääl</h4>
+                        <p class="text-gray-600 text-sm">Osale otsuste langetamises ja mõjuta oma kodukandi tulevikku</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
+                        <div class="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
                         </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-gray-800 mb-2">Kaiu</div>
-                            <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Rapla Maakond</div>
+                        <h4 class="text-gray-900 font-semibold mb-2">Üritused</h4>
+                        <p class="text-gray-600 text-sm">Ligipääs kõigile MTÜ üritustele ja tegevustele</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
+                        <div class="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
                         </div>
+                        <h4 class="text-gray-900 font-semibold mb-2">Mõju</h4>
+                        <p class="text-gray-600 text-sm">Aita kaasa positiivsete muudatuste elluviimisele</p>
+                    </div>
+                </div>
+                
+                <!-- Membership Form -->
+                <div class="section-card">
+                    <div class="form-container">
+                        <form id="membership-form">
+                            <div class="form-field">
+                                <label for="member-name" class="form-label">Nimi *</label>
+                                <input type="text" id="member-name" name="name" required class="form-input">
+                                <div class="form-error">Palun sisesta oma nimi.</div>
+                            </div>
+                            
+                            <div class="form-field">
+                                <label for="member-email" class="form-label">E-posti aadress *</label>
+                                <input type="email" id="member-email" name="email" required class="form-input">
+                                <div class="form-error">Palun sisesta kehtiv e-posti aadress.</div>
+                            </div>
+                            
+                            <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 my-8 text-center">
+                                <p class="text-gray-700 mb-2">Edasine info MTÜ tegemiste kohta saabub Sulle e-posti teel.</p>
+                                <div class="text-2xl font-bold text-gray-900 mb-2">Liikmemaks</div>
+                                <p class="text-gray-800"><span class="text-3xl font-bold text-gray-900">20€</span> aastas</p>
+                                <p class="text-gray-600 text-sm mt-1">Pensionäridel 10€</p>
+                                <p class="mt-4 font-semibold text-gray-800">Aitäh, et oled meiega! 😊</p>
+                            </div>
+
+                            <button type="submit" class="form-button">
+                                <span>Saada liikmestaotlus</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -169,7 +205,7 @@
                 <div>
                     <h4 class="font-semibold text-white mb-6 text-lg">Navigatsioon</h4>
                     <ul class="space-y-3">
-                        <li><a href="index.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                        <li><a href="./" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Esileht
                         </a></li>
                         <li><a href="events.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
@@ -232,7 +268,8 @@
         </div>
     </footer>
 
-    <!-- Common JavaScript -->
+    <!-- JavaScript -->
     <script src="js/common.js"></script>
+    <script src="js/forms.js"></script>
 </body>
 </html>

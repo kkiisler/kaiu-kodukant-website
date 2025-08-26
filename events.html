@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Esileht - MTÜ Kaiu Kodukant</title>
+    <title>Sündmused - MTÜ Kaiu Kodukant</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com/"></script>
@@ -12,6 +12,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     
     <!-- Tailwind Configuration -->
     <script>
@@ -71,8 +74,8 @@
                 <img src="https://kaiukodukant.ee/wp-content/uploads/2025/03/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
             </a>
             <div class="hidden md:flex items-center space-x-8">
-                <a href="index.html" class="nav-link font-medium hover:underline active">Esileht</a>
-                <a href="events.html" class="nav-link font-medium hover:underline">Sündmused</a>
+                <a href="index.html" class="nav-link font-medium hover:underline">Esileht</a>
+                <a href="events.html" class="nav-link font-medium hover:underline active">Sündmused</a>
                 <a href="gallery.html" class="nav-link font-medium hover:underline">Galerii</a>
                 <a href="about.html" class="nav-link font-medium hover:underline">Meist</a>
                 <a href="contact.html" class="nav-link font-medium hover:underline">Kontakt</a>
@@ -85,8 +88,8 @@
         </nav>
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden global-padding pb-4">
-            <a href="index.html" class="block py-2 mobile-nav-link active">Esileht</a>
-            <a href="events.html" class="block py-2 mobile-nav-link">Sündmused</a>
+            <a href="index.html" class="block py-2 mobile-nav-link">Esileht</a>
+            <a href="events.html" class="block py-2 mobile-nav-link active">Sündmused</a>
             <a href="gallery.html" class="block py-2 mobile-nav-link">Galerii</a>
             <a href="about.html" class="block py-2 mobile-nav-link">Meist</a>
             <a href="contact.html" class="block py-2 mobile-nav-link">Kontakt</a>
@@ -94,48 +97,66 @@
         </div>
     </header>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <main>
-        <!-- Hero Section -->
-        <section class="relative bg-gray-300 h-[60vh] min-h-[400px] flex items-center justify-center text-center text-white">
-            <img src="https://s3.pilw.io/kaiukodukant/media/hero_image.jpeg" class="absolute inset-0 w-full h-full object-cover" alt="Kaiu koolihoov" style="object-position: center 55%;">
-            <div class="absolute inset-0 bg-black/50"></div>
-            <div class="relative global-padding">
-                <h1 class="text-white mb-6">Tere tulemast MTÜ Kaiu Kodukant kodulehele!</h1>
-                <p class="max-w-3xl mx-auto text-lg md:text-xl text-gray-200 mb-8 leading-relaxed">Edendame koos kohalikku elu, hoiame oma kodukandi pärandit ja loome parema elukeskkonna kõigile.</p>
-                <a href="contact.html#liikmeks" class="inline-block bg-white bg-opacity-10 backdrop-blur border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-all duration-200">
-                    Astu liikmeks
-                </a>
-            </div>
-        </section>
+        <!-- Page Title -->
+        <div class="page-title-component">
+            <h1>Sündmused</h1>
+            <p class="lead max-w-2xl mx-auto">Siit leiad meie tulevased üritused ja kogukonna kokkusaamised. Löö kaasa ja tule meie üritustele!</p>
+        </div>
         
-        <!-- Introduction Section -->
-        <section class="global-padding global-padding-y bg-gray-50">
-            <div class="max-w-4xl mx-auto">
-                <div class="section-card text-center">
-                    <h2 class="text-center">Meie Missioon</h2>
-                    <p class="text-xl leading-relaxed max-w-3xl mx-auto">MTÜ Kaiu Kodukant on mittetulundusühing, mille eesmärk on <strong>edendada kohalikku elu</strong>, algatades ja toetades Kaiu kandi kogukonna tegevusi.</p>
-                    <p class="mt-4 max-w-3xl mx-auto text-gray-600">Meie tegevuse siht on tõsta kohalikku heaolu ja parandada elukeskkonda. Tegutseme Rapla maakonnas Kaiu alevikus ja suuname kogu oma tulu põhikirjaliste eesmärkide saavutamisse.</p>
-                    
-                    <!-- Stats or highlights -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 pt-8 border-t border-gray-200">
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-gray-800 mb-2">üle 50</div>
-                            <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Kogukonna liikme</div>
+        <section class="global-padding">
+            <div class="max-w-wide mx-auto">
+                <div class="section-card">
+                    <div id='calendar-container'>
+                        <div id='calendar'></div>
+                    </div>
+                </div>
+                
+                <!-- Quick info cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h4 class="text-gray-900 font-semibold">Regulaarsed kokkusaamised</h4>
+                                <p class="text-gray-600 text-sm mt-1">Juhatus koguneb igal kuul, et planeerida kogukonna tegevusi</p>
+                            </div>
                         </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-gray-800 mb-2">2022</div>
-                            <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Asutamisaasta</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-3xl font-bold text-gray-800 mb-2">Kaiu</div>
-                            <div class="text-sm font-medium text-gray-600 uppercase tracking-wide">Rapla Maakond</div>
+                    </div>
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h4 class="text-gray-900 font-semibold">Kogukonna üritused</h4>
+                                <p class="text-gray-600 text-sm mt-1">Suvefestivalid, korrastustööd ja muud kogunemised</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
+
+    <!-- Event Modal -->
+    <div id="event-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 relative">
+            <button id="modal-close" class="absolute top-3 right-3 text-gray-400 hover:text-black w-8 h-8 flex items-center justify-center text-2xl rounded-full hover:bg-gray-100">&times;</button>
+            <h2 id="modal-title" class="text-2xl md:text-3xl font-bold text-text-primary pr-8"></h2>
+            <p id="modal-time" class="text-text-secondary mt-2"></p>
+            <hr class="my-4">
+            <div id="modal-description" class="mt-4 text-text-secondary prose"></div>
+            <p id="modal-location" class="mt-4 text-sm text-text-secondary font-semibold"></p>
+        </div>
+    </div>
 
     <!-- Footer with complete information -->
     <footer class="bg-gray-900 text-white relative overflow-hidden">
@@ -232,7 +253,8 @@
         </div>
     </footer>
 
-    <!-- Common JavaScript -->
+    <!-- JavaScript -->
     <script src="js/common.js"></script>
+    <script src="js/calendar.js"></script>
 </body>
 </html>
