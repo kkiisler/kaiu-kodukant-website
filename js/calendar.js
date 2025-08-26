@@ -5,7 +5,7 @@ let calendarInitialized = false;
 
 // Configuration
 const GOOGLE_CALENDAR_ID = '3ab658c2becd62b9af62343da736243b73e1d56523c7c04b8ed46d944eb0e8fb@group.calendar.google.com';
-const GOOGLE_API_KEY = 'AIzaSyDQ0VNGYf2v1lSa6C1Xn8xc7aS_zvkH5Bc';
+const GOOGLE_API_KEY = 'PUT YOUR GOOGLE API KEY HERE';
 
 document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
