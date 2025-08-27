@@ -16,8 +16,11 @@ A modern, lightweight community website for MTÜ Kaiu Kodukant (Kaiu Community A
 ## 🏗️ Architecture
 
 ### Frontend
-- **Single HTML file** with embedded CSS and JavaScript
+- **Multi-page static website** with separated CSS and JavaScript
+- **6 HTML pages** for different sections (Home, Events, Gallery, About, Contact, Membership)
 - **Tailwind CSS** via CDN for styling
+- **Custom CSS** in `css/styles.css` (348 lines)
+- **JavaScript modules** for specific functionality
 - **FullCalendar.js** for event calendar
 - **Vanilla JavaScript** for all interactions
 
@@ -31,8 +34,21 @@ A modern, lightweight community website for MTÜ Kaiu Kodukant (Kaiu Community A
 
 ```
 kaiumtu/
-├── index.html              # Main website file
-├── apps-script-backend.js   # Google Apps Script backend code
+├── index.html              # Homepage
+├── events.html             # Events calendar page
+├── gallery.html            # Photo gallery page
+├── about.html              # About us page
+├── contact.html            # Contact form page
+├── membership.html         # Membership registration page
+├── css/
+│   └── styles.css          # Custom styles (348 lines)
+├── js/
+│   ├── common.js           # Mobile menu, navigation
+│   ├── calendar.js         # FullCalendar integration
+│   ├── gallery.js          # Gallery and lightbox
+│   └── forms.js            # Form validation and handling
+├── index_original.html     # Backup of original single-page file
+├── apps-script-backend.js  # Google Apps Script backend code
 ├── SETUP.md                # Complete setup instructions
 ├── CLAUDE.md               # Development guidance
 ├── examples/               # Reference implementations
@@ -43,7 +59,7 @@ kaiumtu/
 
 ## 🚀 Quick Start
 
-1. **Deploy the website**: Upload `index.html` to any web server
+1. **Deploy the website**: Upload all HTML files, `css/` and `js/` directories to any web server
 2. **Set up backend**: Follow instructions in `SETUP.md` to configure:
    - Google Apps Script for forms and calendar
    - Google Sheets for data storage
@@ -52,12 +68,24 @@ kaiumtu/
 
 ## 🛠️ Development
 
-This is a static website that can be developed with any code editor:
+This is a static multi-page website that can be developed with any code editor:
 
-1. Open `index.html` in your browser to preview
-2. Edit HTML, CSS, or JavaScript directly in the file
+1. Open any HTML page in your browser to preview (or use a local server)
+2. Edit HTML files, CSS in `css/styles.css`, or JavaScript modules in `js/` directory
 3. Refresh browser to see changes
 4. For backend changes, update the Google Apps Script
+
+### Local Development Server (optional)
+```bash
+# Python 3
+python3 -m http.server 8080
+
+# Node.js
+npx serve
+
+# PHP
+php -S localhost:8080
+```
 
 ## 📋 Setup Requirements
 
@@ -77,9 +105,10 @@ See `SETUP.md` for detailed setup instructions.
 
 ### Technical Excellence
 - **Zero server costs** - uses Google's free tier
-- **High performance** - optimized loading and caching
-- **Easy maintenance** - non-technical users can manage content
+- **High performance** - optimized loading with separated CSS/JS
+- **Easy maintenance** - modular structure with separated concerns
 - **Secure** - enterprise-grade Google infrastructure
+- **Maintainable** - Clean separation of HTML, CSS, and JavaScript
 
 ## 🤝 Contributing
 

@@ -4,7 +4,7 @@ This guide will help you set up the Google Apps Script backend and configure all
 
 ## Overview
 
-The website now uses Google Apps Script as a backend to handle:
+The website is a multi-page static site with Google Apps Script as a backend to handle:
 - Membership form submissions
 - Contact form submissions  
 - Google Calendar API proxy (secure and free)
@@ -85,8 +85,8 @@ const GALLERY_DRIVE_FOLDER_ID = 'YOUR_GALLERY_FOLDER_ID'; // From Step 6.2
 
 ## Step 4: Configure Website
 
-### 4.1 Update HTML Configuration
-In `index.html`, replace these values:
+### 4.1 Update JavaScript Configuration
+In `js/forms.js`, replace these values:
 
 ```javascript
 // Form configuration  
@@ -94,8 +94,19 @@ const GOOGLE_APPS_SCRIPT_URL = 'YOUR_DEPLOYED_APPS_SCRIPT_URL'; // From Step 3.5
 const RECAPTCHA_SITE_KEY = 'YOUR_RECAPTCHA_SITE_KEY'; // From Step 2
 ```
 
+In `js/calendar.js`, update:
+```javascript
+const GOOGLE_CALENDAR_API_KEY = 'YOUR_API_KEY';
+const CALENDAR_ID = 'YOUR_CALENDAR_ID';
+```
+
+In `js/gallery.js`, update:
+```javascript
+const S3_BASE_URL = 'YOUR_S3_URL'; // Or configure Google Drive integration
+```
+
 ### 4.2 Update reCAPTCHA Script Tag
-Replace the reCAPTCHA script src with your site key:
+In `contact.html` and `membership.html`, replace the reCAPTCHA script src with your site key:
 ```html
 <script src="https://www.google.com/recaptcha/api.js?render=YOUR_RECAPTCHA_SITE_KEY"></script>
 ```
@@ -149,29 +160,37 @@ Replace the reCAPTCHA script src with your site key:
 
 ## Step 7: Test Everything
 
-### 6.1 Test Forms
+### 7.1 Test Forms
 1. Open the website
-2. Try submitting the membership form
+2. Navigate to the Contact page (`contact.html`)
 3. Try submitting the contact form
-4. Check that data appears in your Google Sheets
-5. Check that you receive email notifications
+4. Navigate to the Membership page (`membership.html`)
+5. Try submitting the membership form
+6. Check that data appears in your Google Sheets
+7. Check that you receive email notifications
 
-### 6.2 Test Calendar
+### 7.2 Test Calendar
 1. Add some test events to your Google Calendar
-2. Refresh the website's events page
+2. Navigate to the Events page (`events.html`)
 3. Verify events appear correctly
 4. Test clicking on events to see details
 
+### 7.3 Test Gallery
+1. Navigate to the Gallery page (`gallery.html`)
+2. Verify albums load correctly
+3. Click on albums to view photos
+4. Test the lightbox functionality
+
 ## Step 8: Email Notifications
 
-### 7.1 Update Recipient Email
+### 8.1 Update Recipient Email
 In the Apps Script, update these lines with your actual email:
 
 ```javascript
 const recipient = 'info@kaiukodukant.ee'; // Replace with actual email
 ```
 
-### 7.2 Gmail Permissions
+### 8.2 Gmail Permissions
 The first time emails are sent, you'll need to authorize Gmail access in the Apps Script execution log.
 
 ## Step 9: Troubleshooting
@@ -217,7 +236,30 @@ The first time emails are sent, you'll need to authorize Gmail access in the App
 - **Gallery cache**: Run `clearGalleryCaches()` function in Apps Script editor
 - **Both caches**: Apps Script caches refresh automatically (15min for calendar, 30min for gallery albums, 60min for album photos)
 
-## Step 12: Support
+## Step 12: Deployment
+
+### Hosting the Website
+1. Upload all files to your web server maintaining the directory structure:
+   ```
+   /
+   ├── index.html
+   ├── events.html
+   ├── gallery.html
+   ├── about.html
+   ├── contact.html
+   ├── membership.html
+   ├── css/
+   │   └── styles.css
+   └── js/
+       ├── common.js
+       ├── calendar.js
+       ├── gallery.js
+       └── forms.js
+   ```
+2. Ensure all files are accessible via HTTPS
+3. Test all pages and navigation links
+
+## Step 13: Support
 
 For technical issues:
 1. Check Apps Script execution logs
