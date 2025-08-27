@@ -1,8 +1,9 @@
 // Form handling functionality
 
-// Form configuration - Replace with your actual URLs
-const GOOGLE_APPS_SCRIPT_URL = 'YOUR_DEPLOYED_APPS_SCRIPT_URL';
-const RECAPTCHA_SITE_KEY = 'YOUR_RECAPTCHA_SITE_KEY';
+// Form configuration - Uses values from config.js
+// Fallback values if config.js is not loaded
+const GOOGLE_APPS_SCRIPT_URL = window.GOOGLE_APPS_SCRIPT_URL || 'YOUR_DEPLOYED_APPS_SCRIPT_URL';
+const RECAPTCHA_SITE_KEY = window.RECAPTCHA_SITE_KEY || 'YOUR_RECAPTCHA_SITE_KEY';
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeForms();

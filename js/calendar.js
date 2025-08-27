@@ -3,9 +3,8 @@
 let calendar;
 let calendarInitialized = false;
 
-// Configuration
-const GOOGLE_CALENDAR_ID = '3ab658c2becd62b9af62343da736243b73e1d56523c7c04b8ed46d944eb0e8fb@group.calendar.google.com';
-const GOOGLE_API_KEY = 'PUT YOUR GOOGLE API KEY HERE';
+// Configuration - Google Apps Script backend
+const GOOGLE_APPS_SCRIPT_URL = window.GOOGLE_APPS_SCRIPT_URL || 'YOUR_APPS_SCRIPT_URL_HERE';
 
 document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
@@ -71,39 +70,44 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function loadCalendarEvents(successCallback, failureCallback) {
-        const timeMin = new Date();
-        timeMin.setMonth(timeMin.getMonth() - 1);
-        const timeMax = new Date();
-        timeMax.setMonth(timeMax.getMonth() + 6);
-
-        const url = `https://www.googleapis.com/calendar/v3/calendars/${GOOGLE_CALENDAR_ID}/events?` +
-            `key=${GOOGLE_API_KEY}&` +
-            `timeMin=${timeMin.toISOString()}&` +
-            `timeMax=${timeMax.toISOString()}&` +
-            `singleEvents=true&` +
-            `orderBy=startTime`;
-
+        // Build URL for Apps Script endpoint
+        const url = `${GOOGLE_APPS_SCRIPT_URL}?action=calendar`;
+        
+        // Show loading state
+        console.log('Fetching calendar events from backend...');
+        
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
-                if (data.error) {
-                    console.error('Google Calendar API error:', data.error);
-                    loadExampleCalendarEvents(successCallback);
-                } else {
-                    const events = data.items.map(item => ({
+                console.log('Calendar response:', data);
+                
+                if (data.status === 'success' && data.events) {
+                    // Format events for FullCalendar
+                    const events = data.events.map(item => ({
                         id: item.id,
-                        title: item.summary,
-                        start: item.start.dateTime || item.start.date,
-                        end: item.end.dateTime || item.end.date,
+                        title: item.title,
+                        start: item.start,
+                        end: item.end,
                         description: item.description || '',
                         location: item.location || '',
-                        allDay: !item.start.dateTime
+                        allDay: item.allDay || false
                     }));
+                    
+                    console.log(`Loaded ${events.length} events${data.cached ? ' (cached)' : ''}`);
                     successCallback(events);
+                } else {
+                    console.warn('Invalid calendar response, using example events');
+                    loadExampleCalendarEvents(successCallback);
                 }
             })
             .catch(error => {
                 console.error('Calendar fetch error:', error);
+                // Fallback to example events
                 loadExampleCalendarEvents(successCallback);
             });
     }

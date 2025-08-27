@@ -716,3 +716,113 @@ function clearCalendarCache() {
   cache.remove('calendar_events');
   console.log('Calendar cache cleared');
 }
+
+/**
+ * Gets calendar events from Google Calendar with caching
+ * Called via: GET ?action=calendar
+ */
+function getCalendarEvents(headers) {
+  try {
+    // Check cache first (15-minute cache)
+    const cache = CacheService.getScriptCache();
+    const cacheKey = 'calendar_events';
+    const cachedData = cache.get(cacheKey);
+    
+    if (cachedData) {
+      console.log('Returning cached calendar events');
+      return createResponse({
+        status: 'success',
+        events: JSON.parse(cachedData),
+        cached: true
+      }, 200, headers);
+    }
+    
+    // Get calendar
+    const calendar = CalendarApp.getCalendarById(GOOGLE_CALENDAR_ID);
+    if (!calendar) {
+      console.error('Calendar not found:', GOOGLE_CALENDAR_ID);
+      return getExampleCalendarEvents(headers);
+    }
+    
+    // Define time range (1 month ago to 6 months ahead)
+    const now = new Date();
+    const timeMin = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const timeMax = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+    
+    // Get events
+    const events = calendar.getEvents(timeMin, timeMax);
+    console.log(`Found ${events.length} calendar events`);
+    
+    // Format events for FullCalendar
+    const formattedEvents = events.map(event => ({
+      id: event.getId(),
+      title: event.getTitle(),
+      start: event.getStartTime().toISOString(),
+      end: event.getEndTime().toISOString(),
+      description: event.getDescription() || '',
+      location: event.getLocation() || '',
+      allDay: event.isAllDayEvent()
+    }));
+    
+    // Cache the formatted events
+    cache.put(cacheKey, JSON.stringify(formattedEvents), CALENDAR_CACHE_MINUTES * 60);
+    console.log(`Cached ${formattedEvents.length} events for ${CALENDAR_CACHE_MINUTES} minutes`);
+    
+    return createResponse({
+      status: 'success',
+      events: formattedEvents,
+      cached: false,
+      count: formattedEvents.length
+    }, 200, headers);
+    
+  } catch (error) {
+    console.error('Error getting calendar events:', error.toString());
+    // Fallback to example events
+    return getExampleCalendarEvents(headers);
+  }
+}
+
+/**
+ * Returns example calendar events when Calendar API fails or is not configured
+ */
+function getExampleCalendarEvents(headers) {
+  const now = new Date();
+  const exampleEvents = [
+    {
+      id: 'example1',
+      title: 'Näidisündmus - Kogukonna koosolek',
+      start: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
+      description: 'See on näidisündmus. Palun seadista Google Calendar backend.',
+      location: 'Kaiu Kultuurimaja',
+      allDay: false
+    },
+    {
+      id: 'example2',
+      title: 'Suvefestival (Näidis)',
+      start: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      description: 'Traditsioonilline suvefestival kogu perele.',
+      location: 'Kaiu keskväljak',
+      allDay: true
+    },
+    {
+      id: 'example3',
+      title: 'Kevadkorrastus (Näidis)',
+      start: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      description: 'Kogukonna ühine kevadkorrastus.',
+      location: 'Kaiu alevik',
+      allDay: true
+    }
+  ];
+  
+  console.log('Returning example calendar events');
+  
+  return createResponse({
+    status: 'success',
+    events: exampleEvents,
+    cached: false,
+    example: true
+  }, 200, headers);
+}

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calendar Security Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>Calendar Security Migration Test</h1>
+    
+    <div class="test info">
+        <h2>Configuration Check</h2>
+        <p>Apps Script URL: <code id="script-url">Not configured</code></p>
+        <p>Status: <span id="config-status">Checking...</span></p>
+    </div>
+    
+    <div class="test">
+        <h2>API Key Security Check</h2>
+        <p id="security-check">Checking for exposed API keys...</p>
+    </div>
+    
+    <div class="test">
+        <h2>Calendar Event Fetch Test</h2>
+        <button onclick="testCalendarFetch()">Test Calendar Fetch</button>
+        <div id="fetch-result"></div>
+    </div>
+    
+    <div class="test">
+        <h2>Response Data</h2>
+        <pre id="response-data">No data yet. Click "Test Calendar Fetch" to load events.</pre>
+    </div>
+
+    <script>
+        // Test configuration
+        window.GOOGLE_APPS_SCRIPT_URL = 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE';
+        
+        // Check configuration
+        document.getElementById('script-url').textContent = window.GOOGLE_APPS_SCRIPT_URL || 'Not configured';
+        
+        if (window.GOOGLE_APPS_SCRIPT_URL && !window.GOOGLE_APPS_SCRIPT_URL.includes('YOUR_')) {
+            document.getElementById('config-status').textContent = '✅ Configured';
+            document.getElementById('config-status').style.color = 'green';
+        } else {
+            document.getElementById('config-status').textContent = '❌ Not configured - Update GOOGLE_APPS_SCRIPT_URL';
+            document.getElementById('config-status').style.color = 'red';
+        }
+        
+        // Security check
+        const securityCheck = document.getElementById('security-check');
+        
+        // Check if any Google API keys are exposed
+        const pageContent = document.documentElement.innerHTML;
+        const apiKeyPattern = /AIza[0-9A-Za-z\-_]{35}/g;
+        const foundKeys = pageContent.match(apiKeyPattern);
+        
+        if (foundKeys) {
+            securityCheck.innerHTML = '❌ <strong>SECURITY ISSUE:</strong> Found exposed API key(s)!';
+            securityCheck.parentElement.classList.add('error');
+        } else {
+            securityCheck.innerHTML = '✅ <strong>SECURE:</strong> No API keys found in frontend code';
+            securityCheck.parentElement.classList.add('success');
+        }
+        
+        // Test calendar fetch
+        async function testCalendarFetch() {
+            const resultDiv = document.getElementById('fetch-result');
+            const dataDiv = document.getElementById('response-data');
+            
+            resultDiv.innerHTML = '<p>⏳ Fetching calendar events...</p>';
+            
+            if (!window.GOOGLE_APPS_SCRIPT_URL || window.GOOGLE_APPS_SCRIPT_URL.includes('YOUR_')) {
+                resultDiv.innerHTML = '<p style="color: red;">❌ Error: Apps Script URL not configured</p>';
+                return;
+            }
+            
+            try {
+                const url = `${window.GOOGLE_APPS_SCRIPT_URL}?action=calendar`;
+                console.log('Fetching from:', url);
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                console.log('Response:', data);
+                
+                if (data.status === 'success') {
+                    const eventCount = data.events ? data.events.length : 0;
+                    const cacheStatus = data.cached ? ' (from cache)' : ' (fresh data)';
+                    const exampleStatus = data.example ? ' - EXAMPLE EVENTS' : '';
+                    
+                    resultDiv.innerHTML = `
+                        <p style="color: green;">✅ Success! Loaded ${eventCount} events${cacheStatus}${exampleStatus}</p>
+                        <ul>
+                            ${data.events.slice(0, 3).map(event => 
+                                `<li>${event.title} - ${new Date(event.start).toLocaleDateString()}</li>`
+                            ).join('')}
+                            ${eventCount > 3 ? `<li><em>...and ${eventCount - 3} more events</em></li>` : ''}
+                        </ul>
+                    `;
+                    
+                    // Show response data
+                    dataDiv.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.innerHTML = `<p style="color: red;">❌ Error: ${data.message || 'Unknown error'}</p>`;
+                    dataDiv.textContent = JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ Fetch Error: ${error.message}</p>`;
+                dataDiv.textContent = error.toString();
+                console.error('Fetch error:', error);
+            }
+        }
+        
+        // Auto-test if configured
+        if (window.GOOGLE_APPS_SCRIPT_URL && !window.GOOGLE_APPS_SCRIPT_URL.includes('YOUR_')) {
+            console.log('Configuration detected, auto-testing...');
+            setTimeout(() => testCalendarFetch(), 1000);
+        }
+    </script>
+</body>
+</html>

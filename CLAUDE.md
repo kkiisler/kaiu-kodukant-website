@@ -10,10 +10,13 @@ This is a static multi-page website for MTÜ Kaiu Kodukant, an Estonian non-prof
 
 - **Frontend**: Pure HTML5, CSS3, and vanilla JavaScript
 - **Styling**: Tailwind CSS (via CDN)
-- **Calendar**: FullCalendar.js library
-- **External APIs**: 
-  - Google Calendar API for event data
-  - AWS S3 for photo gallery storage
+- **Calendar**: FullCalendar.js library with secure backend
+- **Backend APIs**: 
+  - Google Apps Script (secure proxy for calendar, forms, gallery)
+  - No API keys exposed in frontend
+- **Storage**:
+  - Google Drive for photo gallery (via Apps Script)
+  - Google Sheets for form submissions
 - **Responsive Design**: Mobile-first approach with responsive navigation
 
 ## Architecture
@@ -41,7 +44,7 @@ The application is structured as a static multi-page website with:
 
 1. **Multi-page website**: Home, Events, Gallery, About, Contact, Membership
 2. **Event calendar**: Google Calendar integration with modal event details
-3. **Photo gallery**: S3-hosted images with XML metadata and lightbox viewing
+3. **Photo gallery**: Google Drive-hosted images with automatic metadata extraction and lightbox viewing
 4. **Membership form**: Client-side form handling with success messages
 5. **Mobile responsive**: Tailored mobile navigation and layouts
 
@@ -62,23 +65,36 @@ Since this is a static HTML project, there are no build commands, package manage
 - Tailwind CSS: Loaded via CDN
 - FullCalendar.js: Loaded via CDN for event calendar functionality
 - Google Fonts (Inter): For typography
-- Google Calendar API: For fetching event data
-- AWS S3: For photo gallery storage with XML metadata
+- Google Calendar API: For fetching event data (via Apps Script proxy)
+- Google Drive API: For photo gallery storage (via Apps Script proxy)
 
 ## Content Management
 
 - **Events**: Managed through Google Calendar (calendar ID: `3ab658c2becd62b9af62343da736243b73e1d56523c7c04b8ed46d944eb0e8fb@group.calendar.google.com`)
-- **Gallery**: Photos stored in S3 bucket (`s3.pilw.io/kaiugalerii/`) with XML metadata files
+- **Gallery**: Photos stored in Google Drive folders with automatic metadata extraction
 - **Images**: Logo and hero image hosted externally
 
 ## Configuration
 
 Key configuration values:
-- Google Calendar API key and calendar ID (in `js/calendar.js`)
-- S3 base URL for gallery (in `js/gallery.js`)
+- **Central configuration** in `js/config.js`:
+  - Google Apps Script URL (backend for all API calls)
+  - reCAPTCHA site key for forms
+- **Backend configuration** in `apps-script-backend.js`:
+  - Google Calendar ID (server-side only)
+  - Gallery folder IDs
+  - Cache durations
 - Color scheme defined in Tailwind config (in each HTML file)
 - Custom styles and typography (in `css/styles.css`)
 - Responsive breakpoints and typography scales
+
+## Security Features
+
+- **No API keys in frontend**: All sensitive credentials stored server-side
+- **CORS protection**: Apps Script restricts access to allowed domains
+- **Rate limiting**: Built-in Apps Script quotas prevent abuse
+- **Caching**: Reduces API calls and improves performance
+- **Secure forms**: reCAPTCHA v3 protection
 
 ## File Structure
 
@@ -92,9 +108,12 @@ Key configuration values:
 ├── css/
 │   └── styles.css       # Custom styles (348 lines)
 ├── js/
+│   ├── config.js        # Central configuration
 │   ├── common.js        # Mobile menu, navigation
 │   ├── calendar.js      # FullCalendar integration
 │   ├── gallery.js       # Gallery and lightbox
 │   └── forms.js         # Form validation and handling
+├── test-calendar.html   # Calendar testing page
+├── test-gallery.html    # Gallery testing page
 └── index_original.html  # Backup of original single-page file
 ```

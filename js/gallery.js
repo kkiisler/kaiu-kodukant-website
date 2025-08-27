@@ -1,4 +1,4 @@
-// Gallery functionality
+// Gallery functionality - Google Drive Implementation
 
 let galleryInitialized = false;
 let currentAlbumTitle = '';
@@ -6,8 +6,8 @@ let currentAlbumDescription = '';
 let lightboxPhotos = [];
 let currentLightboxIndex = 0;
 
-// Configuration
-const S3_BASE_URL = 'https://s3.pilw.io/kaiugalerii/';
+// Configuration - Google Apps Script backend
+const GOOGLE_APPS_SCRIPT_URL = window.GOOGLE_APPS_SCRIPT_URL || 'YOUR_APPS_SCRIPT_URL_HERE';
 
 document.addEventListener('DOMContentLoaded', function() {
     const albumView = document.getElementById('album-view');
@@ -88,27 +88,29 @@ document.addEventListener('DOMContentLoaded', function() {
         albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galeriide laadimine...</p>';
         
         try {
-            // Fetch albums from S3 XML
-            const response = await fetch(S3_BASE_URL + 'albums.xml');
-            if (!response.ok) throw new Error('Failed to load albums');
+            const url = `${GOOGLE_APPS_SCRIPT_URL}?action=gallery`;
+            console.log('Fetching gallery from:', url);
             
-            const text = await response.text();
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(text, 'text/xml');
+            const response = await fetch(url);
             
-            const albums = Array.from(xml.querySelectorAll('album')).map(album => ({
-                id: album.querySelector('id').textContent,
-                title: album.querySelector('title').textContent,
-                date: album.querySelector('date').textContent,
-                description: album.querySelector('description')?.textContent || '',
-                coverImageUrl: S3_BASE_URL + album.querySelector('coverImage').textContent,
-                imageCount: parseInt(album.querySelector('imageCount').textContent)
-            }));
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            displayAlbums(albums);
+            const data = await response.json();
+            console.log('Gallery response:', data);
+            
+            if (data.status === 'success' && data.albums) {
+                console.log(`Loaded ${data.albums.length} albums${data.cached ? ' (cached)' : ''}`);
+                displayAlbums(data.albums);
+            } else if (data.status === 'success' && (!data.albums || data.albums.length === 0)) {
+                albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galerii on hetkel tühi.</p>';
+            } else {
+                throw new Error(data.message || 'Failed to load albums');
+            }
         } catch (error) {
             console.error('Error loading gallery:', error);
-            loadExampleGalleryData();
+            albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Viga galerii laadimisel. Palun proovi hiljem uuesti.</p>';
         }
     }
 
@@ -116,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
         albumGrid.innerHTML = '';
         
         if (albums.length === 0) {
-            albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galeriis pole veel albumeid.</p>';
+            albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galerii on hetkel tühi.</p>';
             return;
         }
         
@@ -138,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${album.description ? `<p class="text-gray-600 text-sm leading-relaxed">${album.description}</p>` : ''}
                 </div>
             `;
-            albumEl.addEventListener('click', () => loadAlbum(album.id, album.title, album.description));
+            albumEl.addEventListener('click', () => loadAlbum(album.id, album.title, album.description || ''));
             albumGrid.appendChild(albumEl);
         });
     }
@@ -152,33 +154,30 @@ document.addEventListener('DOMContentLoaded', function() {
         currentAlbumTitle = title;
         currentAlbumDescription = description;
         
-        // Handle example albums
-        if (albumId.startsWith('example')) {
-            loadExampleAlbumData(albumId, title, description);
-            return;
-        }
-        
         try {
-            // Fetch photos from S3 XML
-            const response = await fetch(S3_BASE_URL + albumId + '/photos.xml');
-            if (!response.ok) throw new Error('Failed to load photos');
+            const url = `${GOOGLE_APPS_SCRIPT_URL}?action=album&id=${encodeURIComponent(albumId)}`;
+            console.log('Fetching album from:', url);
             
-            const text = await response.text();
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(text, 'text/xml');
+            const response = await fetch(url);
             
-            const photos = Array.from(xml.querySelectorAll('photo')).map(photo => ({
-                id: photo.querySelector('id').textContent,
-                name: photo.querySelector('name').textContent,
-                url: S3_BASE_URL + albumId + '/' + photo.querySelector('url').textContent,
-                thumbnailUrl: S3_BASE_URL + albumId + '/thumbs/' + photo.querySelector('thumbnail').textContent,
-                caption: photo.querySelector('caption')?.textContent || ''
-            }));
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            displayAlbumPhotos(photos);
+            const data = await response.json();
+            console.log('Album response:', data);
+            
+            if (data.status === 'success' && data.photos) {
+                console.log(`Loaded ${data.photos.length} photos${data.cached ? ' (cached)' : ''}`);
+                displayAlbumPhotos(data.photos);
+            } else if (data.status === 'success' && (!data.photos || data.photos.length === 0)) {
+                photoGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Selles albumis pole veel pilte.</p>';
+            } else {
+                throw new Error(data.message || 'Failed to load photos');
+            }
         } catch (error) {
             console.error('Error loading album:', error);
-            loadExampleAlbumData(albumId, title, description);
+            photoGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Viga piltide laadimisel. Palun proovi hiljem uuesti.</p>';
         }
     }
 
@@ -213,66 +212,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         setupImageLazyLoading();
-    }
-
-    function loadExampleGalleryData() {
-        const exampleAlbums = [
-            {
-                id: 'example1',
-                title: 'Suvefestival 2024 (Näidis)',
-                date: '15. juuli 2024',
-                description: 'Traditsioonilne suvefestival kogu perele',
-                coverImageUrl: 'https://placehold.co/600x400/cfcabe/111111?text=Suvefestival',
-                imageCount: 8
-            },
-            {
-                id: 'example2',
-                title: 'Kevadkorrastus 2024 (Näidis)',
-                date: '20. aprill 2024',
-                description: 'Kogukonna ühine kevadkorrastus',
-                coverImageUrl: 'https://placehold.co/600x400/cfcabe/111111?text=Kevadkorrastus',
-                imageCount: 12
-            }
-        ];
-        albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galerii backend pole veel seadistatud. Näidisgalerii:</p>';
-        setTimeout(() => displayAlbums(exampleAlbums), 500);
-    }
-    
-    function loadExampleAlbumData(albumId, title, description) {
-        currentAlbumTitle = title;
-        currentAlbumDescription = description;
-        
-        const examplePhotos = [
-            {
-                id: 'ex1',
-                name: 'pilt1.jpg',
-                url: 'https://placehold.co/800x600/cfcabe/111111?text=Näidispilt+1',
-                thumbnailUrl: 'https://placehold.co/400x300/cfcabe/111111?text=Näidispilt+1',
-                caption: 'Näidispilt 1'
-            },
-            {
-                id: 'ex2',
-                name: 'pilt2.jpg',
-                url: 'https://placehold.co/800x600/cfcabe/111111?text=Näidispilt+2',
-                thumbnailUrl: 'https://placehold.co/400x300/cfcabe/111111?text=Näidispilt+2',
-                caption: 'Näidispilt 2'
-            },
-            {
-                id: 'ex3',
-                name: 'pilt3.jpg',
-                url: 'https://placehold.co/800x600/cfcabe/111111?text=Näidispilt+3',
-                thumbnailUrl: 'https://placehold.co/400x300/cfcabe/111111?text=Näidispilt+3',
-                caption: 'Näidispilt 3'
-            },
-            {
-                id: 'ex4',
-                name: 'pilt4.jpg',
-                url: 'https://placehold.co/800x600/cfcabe/111111?text=Näidispilt+4',
-                thumbnailUrl: 'https://placehold.co/400x300/cfcabe/111111?text=Näidispilt+4',
-                caption: 'Näidispilt 4'
-            }
-        ];
-        displayAlbumPhotos(examplePhotos);
     }
 
     function openLightbox(index) {

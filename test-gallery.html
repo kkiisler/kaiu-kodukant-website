@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery Test - MTÜ Kaiu Kodukant</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com/"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">Gallery Integration Test</h1>
+        
+        <!-- Test Status -->
+        <div id="test-status" class="space-y-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-4">
+                <h2 class="text-xl font-semibold mb-4">Test Status</h2>
+                <div id="status-content"></div>
+            </div>
+        </div>
+
+        <!-- Configuration Check -->
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+            <h2 class="text-xl font-semibold mb-4">1. Configuration Check</h2>
+            <div id="config-check">
+                <p>Checking configuration...</p>
+            </div>
+        </div>
+
+        <!-- Gallery Albums Test -->
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+            <h2 class="text-xl font-semibold mb-4">2. Gallery Albums Test</h2>
+            <button onclick="testGalleryAlbums()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Test Gallery Albums
+            </button>
+            <div id="gallery-albums-result" class="mt-4">
+                <p class="text-gray-500">Click button to test gallery albums endpoint</p>
+            </div>
+        </div>
+
+        <!-- Album Photos Test -->
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+            <h2 class="text-xl font-semibold mb-4">3. Album Photos Test</h2>
+            <div class="mb-4">
+                <input type="text" id="album-id" placeholder="Enter album folder ID" class="border rounded px-3 py-2 w-full max-w-md">
+            </div>
+            <button onclick="testAlbumPhotos()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                Test Album Photos
+            </button>
+            <div id="album-photos-result" class="mt-4">
+                <p class="text-gray-500">Enter album ID and click button to test</p>
+            </div>
+        </div>
+
+        <!-- Response Format Validation -->
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+            <h2 class="text-xl font-semibold mb-4">4. Response Format Validation</h2>
+            <div id="format-validation">
+                <p class="text-gray-500">Tests will validate response formats automatically</p>
+            </div>
+        </div>
+
+        <!-- Gallery Preview -->
+        <div class="bg-white rounded-lg shadow p-4">
+            <h2 class="text-xl font-semibold mb-4">5. Gallery Preview</h2>
+            <div id="gallery-preview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <p class="text-gray-500 col-span-full">Run tests above to see gallery preview</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load configuration -->
+    <script src="js/config.js"></script>
+    
+    <script>
+        // Configuration check
+        function checkConfiguration() {
+            const configDiv = document.getElementById('config-check');
+            const statusDiv = document.getElementById('status-content');
+            
+            let configHtml = '<ul class="space-y-2">';
+            let hasErrors = false;
+            
+            // Check Google Apps Script URL
+            if (window.GOOGLE_APPS_SCRIPT_URL && window.GOOGLE_APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE') {
+                configHtml += '<li class="text-green-600">✓ Google Apps Script URL configured</li>';
+                configHtml += `<li class="text-gray-600 text-sm ml-4">URL: ${window.GOOGLE_APPS_SCRIPT_URL.substring(0, 50)}...</li>`;
+            } else {
+                configHtml += '<li class="text-red-600">✗ Google Apps Script URL not configured</li>';
+                configHtml += '<li class="text-gray-600 text-sm ml-4">Please set GOOGLE_APPS_SCRIPT_URL in js/config.js</li>';
+                hasErrors = true;
+            }
+            
+            configHtml += '</ul>';
+            configDiv.innerHTML = configHtml;
+            
+            // Update status
+            if (hasErrors) {
+                statusDiv.innerHTML = '<p class="text-red-600">⚠️ Configuration incomplete. Please check js/config.js</p>';
+            } else {
+                statusDiv.innerHTML = '<p class="text-green-600">✓ Configuration complete</p>';
+            }
+        }
+        
+        // Test gallery albums
+        async function testGalleryAlbums() {
+            const resultDiv = document.getElementById('gallery-albums-result');
+            const previewDiv = document.getElementById('gallery-preview');
+            
+            if (!window.GOOGLE_APPS_SCRIPT_URL || window.GOOGLE_APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+                resultDiv.innerHTML = '<p class="text-red-600">Error: Google Apps Script URL not configured</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p class="text-blue-600">Loading albums...</p>';
+            
+            try {
+                const url = `${window.GOOGLE_APPS_SCRIPT_URL}?action=gallery`;
+                console.log('Fetching from:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                // Validate response format
+                const validationDiv = document.getElementById('format-validation');
+                let validationHtml = '<h3 class="font-semibold mb-2">Albums Response Validation:</h3><ul class="space-y-1">';
+                
+                if (data.status) {
+                    validationHtml += '<li class="text-green-600">✓ Has status field</li>';
+                } else {
+                    validationHtml += '<li class="text-red-600">✗ Missing status field</li>';
+                }
+                
+                if (data.albums && Array.isArray(data.albums)) {
+                    validationHtml += '<li class="text-green-600">✓ Has albums array</li>';
+                    
+                    if (data.albums.length > 0) {
+                        const album = data.albums[0];
+                        validationHtml += '<li class="text-green-600 ml-4">✓ Found ' + data.albums.length + ' albums</li>';
+                        
+                        // Check album structure
+                        const requiredFields = ['id', 'title', 'date', 'coverImageUrl', 'imageCount'];
+                        requiredFields.forEach(field => {
+                            if (album[field] !== undefined) {
+                                validationHtml += `<li class="text-green-600 ml-4">✓ Album has ${field}</li>`;
+                            } else {
+                                validationHtml += `<li class="text-red-600 ml-4">✗ Album missing ${field}</li>`;
+                            }
+                        });
+                    }
+                } else {
+                    validationHtml += '<li class="text-red-600">✗ Missing or invalid albums array</li>';
+                }
+                
+                if (data.cached !== undefined) {
+                    validationHtml += '<li class="text-green-600">✓ Has cached indicator</li>';
+                }
+                
+                validationHtml += '</ul>';
+                validationDiv.innerHTML = validationHtml;
+                
+                // Display results
+                if (data.status === 'success' && data.albums) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-green-50 p-4 rounded">
+                            <p class="text-green-700 font-semibold">Success!</p>
+                            <p class="text-gray-600">Loaded ${data.albums.length} albums${data.cached ? ' (cached)' : ''}</p>
+                            <details class="mt-2">
+                                <summary class="cursor-pointer text-blue-600 hover:text-blue-800">View Raw Response</summary>
+                                <pre class="mt-2 bg-gray-100 p-2 rounded text-xs overflow-auto">${JSON.stringify(data, null, 2)}</pre>
+                            </details>
+                        </div>
+                    `;
+                    
+                    // Display album previews
+                    if (data.albums.length > 0) {
+                        previewDiv.innerHTML = '<h3 class="col-span-full font-semibold mb-2">Album Previews:</h3>';
+                        data.albums.slice(0, 6).forEach(album => {
+                            const albumDiv = document.createElement('div');
+                            albumDiv.className = 'border rounded-lg p-4';
+                            albumDiv.innerHTML = `
+                                <img src="${album.coverImageUrl}" alt="${album.title}" class="w-full h-40 object-cover rounded mb-2">
+                                <h4 class="font-semibold">${album.title}</h4>
+                                <p class="text-sm text-gray-600">${album.date} • ${album.imageCount} photos</p>
+                                ${album.description ? `<p class="text-sm text-gray-500 mt-1">${album.description}</p>` : ''}
+                                <button onclick="document.getElementById('album-id').value='${album.id}'; testAlbumPhotos()" 
+                                        class="mt-2 text-blue-600 hover:text-blue-800 text-sm">
+                                    Test this album →
+                                </button>
+                            `;
+                            previewDiv.appendChild(albumDiv);
+                        });
+                    }
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="bg-yellow-50 p-4 rounded">
+                            <p class="text-yellow-700 font-semibold">Warning</p>
+                            <p class="text-gray-600">${data.message || 'No albums found or unexpected response format'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 p-4 rounded">
+                        <p class="text-red-700 font-semibold">Error</p>
+                        <p class="text-gray-600">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Test album photos
+        async function testAlbumPhotos() {
+            const resultDiv = document.getElementById('album-photos-result');
+            const albumId = document.getElementById('album-id').value.trim();
+            
+            if (!albumId) {
+                resultDiv.innerHTML = '<p class="text-red-600">Please enter an album ID</p>';
+                return;
+            }
+            
+            if (!window.GOOGLE_APPS_SCRIPT_URL || window.GOOGLE_APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_URL_HERE') {
+                resultDiv.innerHTML = '<p class="text-red-600">Error: Google Apps Script URL not configured</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p class="text-blue-600">Loading photos...</p>';
+            
+            try {
+                const url = `${window.GOOGLE_APPS_SCRIPT_URL}?action=album&id=${encodeURIComponent(albumId)}`;
+                console.log('Fetching from:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                // Validate response format
+                const validationDiv = document.getElementById('format-validation');
+                let validationHtml = '<h3 class="font-semibold mb-2">Photos Response Validation:</h3><ul class="space-y-1">';
+                
+                if (data.status) {
+                    validationHtml += '<li class="text-green-600">✓ Has status field</li>';
+                } else {
+                    validationHtml += '<li class="text-red-600">✗ Missing status field</li>';
+                }
+                
+                if (data.photos && Array.isArray(data.photos)) {
+                    validationHtml += '<li class="text-green-600">✓ Has photos array</li>';
+                    
+                    if (data.photos.length > 0) {
+                        const photo = data.photos[0];
+                        validationHtml += '<li class="text-green-600 ml-4">✓ Found ' + data.photos.length + ' photos</li>';
+                        
+                        // Check photo structure
+                        const requiredFields = ['id', 'name', 'url', 'thumbnailUrl'];
+                        requiredFields.forEach(field => {
+                            if (photo[field] !== undefined) {
+                                validationHtml += `<li class="text-green-600 ml-4">✓ Photo has ${field}</li>`;
+                            } else {
+                                validationHtml += `<li class="text-red-600 ml-4">✗ Photo missing ${field}</li>`;
+                            }
+                        });
+                    }
+                } else {
+                    validationHtml += '<li class="text-red-600">✗ Missing or invalid photos array</li>';
+                }
+                
+                if (data.cached !== undefined) {
+                    validationHtml += '<li class="text-green-600">✓ Has cached indicator</li>';
+                }
+                
+                validationHtml += '</ul>';
+                validationDiv.innerHTML = validationHtml;
+                
+                // Display results
+                if (data.status === 'success' && data.photos) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-green-50 p-4 rounded">
+                            <p class="text-green-700 font-semibold">Success!</p>
+                            <p class="text-gray-600">Loaded ${data.photos.length} photos${data.cached ? ' (cached)' : ''}</p>
+                            <div class="grid grid-cols-3 gap-2 mt-4">
+                                ${data.photos.slice(0, 6).map(photo => `
+                                    <img src="${photo.thumbnailUrl}" alt="${photo.name}" 
+                                         class="w-full h-24 object-cover rounded" 
+                                         title="${photo.caption || photo.name}">
+                                `).join('')}
+                            </div>
+                            <details class="mt-4">
+                                <summary class="cursor-pointer text-blue-600 hover:text-blue-800">View Raw Response</summary>
+                                <pre class="mt-2 bg-gray-100 p-2 rounded text-xs overflow-auto">${JSON.stringify(data, null, 2)}</pre>
+                            </details>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="bg-yellow-50 p-4 rounded">
+                            <p class="text-yellow-700 font-semibold">Warning</p>
+                            <p class="text-gray-600">${data.message || 'No photos found or unexpected response format'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 p-4 rounded">
+                        <p class="text-red-700 font-semibold">Error</p>
+                        <p class="text-gray-600">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Run configuration check on load
+        document.addEventListener('DOMContentLoaded', checkConfiguration);
+    </script>
+</body>
+</html>

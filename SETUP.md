@@ -86,24 +86,19 @@ const GALLERY_DRIVE_FOLDER_ID = 'YOUR_GALLERY_FOLDER_ID'; // From Step 6.2
 ## Step 4: Configure Website
 
 ### 4.1 Update JavaScript Configuration
-In `js/forms.js`, replace these values:
+In `js/config.js`, replace these values:
 
 ```javascript
-// Form configuration  
-const GOOGLE_APPS_SCRIPT_URL = 'YOUR_DEPLOYED_APPS_SCRIPT_URL'; // From Step 3.5
-const RECAPTCHA_SITE_KEY = 'YOUR_RECAPTCHA_SITE_KEY'; // From Step 2
+// Google Apps Script Backend URL
+window.GOOGLE_APPS_SCRIPT_URL = 'YOUR_DEPLOYED_APPS_SCRIPT_URL'; // From Step 3.5
+
+// reCAPTCHA Site Key
+window.RECAPTCHA_SITE_KEY = 'YOUR_RECAPTCHA_SITE_KEY'; // From Step 2
 ```
 
-In `js/calendar.js`, update:
-```javascript
-const GOOGLE_CALENDAR_API_KEY = 'YOUR_API_KEY';
-const CALENDAR_ID = 'YOUR_CALENDAR_ID';
-```
+**Note:** The calendar now uses the secure Apps Script backend - no API key needed in frontend!
 
-In `js/gallery.js`, update:
-```javascript
-const S3_BASE_URL = 'YOUR_S3_URL'; // Or configure Google Drive integration
-```
+The gallery now uses Google Drive through Apps Script - no additional configuration needed in gallery.js!
 
 ### 4.2 Update reCAPTCHA Script Tag
 In `contact.html` and `membership.html`, replace the reCAPTCHA script src with your site key:
@@ -128,16 +123,17 @@ In `contact.html` and `membership.html`, replace the reCAPTCHA script src with y
 
 ### 6.1 Create Gallery Folder Structure
 1. Create a main folder in Google Drive called "Kaiu Galerii"
-2. Share this folder with the Apps Script project (same email as calendar)
-3. Create subfolders for each photo album:
+2. Get the folder ID from the URL when viewing the folder
+3. Share this folder with "Anyone with the link" (view access) or with specific users
+4. Create subfolders for each photo album:
    ```
-   📁 Kaiu Galerii
-     📁 2024-Suvefestival
+   📁 Kaiu Galerii/
+     📁 2024-Suvefestival/
        🖼️ cover.jpg (optional - first image used as cover if not present)
        🖼️ festival-1.jpg
        🖼️ festival-2.jpg
        📄 info.txt (optional - first line: date, rest: description)
-     📁 2024-Kevadkorrastus
+     📁 2024-Kevadkorrastus/
        🖼️ cleanup-1.jpg
        📄 info.txt
    ```
@@ -147,16 +143,25 @@ In `contact.html` and `membership.html`, replace the reCAPTCHA script src with y
 2. Update `GALLERY_DRIVE_FOLDER_ID` in the Apps Script configuration
 
 ### 6.3 Album Management Tips
-- **Folder names**: Use format "YYYY-Event-Name" for automatic sorting
-- **Cover images**: Name one image "cover.jpg" or let the system use the first image
-- **Album info**: Create "info.txt" with date on first line, description on following lines
-- **Image optimization**: Google Drive automatically optimizes images for web delivery
+- **Folder names**: Use format "YYYY-Event-Name" for automatic chronological sorting
+- **Cover images**: Name one image "cover.jpg" or the system will use the first image alphabetically
+- **Album info**: Create "info.txt" with:
+  - First line: Date in Estonian format (e.g., "15. juuli 2024")
+  - Following lines: Album description (optional)
+- **Image optimization**: Google Drive automatically creates optimized thumbnails
+- **Supported formats**: JPG, PNG, GIF, and other common image formats
 
 ### 6.4 Community Photo Management
 1. Give album managers (MTÜ board) Editor access to the gallery folder
 2. They can create new albums by adding subfolders
-3. Photos can be uploaded via drag-and-drop or Google Drive mobile app
-4. Albums appear automatically on the website (cached for 30 minutes)
+3. Photos can be uploaded via:
+   - Drag-and-drop in Google Drive web interface
+   - Google Drive mobile app for instant uploads from phones
+   - Google Drive desktop sync for bulk uploads
+4. Albums appear automatically on the website:
+   - Gallery cached for 30 minutes
+   - Individual album photos cached for 60 minutes
+   - Changes visible after cache expires
 
 ## Step 7: Test Everything
 
@@ -176,10 +181,12 @@ In `contact.html` and `membership.html`, replace the reCAPTCHA script src with y
 4. Test clicking on events to see details
 
 ### 7.3 Test Gallery
-1. Navigate to the Gallery page (`gallery.html`)
-2. Verify albums load correctly
-3. Click on albums to view photos
-4. Test the lightbox functionality
+1. Open the test page (`test-gallery.html`) to verify configuration
+2. Navigate to the Gallery page (`gallery.html`)
+3. Verify albums load from Google Drive
+4. Click on albums to view photos
+5. Test the lightbox functionality (arrows, keyboard navigation, close)
+6. Check browser console for any errors
 
 ## Step 8: Email Notifications
 
@@ -195,15 +202,26 @@ The first time emails are sent, you'll need to authorize Gmail access in the App
 
 ## Step 9: Troubleshooting
 
+### Gallery Not Loading
+- Check that `GALLERY_DRIVE_FOLDER_ID` is set correctly in Apps Script
+- Verify the folder is shared properly (at least "View" access)
+- Check Apps Script execution logs for errors
+- Use `test-gallery.html` to debug API responses
+- Ensure Google Drive API is enabled in Apps Script services
+
 ### Forms Not Working
 - Check the Apps Script execution logs for errors
 - Verify all IDs and keys are correctly configured
 - Test reCAPTCHA by checking browser console for errors
 
-### Calendar Not Loading
-- Check that the Apps Script has Calendar API enabled
-- Verify the calendar ID is correct
-- Check that the Apps Script project has access to the calendar
+### Calendar Not Loading (Secure Backend)
+- **No API Key Needed**: Calendar now uses secure Apps Script backend
+- Check that Calendar Service is enabled in Apps Script (Services → Calendar)
+- Verify the calendar ID is correct in `apps-script-backend.js`
+- Check Apps Script execution logs for permission errors
+- Test with `test-calendar.html` to debug issues
+- Ensure `js/config.js` has correct Apps Script URL
+- If you see example events, the backend needs configuration
 
 ### Gallery Not Loading
 - Check that the Apps Script has Drive API enabled

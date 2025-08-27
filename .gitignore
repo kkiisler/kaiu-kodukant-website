@@ -41,3 +41,24 @@ node_modules/
 # Build outputs (if added later)
 dist/
 build/
+
+# Docker volumes and data
+docker/caddy_data/
+docker/caddy_config/
+caddy_data/
+caddy_config/
+
+# Certificates (should be generated, not committed)
+*.pem
+*.key
+*.crt
+*.cer
+
+# Backup files
+*_backup.*
+*.backup
+backup/
+
+# Local configuration overrides
+*.local.js
+*.local.html
