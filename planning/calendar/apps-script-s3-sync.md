@@ -1,7 +1,7 @@
-# Apps Script S3 Sync Implementation
+# Apps Script Pilvio S3 Sync Implementation
 
 ## Overview
-Complete Google Apps Script implementation for syncing calendar data to S3 using AWS Signature v4 authentication.
+Complete Google Apps Script implementation for syncing calendar data to Pilvio's S3-compatible storage service using AWS Signature v4 authentication.
 
 ---
 
@@ -115,16 +115,17 @@ function uploadToS3(jsonData) {
   // Get configuration from Script Properties
   const props = PropertiesService.getScriptProperties();
   const config = {
-    accessKeyId: props.getProperty('AWS_ACCESS_KEY_ID'),
-    secretAccessKey: props.getProperty('AWS_SECRET_ACCESS_KEY'),
-    region: props.getProperty('AWS_REGION') || 'eu-central-1',
-    bucket: props.getProperty('S3_BUCKET'),
-    key: props.getProperty('S3_KEY') || 'sites/kaiu-kodukant/calendar/calendar.json'
+    accessKeyId: props.getProperty('S3_ACCESS_KEY_ID'),
+    secretAccessKey: props.getProperty('S3_SECRET_ACCESS_KEY'),
+    endpoint: props.getProperty('S3_ENDPOINT') || 'https://s3.pilvio.com',
+    region: props.getProperty('S3_REGION') || 'us-east-1', // Pilvio may ignore this
+    bucket: props.getProperty('S3_BUCKET') || 'kaiu-static',
+    key: props.getProperty('S3_KEY') || 'calendar/calendar.json'
   };
   
   // Validate configuration
   if (!config.accessKeyId || !config.secretAccessKey || !config.bucket) {
-    throw new Error('Missing AWS configuration in Script Properties');
+    throw new Error('Missing Pilvio S3 configuration in Script Properties');
   }
   
   // Set cache headers for 15 minutes
@@ -138,6 +139,7 @@ function uploadToS3(jsonData) {
   
   // Perform S3 upload
   const result = s3PutObjectV4({
+    endpoint: config.endpoint,
     region: config.region,
     bucket: config.bucket,
     key: config.key,
@@ -146,16 +148,17 @@ function uploadToS3(jsonData) {
   });
   
   // Archive a copy with timestamp (optional)
-  const archiveKey = `sites/kaiu-kodukant/calendar/archive/calendar-${Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd-HHmmss')}.json`;
+  const archiveKey = `calendar/archive/calendar-${Utilities.formatDate(new Date(), 'UTC', 'yyyyMMdd-HHmmss')}.json`;
   try {
     s3PutObjectV4({
+      endpoint: config.endpoint,
       region: config.region,
       bucket: config.bucket,
       key: archiveKey,
       body: jsonData,
       headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'x-amz-storage-class': 'GLACIER_IR' // Use cheaper storage for archives
+        'Content-Type': 'application/json; charset=utf-8'
+        // Note: Pilvio may not support storage classes
       }
     });
   } catch (e) {
@@ -163,31 +166,32 @@ function uploadToS3(jsonData) {
   }
   
   return {
-    url: `https://${config.bucket}.s3.${config.region}.amazonaws.com/${config.key}`,
+    url: `${config.endpoint}/${config.bucket}/${config.key}`,
     size: jsonData.length,
     timestamp: new Date().toISOString()
   };
 }
 
 /**
- * AWS Signature v4 implementation for S3 PUT
+ * AWS Signature v4 implementation for S3-compatible services (Pilvio)
  */
 function s3PutObjectV4(params) {
-  const { region, bucket, key, body, headers = {} } = params;
+  const { endpoint, region, bucket, key, body, headers = {} } = params;
   
-  // Get AWS credentials
+  // Get S3 credentials
   const props = PropertiesService.getScriptProperties();
-  const accessKey = props.getProperty('AWS_ACCESS_KEY_ID');
-  const secretKey = props.getProperty('AWS_SECRET_ACCESS_KEY');
+  const accessKey = props.getProperty('S3_ACCESS_KEY_ID');
+  const secretKey = props.getProperty('S3_SECRET_ACCESS_KEY');
   
   if (!accessKey || !secretKey) {
-    throw new Error('AWS credentials not found in Script Properties');
+    throw new Error('S3 credentials not found in Script Properties');
   }
   
-  // AWS service constants
+  // S3 service constants
   const service = 's3';
-  const host = `${bucket}.s3.${region}.amazonaws.com`;
-  const endpoint = `https://${host}/${encodeURI(key).replace(/\+/g, '%20')}`;
+  const endpointUrl = new URL(endpoint);
+  const host = endpointUrl.hostname;
+  const fullUrl = `${endpoint}/${bucket}/${encodeURI(key).replace(/\+/g, '%20')}`;
   
   // Generate timestamps
   const now = new Date();
@@ -251,7 +255,7 @@ function s3PutObjectV4(params) {
   finalHeaders['Authorization'] = authorizationHeader;
   
   // Make the request
-  const response = UrlFetchApp.fetch(endpoint, {
+  const response = UrlFetchApp.fetch(fullUrl, {
     method: 'PUT',
     payload: payload,
     headers: finalHeaders,
@@ -261,7 +265,7 @@ function s3PutObjectV4(params) {
   const statusCode = response.getResponseCode();
   
   if (statusCode >= 200 && statusCode < 300) {
-    console.log(`✅ S3 PUT successful: ${endpoint}`);
+    console.log(`✅ S3 PUT successful: ${fullUrl}`);
     return {
       success: true,
       statusCode: statusCode,
@@ -393,11 +397,12 @@ In Apps Script Editor → Project Settings → Script Properties, add:
 
 | Property | Value | Description |
 |----------|-------|-------------|
-| AWS_ACCESS_KEY_ID | AKIA... | IAM user access key |
-| AWS_SECRET_ACCESS_KEY | wJalr... | IAM user secret key |
-| AWS_REGION | eu-central-1 | Your S3 bucket region |
-| S3_BUCKET | pilvio-bucket | Your bucket name |
-| S3_KEY | sites/kaiu-kodukant/calendar/calendar.json | S3 object key |
+| S3_ACCESS_KEY_ID | your-key... | Pilvio S3 access key |
+| S3_SECRET_ACCESS_KEY | your-secret... | Pilvio S3 secret key |
+| S3_ENDPOINT | https://s3.pilvio.com | Pilvio S3 endpoint URL |
+| S3_REGION | us-east-1 | Region (usually us-east-1 for S3-compatible) |
+| S3_BUCKET | kaiu-static | Your bucket name |
+| S3_KEY | calendar/calendar.json | S3 object key |
 | GOOGLE_CALENDAR_ID | abc123@group.calendar.google.com | Your calendar ID |
 | ADMIN_EMAIL | admin@kaiukodukant.ee | For error notifications |
 

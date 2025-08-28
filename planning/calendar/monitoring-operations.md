@@ -454,11 +454,12 @@ aws ce get-cost-and-usage \
 
 2. **Diagnose**: Check all components
    ```bash
-   # Check S3
-   aws s3api head-bucket --bucket BUCKET
+   # Check Pilvio S3
+   aws s3api head-bucket --bucket kaiu-static \
+     --endpoint-url https://s3.pilvio.com
    
-   # Check CloudFront
-   curl -I https://DISTRIBUTION.cloudfront.net/calendar.json
+   # Check direct access
+   curl -I https://s3.pilvio.com/kaiu-static/calendar/calendar.json
    
    # Check Apps Script
    curl "APPS_SCRIPT_URL?action=calendar&callback=test"

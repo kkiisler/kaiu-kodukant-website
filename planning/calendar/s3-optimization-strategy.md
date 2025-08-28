@@ -1,8 +1,8 @@
-# Calendar S3 Optimization Strategy
+# Calendar S3 Optimization Strategy (Pilvio Cloud)
 
 ## Executive Summary
 
-Replace the current JSONP-based calendar loading from Google Apps Script with a static JSON file served from S3/CloudFront. This approach eliminates CORS issues, reduces latency from 500-2000ms to 10-50ms, and provides true caching capabilities at multiple layers.
+Replace the current JSONP-based calendar loading from Google Apps Script with a static JSON file served from Pilvio's S3-compatible storage service. Using Pilvio's infrastructure (the same platform hosting your VMs) eliminates CORS issues, reduces latency from 500-2000ms to 10-50ms, and provides true caching capabilities with optional CDN integration.
 
 ## Current Architecture Problems
 
@@ -19,7 +19,7 @@ Replace the current JSONP-based calendar loading from Google Apps Script with a 
 - Cannot leverage browser caching effectively
 - No CDN or edge caching possible
 
-## Proposed S3/CloudFront Architecture
+## Proposed Pilvio S3 Architecture
 
 ### System Design
 
@@ -28,7 +28,7 @@ Replace the current JSONP-based calendar loading from Google Apps Script with a 
 │                     BACKGROUND SYNC (Every 15 min)          │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
-│  Google Calendar → Apps Script → Generate JSON → S3 Bucket  │
+│  Google Calendar → Apps Script → Generate JSON → Pilvio S3  │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 
@@ -36,7 +36,7 @@ Replace the current JSONP-based calendar loading from Google Apps Script with a 
 │                     FRONTEND REQUEST PATH                    │
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
-│  Browser → CloudFront Edge → S3 Static JSON                 │
+│  Browser → Pilvio CDN/Direct → Pilvio S3 Static JSON        │
 │    ↑           ↓                                            │
 │    └─── Cached Response (10-50ms)                           │
 │                                                              │
@@ -49,27 +49,25 @@ Replace the current JSONP-based calendar loading from Google Apps Script with a 
    - Runs every 15 minutes via trigger
    - Fetches events from Google Calendar
    - Generates optimized JSON structure
-   - Uploads to S3 with cache headers
-   - Uses AWS Signature v4 for authentication
+   - Uploads to Pilvio S3 with cache headers
+   - Uses S3-compatible API (AWS Signature v4)
 
 2. **Frontend Access** (Website):
-   - Fetches static JSON from CloudFront URL
-   - Benefits from edge caching (global)
+   - Fetches static JSON from Pilvio S3 URL
+   - Benefits from same-datacenter latency
+   - Optional CDN/proxy for edge caching
    - Falls back to Apps Script if S3 fails
    - Uses standard fetch() API
 
-### S3 Bucket Structure
+### Pilvio S3 Bucket Structure
 
-Using existing Pilvio bucket with organized structure:
 ```
-pilvio-bucket/
-└── sites/
-    └── kaiu-kodukant/
-        └── calendar/
-            ├── calendar.json          # Main calendar data
-            ├── calendar-v2.json       # Version for testing
-            └── archive/               # Historical versions
-                └── calendar-20250828.json
+kaiu-static/                            # Your Pilvio S3 bucket
+└── calendar/
+    ├── calendar.json                   # Main calendar data
+    ├── calendar-v2.json                # Version for testing
+    └── archive/                        # Historical versions
+        └── calendar-20250828.json
 ```
 
 ## Performance Improvements
@@ -85,9 +83,9 @@ pilvio-bucket/
 ### Caching Strategy
 
 ```
-Browser Cache (15 min) → CloudFront Edge (15 min) → S3 Origin
-                ↓                    ↓                    ↓
-             instant            10-20ms              30-50ms
+Browser Cache (15 min) → Pilvio CDN (optional) → Pilvio S3
+                ↓                    ↓                ↓
+             instant            5-10ms           10-30ms
 ```
 
 **Cache Headers Configuration**:

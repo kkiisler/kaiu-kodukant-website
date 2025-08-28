@@ -1,72 +1,50 @@
-# AWS Setup Guide for Calendar S3 Integration
+# Pilvio S3 Setup Guide for Calendar Integration
 
 ## Overview
-This guide covers the AWS configuration needed to serve calendar data from S3 via CloudFront, using your existing Pilvio infrastructure.
+This guide covers configuring Pilvio's S3-compatible storage service to serve calendar data. Since Pilvio provides S3-compatible APIs, we can use the same tools and authentication methods (AWS Signature v4) with Pilvio's endpoints.
 
 ## Prerequisites
-- Access to Pilvio AWS account
-- Existing S3 bucket (pilvio-bucket or your bucket name)
-- AWS CLI installed (optional but helpful)
-- Domain control for DNS/CloudFront setup
+- Access to Pilvio cloud dashboard
+- Pilvio S3 service enabled on your account
+- S3 API credentials from Pilvio
+- Optional: AWS CLI configured for Pilvio S3 endpoint
 
 ---
 
-## Step 1: IAM User Creation
+## Step 1: Pilvio S3 Credentials
 
-### 1.1 Create Dedicated IAM User
+### 1.1 Get S3 Access Credentials
 
-**Via AWS Console:**
-1. Navigate to IAM → Users → Add User
-2. User name: `kaiu-calendar-sync`
-3. Access type: Programmatic access only
-4. Don't attach any policies yet (we'll create a custom one)
+**Via Pilvio Dashboard:**
+1. Log into your Pilvio account
+2. Navigate to Storage → S3 Service
+3. Create new access key for `kaiu-calendar`
+4. Save the credentials:
+   - Access Key ID
+   - Secret Access Key
+   - S3 Endpoint URL (e.g., `s3.pilvio.com`)
 
-**Via AWS CLI:**
-```bash
-aws iam create-user --user-name kaiu-calendar-sync
-```
+### 1.2 Configure Bucket Permissions (if needed)
 
-### 1.2 Create Minimal Permission Policy
+**Note:** Pilvio may handle permissions differently. Check their documentation for:
+- Bucket policies
+- ACL settings
+- Public read permissions
 
-Create policy named `KaiuCalendarS3WritePolicy`:
-
+Typical Pilvio S3 permissions for public read:
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "AllowCalendarUpload",
       "Effect": "Allow",
-      "Action": [
-        "s3:PutObject",
-        "s3:PutObjectAcl"
-      ],
-      "Resource": [
-        "arn:aws:s3:::PILVIO_BUCKET_NAME/sites/kaiu-kodukant/calendar/*"
-      ]
-    },
-    {
-      "Sid": "AllowListBucket",
-      "Effect": "Allow",
-      "Action": [
-        "s3:ListBucket"
-      ],
-      "Resource": [
-        "arn:aws:s3:::PILVIO_BUCKET_NAME"
-      ],
-      "Condition": {
-        "StringLike": {
-          "s3:prefix": [
-            "sites/kaiu-kodukant/calendar/*"
-          ]
-        }
-      }
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::kaiu-static/calendar/*"
     }
   ]
 }
 ```
-
-**Replace `PILVIO_BUCKET_NAME` with your actual bucket name**
 
 ### 1.3 Attach Policy to User
 
@@ -88,43 +66,43 @@ aws iam create-access-key --user-name kaiu-calendar-sync
 
 ---
 
-## Step 2: S3 Bucket Configuration
+## Step 2: Pilvio S3 Bucket Configuration
 
-### 2.1 Create Folder Structure
-
-Using your existing Pilvio bucket:
+### 2.1 Create Bucket and Structure
 
 ```bash
-# Create calendar directory structure
+# Configure AWS CLI for Pilvio (if using CLI)
+export AWS_ACCESS_KEY_ID="your-pilvio-access-key"
+export AWS_SECRET_ACCESS_KEY="your-pilvio-secret-key"
+
+# Create bucket (via Pilvio dashboard or CLI)
+aws s3 mb s3://kaiu-static --endpoint-url https://s3.pilvio.com
+
+# Create calendar directory
 aws s3api put-object \
-  --bucket PILVIO_BUCKET_NAME \
-  --key sites/kaiu-kodukant/calendar/
+  --bucket kaiu-static \
+  --key calendar/ \
+  --endpoint-url https://s3.pilvio.com
 ```
 
-### 2.2 Configure Bucket Policy for CloudFront
+### 2.2 Configure Public Access
 
-Add this statement to your existing bucket policy to allow CloudFront access:
+**Option 1: Direct Public Access**
+Configure the bucket or specific objects for public read access via Pilvio dashboard.
 
-```json
-{
-  "Sid": "AllowCloudFrontOAC",
-  "Effect": "Allow",
-  "Principal": {
-    "Service": "cloudfront.amazonaws.com"
-  },
-  "Action": "s3:GetObject",
-  "Resource": "arn:aws:s3:::PILVIO_BUCKET_NAME/sites/kaiu-kodukant/calendar/*",
-  "Condition": {
-    "StringEquals": {
-      "aws:SourceArn": "arn:aws:cloudfront::YOUR_ACCOUNT_ID:distribution/YOUR_DISTRIBUTION_ID"
-    }
-  }
-}
+**Option 2: Use Pilvio CDN/Proxy**
+If Pilvio offers a CDN or proxy service, configure it to serve from your S3 bucket.
+
+**Option 3: Custom Domain**
+Set up a subdomain pointing to Pilvio S3:
+```
+calendar.kaiukodukant.ee CNAME s3.pilvio.com
 ```
 
-### 2.3 Configure CORS (if serving directly from S3)
+### 2.3 Configure CORS
 
-**Note: If using CloudFront, configure CORS there instead**
+**Via Pilvio Dashboard:**
+Set CORS rules for your bucket (exact format depends on Pilvio's interface)
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -148,30 +126,38 @@ Add this statement to your existing bucket policy to allow CloudFront access:
 Apply CORS configuration:
 ```bash
 aws s3api put-bucket-cors \
-  --bucket PILVIO_BUCKET_NAME \
-  --cors-configuration file://cors.xml
+  --bucket kaiu-static \
+  --cors-configuration file://cors.xml \
+  --endpoint-url https://s3.pilvio.com
 ```
 
-### 2.4 Enable Versioning (Optional but Recommended)
+### 2.4 Enable Versioning (Optional)
 
 ```bash
 aws s3api put-bucket-versioning \
-  --bucket PILVIO_BUCKET_NAME \
-  --versioning-configuration Status=Enabled
+  --bucket kaiu-static \
+  --versioning-configuration Status=Enabled \
+  --endpoint-url https://s3.pilvio.com
 ```
 
 ---
 
-## Step 3: CloudFront Distribution Setup
+## Step 3: CDN Configuration (Optional)
 
-### 3.1 Create Distribution
+### 3.1 Option A: Use Pilvio CDN
 
-**Via AWS Console:**
+If Pilvio offers CDN services:
+1. Check Pilvio dashboard for CDN options
+2. Configure CDN to serve from your S3 bucket
+3. Set cache TTL to 15 minutes
 
-1. Navigate to CloudFront → Create Distribution
-2. **Origin Settings:**
-   - Origin Domain: `PILVIO_BUCKET_NAME.s3.eu-central-1.amazonaws.com`
-   - Origin Path: `/sites/kaiu-kodukant/calendar`
+### 3.2 Option B: Use Cloudflare (Free)
+
+1. Add your domain to Cloudflare
+2. **Create Page Rule:**
+   - URL: `calendar.kaiukodukant.ee/*`
+   - Cache Level: Cache Everything
+   - Edge Cache TTL: 15 minutes
    - Origin Access: Origin Access Control (recommended)
    - Create new OAC if needed
 

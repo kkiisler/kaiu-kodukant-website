@@ -1,7 +1,7 @@
-# Frontend Migration Guide for S3 Calendar
+# Frontend Migration Guide for Pilvio S3 Calendar
 
 ## Overview
-This guide covers migrating the frontend from JSONP/Apps Script to fetching static JSON from S3/CloudFront.
+This guide covers migrating the frontend from JSONP/Apps Script to fetching static JSON from Pilvio's S3-compatible storage service.
 
 ---
 
@@ -44,12 +44,12 @@ function loadCalendarEvents() {
 // Existing Apps Script URL (keep as fallback)
 window.GOOGLE_APPS_SCRIPT_URL = 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE';
 
-// NEW: S3/CloudFront calendar URL
-window.CALENDAR_S3_URL = 'https://CLOUDFRONT_DISTRIBUTION.cloudfront.net/calendar.json';
+// NEW: Pilvio S3 calendar URL
+window.CALENDAR_S3_URL = 'https://s3.pilvio.com/kaiu-static/calendar/calendar.json';
 // Or if using custom domain:
 // window.CALENDAR_S3_URL = 'https://calendar.kaiukodukant.ee/calendar.json';
-// Or direct S3 (not recommended):
-// window.CALENDAR_S3_URL = 'https://BUCKET_NAME.s3.eu-central-1.amazonaws.com/sites/kaiu-kodukant/calendar/calendar.json';
+// Or with Pilvio CDN:
+// window.CALENDAR_S3_URL = 'https://cdn.pilvio.com/kaiu-static/calendar/calendar.json';
 
 // Calendar configuration
 window.CALENDAR_CONFIG = {
@@ -158,7 +158,7 @@ async function loadCalendarEvents() {
 }
 
 /**
- * Load events from S3/CloudFront
+ * Load events from Pilvio S3
  */
 async function loadFromS3() {
     const controller = new AbortController();
@@ -180,10 +180,10 @@ async function loadFromS3() {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        // Check cache headers for debugging
-        const cacheStatus = response.headers.get('x-cache');
-        const age = response.headers.get('age');
-        console.log(`S3 Calendar loaded (Cache: ${cacheStatus}, Age: ${age}s)`);
+        // Check cache headers for debugging (if available)
+        const cacheControl = response.headers.get('cache-control');
+        const lastModified = response.headers.get('last-modified');
+        console.log(`Pilvio S3 Calendar loaded (Cache-Control: ${cacheControl}, Last-Modified: ${lastModified})`);
         
         const data = await response.json();
         
@@ -573,12 +573,13 @@ function checkBrowserSupport() {
 3. **Test existing functionality** still works
 4. **Add performance monitoring**
 
-### Phase 2: Dual Mode (S3 + Fallback)
-1. **Deploy S3 infrastructure**
-2. **Update calendar.js** with new code
-3. **Set useS3: false** initially
-4. **Test fallback works**
-5. **Enable S3 gradually**
+### Phase 2: Dual Mode (Pilvio S3 + Fallback)
+1. **Configure Pilvio S3 bucket**
+2. **Deploy Apps Script sync**
+3. **Update calendar.js** with new code
+4. **Set useS3: false** initially
+5. **Test fallback works**
+6. **Enable S3 gradually**
 
 ### Phase 3: S3 Primary
 1. **Set useS3: true**
@@ -707,10 +708,11 @@ location.reload();
 - Cached Load: 500-2000ms (no cache)
 - Global Users: 1000-3000ms
 
-### After (S3/CloudFront)
-- First Load: 50-200ms
+### After (Pilvio S3)
+- First Load: 30-100ms (same datacenter)
 - Cached Load: 0-10ms (localStorage)
-- Global Users: 20-100ms
+- Same Region: 10-50ms
+- With CDN: 20-100ms globally
 
 ### Improvement
 - **95% faster first load**

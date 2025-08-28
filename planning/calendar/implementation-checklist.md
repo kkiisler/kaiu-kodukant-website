@@ -1,92 +1,64 @@
-# Calendar S3 Implementation Checklist
+# Calendar Pilvio S3 Implementation Checklist
 
 ## Project Information
-**Project**: Calendar S3/CloudFront Optimization  
-**Bucket**: `PILVIO_BUCKET_NAME` *(Your Pilvio bucket)*  
-**Region**: `eu-central-1`  
+**Project**: Calendar Pilvio S3 Optimization  
+**Bucket**: `kaiu-static` *(Create in Pilvio)*  
+**Endpoint**: `https://s3.pilvio.com`  
 **Start Date**: ___________  
 **Target Go-Live**: ___________  
 **Responsible**: ___________
 
 ---
 
-## Phase 1: AWS Infrastructure Setup ⏱️ 2 hours
+## Phase 1: Pilvio S3 Setup ⏱️ 1 hour
 
-### IAM Configuration
-- [ ] Log into AWS Console with Pilvio account
-- [ ] Navigate to IAM → Users
-- [ ] Create user: `kaiu-calendar-sync`
-- [ ] Create custom policy: `KaiuCalendarS3WritePolicy`
-  ```json
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Effect": "Allow",
-        "Action": ["s3:PutObject", "s3:PutObjectAcl"],
-        "Resource": "arn:aws:s3:::PILVIO_BUCKET_NAME/sites/kaiu-kodukant/calendar/*"
-      }
-    ]
-  }
-  ```
-- [ ] Attach policy to user
-- [ ] Generate access keys
-- [ ] **SAVE CREDENTIALS SECURELY:**
+### S3 Credentials
+- [ ] Log into Pilvio dashboard
+- [ ] Navigate to Storage → S3 Service
+- [ ] Create S3 access key for calendar sync
+- [ ] Note the following:
+  - S3 Endpoint URL: _________________
   - Access Key ID: _________________
   - Secret Access Key: _________________
+  - Region (if required): _________________
 
 ### S3 Bucket Setup
-- [ ] Verify bucket exists: `PILVIO_BUCKET_NAME`
+- [ ] Create bucket: `kaiu-static`
 - [ ] Create folder structure:
   ```
-  /sites
-    /kaiu-kodukant
-      /calendar
-        /archive
+  /calendar
+    /archive
   ```
 - [ ] Enable versioning (optional but recommended)
-- [ ] Configure CORS (if serving directly):
-  ```xml
-  <CORSConfiguration>
-    <CORSRule>
-      <AllowedOrigin>https://kaiukodukant.ee</AllowedOrigin>
-      <AllowedOrigin>https://www.kaiukodukant.ee</AllowedOrigin>
-      <AllowedOrigin>https://tore.kaiukodukant.ee</AllowedOrigin>
-      <AllowedMethod>GET</AllowedMethod>
-      <MaxAgeSeconds>86400</MaxAgeSeconds>
-    </CORSRule>
-  </CORSConfiguration>
-  ```
+- [ ] Configure CORS in Pilvio dashboard:
+  - Allowed Origins: kaiukodukant.ee domains
+  - Allowed Methods: GET, HEAD
+  - Max Age: 86400
 
-### CloudFront Distribution
-- [ ] Create new distribution or use existing
-- [ ] **Distribution ID**: _________________
-- [ ] **Distribution URL**: _________________
-- [ ] Configure origin:
-  - Origin Domain: `PILVIO_BUCKET_NAME.s3.eu-central-1.amazonaws.com`
-  - Origin Path: `/sites/kaiu-kodukant/calendar`
-- [ ] Create Origin Access Control (OAC)
-- [ ] Update S3 bucket policy with OAC
-- [ ] Configure cache behavior:
-  - TTL: 900 seconds (15 minutes)
-  - Compress objects: Yes
-  - Query strings: Forward `v` parameter
-- [ ] Configure CORS headers in response policy
-- [ ] Optional: Set up custom domain `calendar.kaiukodukant.ee`
-  - [ ] Request/import SSL certificate
-  - [ ] Add CNAME to distribution
-  - [ ] Update DNS records
+### CDN/Proxy Setup (Optional)
+- [ ] Option A: Use Pilvio CDN (if available)
+  - [ ] Configure CDN endpoint
+  - [ ] Set cache TTL: 15 minutes
+  - [ ] **CDN URL**: _________________
+- [ ] Option B: Direct S3 access
+  - [ ] Configure public read permissions
+  - [ ] Test direct access URL
+- [ ] Option C: Add Cloudflare (optional)
+  - [ ] Add subdomain to Cloudflare
+  - [ ] Configure page rules for caching
 
-### Testing AWS Setup
+### Testing Pilvio S3 Setup
 - [ ] Upload test file to S3:
   ```bash
   echo '{"test":true}' > test.json
-  aws s3 cp test.json s3://PILVIO_BUCKET_NAME/sites/kaiu-kodukant/calendar/test.json
+  aws s3 cp test.json s3://kaiu-static/calendar/test.json \
+    --endpoint-url https://s3.pilvio.com
   ```
-- [ ] Access via CloudFront: `https://DISTRIBUTION.cloudfront.net/test.json`
+- [ ] Access via Pilvio S3: `https://s3.pilvio.com/kaiu-static/calendar/test.json`
 - [ ] Verify CORS headers with curl:
   ```bash
-  curl -H "Origin: https://kaiukodukant.ee" -I https://DISTRIBUTION.cloudfront.net/test.json
+  curl -H "Origin: https://kaiukodukant.ee" \
+    -I https://s3.pilvio.com/kaiu-static/calendar/test.json
   ```
 - [ ] Check cache headers are present
 - [ ] Delete test file
@@ -114,11 +86,12 @@ Navigate to Project Settings → Script Properties and add:
 
 | Property | Value | Added |
 |----------|-------|-------|
-| AWS_ACCESS_KEY_ID | *(from Phase 1)* | [ ] |
-| AWS_SECRET_ACCESS_KEY | *(from Phase 1)* | [ ] |
-| AWS_REGION | eu-central-1 | [ ] |
-| S3_BUCKET | PILVIO_BUCKET_NAME | [ ] |
-| S3_KEY | sites/kaiu-kodukant/calendar/calendar.json | [ ] |
+| S3_ACCESS_KEY_ID | *(from Phase 1)* | [ ] |
+| S3_SECRET_ACCESS_KEY | *(from Phase 1)* | [ ] |
+| S3_ENDPOINT | https://s3.pilvio.com | [ ] |
+| S3_REGION | us-east-1 | [ ] |
+| S3_BUCKET | kaiu-static | [ ] |
+| S3_KEY | calendar/calendar.json | [ ] |
 | GOOGLE_CALENDAR_ID | *(calendar ID)* | [ ] |
 | ADMIN_EMAIL | admin@kaiukodukant.ee | [ ] |
 
@@ -150,9 +123,9 @@ Navigate to Project Settings → Script Properties and add:
 
 ### Configuration Updates
 - [ ] Open `js/config.js`
-- [ ] Add S3/CloudFront URL:
+- [ ] Add Pilvio S3 URL:
   ```javascript
-  window.CALENDAR_S3_URL = 'https://DISTRIBUTION.cloudfront.net/calendar.json';
+  window.CALENDAR_S3_URL = 'https://s3.pilvio.com/kaiu-static/calendar/calendar.json';
   ```
 - [ ] Add calendar configuration:
   ```javascript
@@ -294,20 +267,20 @@ Navigate to Project Settings → Script Properties and add:
 Fill in these values as you complete setup:
 
 ```javascript
-// AWS Configuration
-const AWS_CONFIG = {
-  // IAM User
+// Pilvio S3 Configuration
+const PILVIO_CONFIG = {
+  // S3 Credentials
   accessKeyId: '_______________________',
   secretAccessKey: '_______________________',
   
   // S3 Settings
-  region: 'eu-central-1',
-  bucket: '_______________________',
-  key: 'sites/kaiu-kodukant/calendar/calendar.json',
+  endpoint: 'https://s3.pilvio.com',
+  region: 'us-east-1', // or as specified by Pilvio
+  bucket: 'kaiu-static',
+  key: 'calendar/calendar.json',
   
-  // CloudFront
-  distributionId: '_______________________',
-  distributionUrl: 'https://_______________________',
+  // Public URL
+  publicUrl: 'https://s3.pilvio.com/kaiu-static/calendar/calendar.json',
   
   // Google Calendar
   calendarId: '_______________________',
