@@ -13,8 +13,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- reCAPTCHA script - Replace YOUR_RECAPTCHA_SITE_KEY with actual key -->
-    <script src="https://www.google.com/recaptcha/api.js?render=YOUR_RECAPTCHA_SITE_KEY"></script>
+    <!-- Configuration -->
+    <script src="js/config.js"></script>
+    
+    <!-- reCAPTCHA script - Loaded dynamically with configured key -->
+    <script>
+        // Load reCAPTCHA with the configured site key
+        if (window.RECAPTCHA_SITE_KEY && window.RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_SITE_KEY_HERE') {
+            const script = document.createElement('script');
+            script.src = `https://www.google.com/recaptcha/api.js?render=${window.RECAPTCHA_SITE_KEY}`;
+            document.head.appendChild(script);
+        } else {
+            console.warn('reCAPTCHA site key not configured');
+        }
+    </script>
     
     <!-- Tailwind Configuration -->
     <script>
@@ -268,7 +280,7 @@
     </footer>
 
     <!-- JavaScript -->
-    <script src="js/config.js"></script>
+    <!-- config.js already loaded in head for reCAPTCHA -->
     <script src="js/common.js"></script>
     <script src="js/forms.js"></script>
 </body>
