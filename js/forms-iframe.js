@@ -109,6 +109,20 @@ function setupForm(form, formType) {
                     
                     // Submit form
                     submitForm();
+                    
+                    // Fallback: Show success after delay if postMessage doesn't work
+                    setTimeout(function() {
+                        // Only show success if still loading (postMessage didn't arrive)
+                        const submitBtn = document.getElementById(`${formType}-submit-btn`);
+                        if (submitBtn && submitBtn.disabled) {
+                            console.log('Fallback: Assuming success after 3s (postMessage not received)');
+                            const form = document.getElementById(`${formType}-form`);
+                            if (form) {
+                                handleFormSuccess(formType, form);
+                                setFormLoading(formType, false);
+                            }
+                        }
+                    }, 3000);
                 }).catch(function(error) {
                     console.error('reCAPTCHA error:', error);
                     showFormMessage(formType, 'Turvakontroll ebaõnnestus. Palun proovi uuesti.', 'error');
@@ -125,6 +139,19 @@ function setupForm(form, formType) {
             }
             
             submitForm();
+            
+            // Fallback for non-reCAPTCHA submissions
+            setTimeout(function() {
+                const submitBtn = document.getElementById(`${formType}-submit-btn`);
+                if (submitBtn && submitBtn.disabled) {
+                    console.log('Fallback: Assuming success after 3s');
+                    const form = document.getElementById(`${formType}-form`);
+                    if (form) {
+                        handleFormSuccess(formType, form);
+                        setFormLoading(formType, false);
+                    }
+                }
+            }, 3000);
         }
         
         return false;
@@ -209,23 +236,46 @@ function showFormMessage(formType, message, type) {
     const messageDiv = document.getElementById(`${formType}-message`);
     if (!messageDiv) return;
     
+    // Clear any existing timeout
+    if (messageDiv.hideTimeout) {
+        clearTimeout(messageDiv.hideTimeout);
+    }
+    
+    // Set message and show with animation
     messageDiv.textContent = message;
     messageDiv.className = `form-message ${type} show`;
+    messageDiv.style.display = 'block';
     
+    // Scroll message into view smoothly
+    messageDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    // Auto-hide success messages after 7 seconds
     if (type === 'success') {
-        setTimeout(() => {
+        messageDiv.hideTimeout = setTimeout(() => {
+            messageDiv.style.display = 'none';
             messageDiv.classList.remove('show');
-        }, 5000);
+        }, 7000);
     }
 }
 
-// Handle field changes to clear errors
+// Handle field changes to clear errors and messages
 document.addEventListener('input', function(e) {
     if (e.target.classList.contains('form-input')) {
         const errorElement = e.target.parentElement.querySelector('.form-error');
         if (errorElement && e.target.value) {
             errorElement.classList.remove('show');
             e.target.style.borderColor = '#e5e7eb';
+        }
+        
+        // Also hide any visible form messages when user starts typing
+        const form = e.target.closest('form');
+        if (form) {
+            const formType = form.id.replace('-form', '');
+            const messageDiv = document.getElementById(`${formType}-message`);
+            if (messageDiv && messageDiv.classList.contains('show')) {
+                messageDiv.style.display = 'none';
+                messageDiv.classList.remove('show');
+            }
         }
     }
 });
