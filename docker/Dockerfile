@@ -33,8 +33,7 @@ RUN chmod +x /app/docker-entrypoint.sh
 # Production image with Caddy
 FROM caddy:2.7-alpine
 
-# Install bash for entrypoint script
-RUN apk add --no-cache bash
+# No need for bash, use sh which is already in alpine
 
 # Copy static files
 COPY --from=builder /app/*.html /usr/share/caddy/
