@@ -1,0 +1,45 @@
+# Production Dockerfile with build-time variable substitution
+FROM alpine:3.18 AS builder
+
+# Arguments for build-time substitution
+ARG GOOGLE_APPS_SCRIPT_URL
+ARG RECAPTCHA_SITE_KEY
+
+# Install required tools
+RUN apk add --no-cache gettext
+
+# Copy website files
+WORKDIR /app
+COPY . .
+
+# Replace placeholders at build time
+RUN if [ ! -z "$GOOGLE_APPS_SCRIPT_URL" ]; then \
+        find /app -name "*.html" -exec sed -i "s|YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE|$GOOGLE_APPS_SCRIPT_URL|g" {} \; && \
+        find /app -name "*.js" -exec sed -i "s|YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE|$GOOGLE_APPS_SCRIPT_URL|g" {} \; ; \
+    fi && \
+    if [ ! -z "$RECAPTCHA_SITE_KEY" ]; then \
+        find /app -name "*.html" -exec sed -i "s|YOUR_RECAPTCHA_SITE_KEY_HERE|$RECAPTCHA_SITE_KEY|g" {} \; && \
+        find /app -name "*.js" -exec sed -i "s|YOUR_RECAPTCHA_SITE_KEY_HERE|$RECAPTCHA_SITE_KEY|g" {} \; ; \
+    fi
+
+# Production image with Caddy
+FROM caddy:2.7-alpine
+
+# Copy pre-processed static files
+COPY --from=builder /app/*.html /usr/share/caddy/
+COPY --from=builder /app/css /usr/share/caddy/css
+COPY --from=builder /app/js /usr/share/caddy/js
+COPY --from=builder /app/media /usr/share/caddy/media
+
+# Set working directory
+WORKDIR /usr/share/caddy
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1
+
+# Expose ports
+EXPOSE 80 443
+
+# Use Caddy's default entrypoint and command
+CMD ["caddy", "file-server", "--listen", ":80"]

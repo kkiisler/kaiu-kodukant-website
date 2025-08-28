@@ -77,7 +77,18 @@ This will:
 - Mount source files for live updates
 - Expose ports 80 and 443
 
-#### Production:
+#### Production (Recommended - with build-time injection):
+```bash
+cd docker
+# Use the production-specific compose file
+./deploy-production.sh
+
+# Or manually:
+docker-compose -f docker-compose.prod.yml build --no-cache
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+#### Production (Alternative):
 ```bash
 cd docker
 # Build the image first (important for environment variable injection)
