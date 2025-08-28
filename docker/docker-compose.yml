@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   web:
     build:
@@ -30,7 +28,9 @@ services:
 
   # Optional: Caddy with automatic HTTPS only (production)
   caddy-prod:
-    image: caddy:2.7-alpine
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
     container_name: kaiumtu-caddy
     restart: unless-stopped
     ports:
@@ -38,15 +38,17 @@ services:
       - "443:443"
     environment:
       - DOMAIN_NAME=${DOMAIN_NAME}
+      - GOOGLE_APPS_SCRIPT_URL=${GOOGLE_APPS_SCRIPT_URL}
+      - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
     volumes:
       - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
-      - ../:/usr/share/caddy:ro
       - caddy_data:/data
       - caddy_config:/config
     networks:
       - web
     profiles:
       - production
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
 
 volumes:
   caddy_data:

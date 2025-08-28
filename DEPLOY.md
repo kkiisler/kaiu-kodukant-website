@@ -80,6 +80,9 @@ This will:
 #### Production:
 ```bash
 cd docker
+# Build the image first (important for environment variable injection)
+docker-compose build --no-cache caddy-prod
+# Then start the production container
 docker-compose --profile production up -d caddy-prod
 ```
 
@@ -217,6 +220,27 @@ sudo systemctl stop nginx  # or apache2
 docker-compose build --no-cache
 docker-compose up -d
 ```
+
+### Environment variables not injecting into config.js
+
+1. Ensure `.env` file exists in the `docker/` directory:
+   ```bash
+   cd docker
+   cat .env  # Should show your variables
+   ```
+
+2. Rebuild the container (required for production):
+   ```bash
+   docker-compose build --no-cache caddy-prod
+   docker-compose --profile production up -d caddy-prod
+   ```
+
+3. Verify injection worked:
+   ```bash
+   # Check if variables were replaced
+   docker exec kaiumtu-caddy cat /usr/share/caddy/js/config.js
+   # Should show actual URLs, not placeholders
+   ```
 
 ### Permission issues
 
