@@ -52,64 +52,55 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gallery navigation
     if (backToAlbumsButton) {
         backToAlbumsButton.addEventListener('click', () => {
-            photoView.classList.add('hidden');
             albumView.classList.remove('hidden');
+            photoView.classList.add('hidden');
         });
     }
 
     // Lightbox controls
     if (lightboxClose) {
-        lightboxClose.addEventListener('click', () => {
-            lightbox.classList.add('hidden');
-            lightbox.classList.remove('flex');
-        });
+        lightboxClose.addEventListener('click', closeLightbox);
     }
 
     if (lightboxPrev) {
-        lightboxPrev.addEventListener('click', () => {
-            currentLightboxIndex = (currentLightboxIndex - 1 + lightboxPhotos.length) % lightboxPhotos.length;
-            updateLightboxContent();
-        });
+        lightboxPrev.addEventListener('click', () => navigateLightbox(-1));
     }
 
     if (lightboxNext) {
-        lightboxNext.addEventListener('click', () => {
-            currentLightboxIndex = (currentLightboxIndex + 1) % lightboxPhotos.length;
-            updateLightboxContent();
-        });
+        lightboxNext.addEventListener('click', () => navigateLightbox(1));
     }
 
-    // Close lightbox on background click
     if (lightbox) {
         lightbox.addEventListener('click', (e) => {
             if (e.target === lightbox) {
-                lightbox.classList.add('hidden');
-                lightbox.classList.remove('flex');
+                closeLightbox();
+            }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (lightbox.classList.contains('flex')) {
+                if (e.key === 'Escape') closeLightbox();
+                if (e.key === 'ArrowLeft') navigateLightbox(-1);
+                if (e.key === 'ArrowRight') navigateLightbox(1);
             }
         });
     }
 
-    // Keyboard navigation for lightbox
-    document.addEventListener('keydown', (e) => {
-        if (!lightbox || lightbox.classList.contains('hidden')) return;
-        
-        if (e.key === 'Escape') {
-            lightbox.classList.add('hidden');
-            lightbox.classList.remove('flex');
-        } else if (e.key === 'ArrowLeft') {
-            lightboxPrev.click();
-        } else if (e.key === 'ArrowRight') {
-            lightboxNext.click();
-        }
-    });
-
     function initializeGallery() {
         if (galleryInitialized) return;
+        
+        loadGalleryAlbums();
         galleryInitialized = true;
-        
-        albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galeriide laadimine...</p>';
-        
+    }
+
+    function loadGalleryAlbums() {
+        // Build URL for Apps Script endpoint
         const url = `${GOOGLE_APPS_SCRIPT_URL}?action=gallery`;
+        
+        // Show loading state
+        albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galerii laadimine...</p>';
+        
         console.log('Fetching gallery from:', url);
         
         // Use JSONP to avoid CORS issues
@@ -123,12 +114,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galerii on hetkel tühi.</p>';
             } else {
                 console.error('Gallery error:', data.message || 'Failed to load albums');
-                albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Viga galerii laadimisel. Palun proovi hiljem uuesti.</p>';
+                loadExampleGallery();
             }
         }, function(error) {
             console.error('Error loading gallery:', error);
-            albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Viga galerii laadimisel. Palun proovi hiljem uuesti.</p>';
+            loadExampleGallery();
         });
+    }
+    
+    function loadExampleGallery() {
+        const exampleAlbums = [
+            {
+                id: 'example1',
+                title: 'Näidisalbum',
+                date: '2024',
+                description: 'See on näidisalbum. Palun seadista Google Drive backend.',
+                coverImageUrl: '',
+                imageCount: 0
+            }
+        ];
+        displayAlbums(exampleAlbums);
     }
 
     function displayAlbums(albums) {
@@ -143,15 +148,33 @@ document.addEventListener('DOMContentLoaded', function() {
             const albumEl = document.createElement('div');
             albumEl.className = 'album-card cursor-pointer bg-white border border-gray-200 hover:border-gray-300 group';
             
-            // Fix Google Drive URL for cover image by removing size parameter
-            const coverUrl = album.coverImageUrl ? album.coverImageUrl.replace('&sz=w600', '').replace('&sz=w400', '') : '';
+            // Fix Google Drive URL - use direct download link format
+            let coverImageHtml = '';
+            if (album.coverImageUrl) {
+                // Extract file ID from the URL if it's in the format https://drive.google.com/uc?id=FILE_ID
+                let imageUrl = album.coverImageUrl;
+                if (imageUrl.includes('drive.google.com/uc?id=')) {
+                    const fileId = imageUrl.split('id=')[1]?.split('&')[0];
+                    if (fileId) {
+                        // Use the thumbnail API for cover images
+                        imageUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
+                    }
+                }
+                coverImageHtml = `<img src="${imageUrl}" alt="${album.title}" 
+                                     class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                                     loading="lazy"
+                                     onerror="this.style.display='none'; this.parentElement.classList.add('bg-gradient-to-br', 'from-gray-200', 'to-gray-300')">`;
+            } else {
+                coverImageHtml = `<div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                  </div>`;
+            }
             
             albumEl.innerHTML = `
                 <div class="overflow-hidden aspect-square bg-gray-200">
-                    <img src="${coverUrl}" alt="${album.title}" 
-                         class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                         loading="lazy"
-                         onerror="this.style.display='none'">
+                    ${coverImageHtml}
                 </div>
                 <div class="p-6">
                     <h3 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">${album.title}</h3>
@@ -162,21 +185,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${album.description ? `<p class="text-gray-600 text-sm leading-relaxed">${album.description}</p>` : ''}
                 </div>
             `;
-            albumEl.addEventListener('click', () => loadAlbum(album.id, album.title, album.description || ''));
+            albumEl.addEventListener('click', () => loadAlbumPhotos(album.id, album.title, album.description));
             albumGrid.appendChild(albumEl);
         });
     }
 
-    function loadAlbum(albumId, title, description) {
+    function loadAlbumPhotos(albumId, title, description) {
+        currentAlbumTitle = title || 'Album';
+        currentAlbumDescription = description || '';
+        
         albumView.classList.add('hidden');
         photoView.classList.remove('hidden');
-        window.scrollTo(0, 0);
+        
+        // Build URL for Apps Script endpoint
+        const url = `${GOOGLE_APPS_SCRIPT_URL}?action=album&id=${albumId}`;
+        
+        // Show loading state
         photoGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Piltide laadimine...</p>';
         
-        currentAlbumTitle = title;
-        currentAlbumDescription = description;
-        
-        const url = `${GOOGLE_APPS_SCRIPT_URL}?action=album&id=${encodeURIComponent(albumId)}`;
         console.log('Fetching album from:', url);
         
         // Use JSONP to avoid CORS issues
@@ -211,9 +237,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         photos.forEach((photo, index) => {
-            // Fix Google Drive URLs by removing the size parameter
-            const fullUrl = photo.url.replace('&sz=w1200', '').replace('&sz=w800', '');
-            const thumbnailUrl = photo.thumbnailUrl.replace('&sz=w400', '').replace('&sz=w600', '');
+            // Fix Google Drive URLs - convert to proper format
+            let thumbnailUrl = photo.thumbnailUrl;
+            let fullUrl = photo.url;
+            
+            // Extract file ID and create proper URLs
+            if (thumbnailUrl && thumbnailUrl.includes('drive.google.com/uc?id=')) {
+                const fileId = thumbnailUrl.split('id=')[1]?.split('&')[0];
+                if (fileId) {
+                    // Use thumbnail API for thumbnails
+                    thumbnailUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
+                    // Use direct view link for full size
+                    fullUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                }
+            }
             
             lightboxPhotos.push({ 
                 src: fullUrl, 
@@ -224,10 +261,11 @@ document.addEventListener('DOMContentLoaded', function() {
             photoEl.className = 'photo-thumbnail cursor-pointer overflow-hidden rounded-lg aspect-square bg-gray-200 border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300';
             
             photoEl.innerHTML = `
-                <img src="${thumbnailUrl}" alt="${photo.caption || photo.name}" 
+                <img src="${thumbnailUrl}" 
+                     alt="${photo.caption || photo.name}" 
                      loading="lazy" 
                      class="object-cover w-full h-full"
-                     data-full-url="${fullUrl}">
+                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' width=\\\'100\\\' height=\\\'100\\\' viewBox=\\\'0 0 100 100\\\'%3E%3Crect width=\\\'100\\\' height=\\\'100\\\' fill=\\\'%23e5e7eb\\\'/%3E%3Ctext x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'14\\\' fill=\\\'%239ca3af\\\' text-anchor=\\\'middle\\\' dominant-baseline=\\\'middle\\\'%3ENo Image%3C/text%3E%3C/svg%3E'">
             `;
             photoEl.addEventListener('click', () => openLightbox(index));
             photoGrid.appendChild(photoEl);
@@ -238,47 +276,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function openLightbox(index) {
         currentLightboxIndex = index;
-        updateLightboxContent();
+        updateLightboxImage();
         lightbox.classList.remove('hidden');
         lightbox.classList.add('flex');
     }
 
-    function updateLightboxContent() {
-        const photo = lightboxPhotos[currentLightboxIndex];
-        
-        lightboxImg.style.opacity = '0.5';
-        lightboxImg.src = photo.src;
-        lightboxCaption.textContent = photo.caption || '';
-        
-        lightboxImg.onload = function() {
-            lightboxImg.style.opacity = '1';
-        };
+    function closeLightbox() {
+        lightbox.classList.add('hidden');
+        lightbox.classList.remove('flex');
     }
-    
+
+    function navigateLightbox(direction) {
+        currentLightboxIndex += direction;
+        if (currentLightboxIndex < 0) currentLightboxIndex = lightboxPhotos.length - 1;
+        if (currentLightboxIndex >= lightboxPhotos.length) currentLightboxIndex = 0;
+        updateLightboxImage();
+    }
+
+    function updateLightboxImage() {
+        const photo = lightboxPhotos[currentLightboxIndex];
+        lightboxImg.src = photo.src;
+        lightboxImg.alt = photo.caption;
+        lightboxCaption.textContent = photo.caption;
+        
+        // Update navigation visibility
+        lightboxPrev.style.display = lightboxPhotos.length > 1 ? 'flex' : 'none';
+        lightboxNext.style.display = lightboxPhotos.length > 1 ? 'flex' : 'none';
+    }
+
     function setupImageLazyLoading() {
+        const images = photoGrid.querySelectorAll('img[loading="lazy"]');
+        
         if ('IntersectionObserver' in window) {
-            const imageObserver = new IntersectionObserver((entries) => {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         const img = entry.target;
-                        const fullUrl = img.getAttribute('data-full-url');
-                        
-                        if (fullUrl && fullUrl !== img.src) {
-                            const fullImg = new Image();
-                            fullImg.src = fullUrl;
-                        }
-                        
-                        imageObserver.unobserve(img);
+                        img.classList.add('opacity-0');
+                        img.onload = () => img.classList.remove('opacity-0');
+                        observer.unobserve(img);
                     }
                 });
-            }, {
-                rootMargin: '100px 0px',
-                threshold: 0.1
             });
-            
-            document.querySelectorAll('img[data-full-url]').forEach(img => {
-                imageObserver.observe(img);
-            });
+
+            images.forEach(img => imageObserver.observe(img));
         }
     }
 });
