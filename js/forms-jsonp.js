@@ -1,24 +1,10 @@
-// Form handling with iframe submission - simplified with debug logging
+// Form handling with JSONP submission to avoid CORS issues
 const GOOGLE_APPS_SCRIPT_URL = window.GOOGLE_APPS_SCRIPT_URL || 'YOUR_APPS_SCRIPT_URL_HERE';
 const RECAPTCHA_SITE_KEY = window.RECAPTCHA_SITE_KEY || 'YOUR_RECAPTCHA_SITE_KEY_HERE';
 
 document.addEventListener('DOMContentLoaded', function() {
     const membershipForm = document.getElementById('membership-form');
     const contactForm = document.getElementById('contact-form');
-    
-    // Create hidden iframe for form submission
-    const iframe = document.createElement('iframe');
-    iframe.name = 'hidden_iframe';
-    iframe.id = 'hidden_iframe';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    
-    // Log configuration
-    console.log('Form configuration:', {
-        GOOGLE_APPS_SCRIPT_URL: GOOGLE_APPS_SCRIPT_URL,
-        RECAPTCHA_SITE_KEY: RECAPTCHA_SITE_KEY,
-        grecaptchaLoaded: typeof grecaptcha !== 'undefined'
-    });
     
     // Setup membership form
     if (membershipForm) {
@@ -32,10 +18,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function setupForm(form, formType) {
-    // Configure form to submit to iframe
-    form.action = GOOGLE_APPS_SCRIPT_URL;
-    form.method = 'POST';
-    form.target = 'hidden_iframe';
+    // We'll use GET request with parameters instead of POST
+    // to avoid 403 errors from Google Apps Script
     
     // Add hidden field for form type
     const formTypeInput = document.createElement('input');
@@ -57,44 +41,28 @@ function setupForm(form, formType) {
         
         // Validate form
         if (!validateForm(form)) {
-            console.log('Form validation failed');
             return false;
         }
         
         // Show loading state
         setFormLoading(formType, true);
         
-        // Check if reCAPTCHA is properly configured
-        if (typeof grecaptcha !== 'undefined' && RECAPTCHA_SITE_KEY && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_SITE_KEY_HERE') {
-            console.log('Getting reCAPTCHA token...');
+        // Get reCAPTCHA token if available
+        if (typeof grecaptcha !== 'undefined' && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_SITE_KEY_HERE') {
             grecaptcha.ready(function() {
                 grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: formType }).then(function(token) {
-                    console.log('reCAPTCHA token received:', token.substring(0, 20) + '...');
-                    
                     // Set token value
                     document.getElementById(`${formType}-recaptcha-token`).value = token;
                     
-                    // Log form data being sent
+                    // Build URL with GET parameters
                     const formData = new FormData(form);
-                    console.log('Submitting form data:');
+                    const params = new URLSearchParams();
                     for (let [key, value] of formData.entries()) {
-                        if (key === 'recaptchaToken') {
-                            console.log(`  ${key}: ${value.substring(0, 20)}...`);
-                        } else {
-                            console.log(`  ${key}: ${value}`);
-                        }
+                        params.append(key, value);
                     }
                     
-                    // Submit form to iframe
-                    console.log('Submitting to:', form.action);
-                    form.submit();
-                    
-                    // Show success after delay (since we can't get response from iframe)
-                    setTimeout(function() {
-                        console.log('Assuming success after 2s delay');
-                        handleFormSuccess(formType, form);
-                        setFormLoading(formType, false);
-                    }, 2000);
+                    // Use JSONP for submission to avoid CORS
+                    submitFormViaJsonp(params.toString(), formType, form);
                 }).catch(function(error) {
                     console.error('reCAPTCHA error:', error);
                     showFormMessage(formType, 'Turvakontroll ebaõnnestus. Palun proovi uuesti.', 'error');
@@ -103,32 +71,14 @@ function setupForm(form, formType) {
             });
         } else {
             // Submit without reCAPTCHA if not configured
-            console.warn('reCAPTCHA not configured properly:', {
-                grecaptchaDefined: typeof grecaptcha !== 'undefined',
-                siteKey: RECAPTCHA_SITE_KEY
-            });
-            
-            // For testing: Add DEV_BYPASS token
-            if (!RECAPTCHA_SITE_KEY || RECAPTCHA_SITE_KEY === 'YOUR_RECAPTCHA_SITE_KEY_HERE') {
-                console.log('Using DEV_BYPASS token for testing');
-                document.getElementById(`${formType}-recaptcha-token`).value = 'DEV_BYPASS';
-            }
-            
-            // Log form data
             const formData = new FormData(form);
-            console.log('Submitting form data without reCAPTCHA:');
+            const params = new URLSearchParams();
             for (let [key, value] of formData.entries()) {
-                console.log(`  ${key}: ${value}`);
+                params.append(key, value);
             }
             
-            form.submit();
-            
-            // Show success after delay
-            setTimeout(function() {
-                console.log('Assuming success after 2s delay');
-                handleFormSuccess(formType, form);
-                setFormLoading(formType, false);
-            }, 2000);
+            // Use JSONP for submission
+            submitFormViaJsonp(params.toString(), formType, form);
         }
         
         return false;
@@ -150,7 +100,6 @@ function validateForm(form) {
             if (errorElement) {
                 errorElement.classList.add('show');
             }
-            console.log(`Validation failed for field: ${field.name}`);
         } else {
             field.style.borderColor = '#e5e7eb';
             if (errorElement) {
@@ -168,7 +117,6 @@ function validateForm(form) {
                     errorElement.textContent = 'Palun sisesta korrektne e-posti aadress';
                     errorElement.classList.add('show');
                 }
-                console.log(`Invalid email format: ${field.value}`);
             }
         }
     });
@@ -223,6 +171,58 @@ function showFormMessage(formType, message, type) {
     }
 }
 
+// Submit form via JSONP to avoid CORS issues
+function submitFormViaJsonp(params, formType, form) {
+    const callbackName = 'formCallback_' + Math.random().toString(36).substring(2, 15);
+    
+    // Create callback function
+    window[callbackName] = function(response) {
+        // Clean up
+        delete window[callbackName];
+        const script = document.getElementById(callbackName + '_script');
+        if (script) {
+            document.head.removeChild(script);
+        }
+        
+        // Handle response
+        if (response && response.result === 'success') {
+            handleFormSuccess(formType, form);
+        } else {
+            showFormMessage(formType, response?.message || 'Midagi läks valesti. Palun proovi uuesti.', 'error');
+        }
+        setFormLoading(formType, false);
+    };
+    
+    // Create script tag for JSONP request
+    const script = document.createElement('script');
+    script.id = callbackName + '_script';
+    script.src = `${GOOGLE_APPS_SCRIPT_URL}?${params}&callback=${callbackName}`;
+    
+    // Handle errors
+    script.onerror = function() {
+        delete window[callbackName];
+        if (script.parentNode) {
+            document.head.removeChild(script);
+        }
+        showFormMessage(formType, 'Ühendus serveriga ebaõnnestus. Palun proovi uuesti.', 'error');
+        setFormLoading(formType, false);
+    };
+    
+    // Add timeout
+    setTimeout(function() {
+        if (window[callbackName]) {
+            delete window[callbackName];
+            if (script.parentNode) {
+                document.head.removeChild(script);
+            }
+            showFormMessage(formType, 'Päring aegus. Palun proovi uuesti.', 'error');
+            setFormLoading(formType, false);
+        }
+    }, 15000);
+    
+    document.head.appendChild(script);
+}
+
 // Handle field changes to clear errors
 document.addEventListener('input', function(e) {
     if (e.target.classList.contains('form-input')) {
@@ -231,22 +231,5 @@ document.addEventListener('input', function(e) {
             errorElement.classList.remove('show');
             e.target.style.borderColor = '#e5e7eb';
         }
-    }
-});
-
-// Debug: Check iframe for errors (won't work cross-origin but worth trying)
-window.addEventListener('load', function() {
-    const iframe = document.getElementById('hidden_iframe');
-    if (iframe) {
-        iframe.addEventListener('load', function() {
-            console.log('Iframe loaded');
-            try {
-                // This will fail for cross-origin but we try anyway
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                console.log('Iframe content:', iframeDoc.body.innerHTML);
-            } catch (e) {
-                console.log('Cannot access iframe content (expected for cross-origin)');
-            }
-        });
     }
 });
