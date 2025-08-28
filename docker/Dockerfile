@@ -42,6 +42,8 @@ FROM caddy:2.7-alpine
 COPY --from=builder /app/*.html /usr/share/caddy/
 COPY --from=builder /app/css /usr/share/caddy/css
 COPY --from=builder /app/js /usr/share/caddy/js
+COPY --from=builder /app/media /usr/share/caddy/media
+
 
 # Set working directory
 WORKDIR /usr/share/caddy
