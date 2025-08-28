@@ -1,4 +1,4 @@
-// Form handling with iframe submission - simplified with debug logging
+// Form handling with iframe POST + postMessage for real responses
 const GOOGLE_APPS_SCRIPT_URL = window.GOOGLE_APPS_SCRIPT_URL || 'YOUR_APPS_SCRIPT_URL_HERE';
 const RECAPTCHA_SITE_KEY = window.RECAPTCHA_SITE_KEY || 'YOUR_RECAPTCHA_SITE_KEY_HERE';
 
@@ -8,34 +8,61 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Create hidden iframe for form submission
     const iframe = document.createElement('iframe');
-    iframe.name = 'hidden_iframe';
-    iframe.id = 'hidden_iframe';
+    iframe.name = 'forms_hidden_iframe';
+    iframe.id = 'forms_hidden_iframe';
     iframe.style.display = 'none';
     document.body.appendChild(iframe);
     
-    // Log configuration
-    console.log('Form configuration:', {
-        GOOGLE_APPS_SCRIPT_URL: GOOGLE_APPS_SCRIPT_URL,
-        RECAPTCHA_SITE_KEY: RECAPTCHA_SITE_KEY,
-        grecaptchaLoaded: typeof grecaptcha !== 'undefined'
+    // Listen for postMessage from Apps Script
+    window.addEventListener('message', function(event) {
+        // Optionally check origin
+        if (event.origin && !event.origin.startsWith('https://script.google')) {
+            return;
+        }
+        
+        const data = event.data;
+        if (!data || typeof data !== 'object' || !('ok' in data)) {
+            return;
+        }
+        
+        console.log('Received response from Apps Script:', data);
+        
+        const { ok, formType, message, details } = data;
+        
+        // Update form state
+        setFormLoading(formType, false);
+        
+        if (ok) {
+            // Find the form and handle success
+            const form = document.getElementById(`${formType}-form`);
+            if (form) {
+                handleFormSuccess(formType, form);
+            }
+        } else {
+            // Show error message
+            showFormMessage(formType, message || 'Midagi läks valesti. Palun proovi uuesti.', 'error');
+            if (details) {
+                console.error('Form submission error details:', details);
+            }
+        }
     });
     
-    // Setup membership form
+    // Setup forms
     if (membershipForm) {
         setupForm(membershipForm, 'membership');
     }
     
-    // Setup contact form
     if (contactForm) {
         setupForm(contactForm, 'contact');
     }
 });
 
 function setupForm(form, formType) {
-    // Configure form to submit to iframe
+    // Configure form to POST to Apps Script in hidden iframe
     form.action = GOOGLE_APPS_SCRIPT_URL;
     form.method = 'POST';
-    form.target = 'hidden_iframe';
+    form.target = 'forms_hidden_iframe';
+    form.id = `${formType}-form`;
     
     // Add hidden field for form type
     const formTypeInput = document.createElement('input');
@@ -64,6 +91,12 @@ function setupForm(form, formType) {
         // Show loading state
         setFormLoading(formType, true);
         
+        // Function to submit the form
+        const submitForm = function() {
+            console.log('Submitting form to:', form.action);
+            form.submit();
+        };
+        
         // Check if reCAPTCHA is properly configured
         if (typeof grecaptcha !== 'undefined' && RECAPTCHA_SITE_KEY && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_SITE_KEY_HERE') {
             console.log('Getting reCAPTCHA token...');
@@ -74,27 +107,8 @@ function setupForm(form, formType) {
                     // Set token value
                     document.getElementById(`${formType}-recaptcha-token`).value = token;
                     
-                    // Log form data being sent
-                    const formData = new FormData(form);
-                    console.log('Submitting form data:');
-                    for (let [key, value] of formData.entries()) {
-                        if (key === 'recaptchaToken') {
-                            console.log(`  ${key}: ${value.substring(0, 20)}...`);
-                        } else {
-                            console.log(`  ${key}: ${value}`);
-                        }
-                    }
-                    
-                    // Submit form to iframe
-                    console.log('Submitting to:', form.action);
-                    form.submit();
-                    
-                    // Show success after delay (since we can't get response from iframe)
-                    setTimeout(function() {
-                        console.log('Assuming success after 2s delay');
-                        handleFormSuccess(formType, form);
-                        setFormLoading(formType, false);
-                    }, 2000);
+                    // Submit form
+                    submitForm();
                 }).catch(function(error) {
                     console.error('reCAPTCHA error:', error);
                     showFormMessage(formType, 'Turvakontroll ebaõnnestus. Palun proovi uuesti.', 'error');
@@ -102,11 +116,7 @@ function setupForm(form, formType) {
                 });
             });
         } else {
-            // Submit without reCAPTCHA if not configured
-            console.warn('reCAPTCHA not configured properly:', {
-                grecaptchaDefined: typeof grecaptcha !== 'undefined',
-                siteKey: RECAPTCHA_SITE_KEY
-            });
+            console.warn('reCAPTCHA not configured, submitting without token');
             
             // For testing: Add DEV_BYPASS token
             if (!RECAPTCHA_SITE_KEY || RECAPTCHA_SITE_KEY === 'YOUR_RECAPTCHA_SITE_KEY_HERE') {
@@ -114,21 +124,7 @@ function setupForm(form, formType) {
                 document.getElementById(`${formType}-recaptcha-token`).value = 'DEV_BYPASS';
             }
             
-            // Log form data
-            const formData = new FormData(form);
-            console.log('Submitting form data without reCAPTCHA:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`  ${key}: ${value}`);
-            }
-            
-            form.submit();
-            
-            // Show success after delay
-            setTimeout(function() {
-                console.log('Assuming success after 2s delay');
-                handleFormSuccess(formType, form);
-                setFormLoading(formType, false);
-            }, 2000);
+            submitForm();
         }
         
         return false;
@@ -231,22 +227,5 @@ document.addEventListener('input', function(e) {
             errorElement.classList.remove('show');
             e.target.style.borderColor = '#e5e7eb';
         }
-    }
-});
-
-// Debug: Check iframe for errors (won't work cross-origin but worth trying)
-window.addEventListener('load', function() {
-    const iframe = document.getElementById('hidden_iframe');
-    if (iframe) {
-        iframe.addEventListener('load', function() {
-            console.log('Iframe loaded');
-            try {
-                // This will fail for cross-origin but we try anyway
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                console.log('Iframe content:', iframeDoc.body.innerHTML);
-            } catch (e) {
-                console.log('Cannot access iframe content (expected for cross-origin)');
-            }
-        });
     }
 });
