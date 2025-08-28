@@ -213,6 +213,8 @@ document.addEventListener('DOMContentLoaded', function() {
         photos.forEach((photo, index) => {
             // Fix Google Drive URLs by removing the size parameter
             const fullUrl = photo.url.replace('&sz=w1200', '').replace('&sz=w800', '');
+            const thumbnailUrl = photo.thumbnailUrl.replace('&sz=w400', '').replace('&sz=w600', '');
+            
             lightboxPhotos.push({ 
                 src: fullUrl, 
                 caption: photo.caption || photo.name
@@ -220,9 +222,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const photoEl = document.createElement('div');
             photoEl.className = 'photo-thumbnail cursor-pointer overflow-hidden rounded-lg aspect-square bg-gray-200 border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300';
-            // Fix Google Drive URLs by removing the size parameter which doesn't work
-            const thumbnailUrl = photo.thumbnailUrl.replace('&sz=w400', '').replace('&sz=w600', '');
-            const fullUrl = photo.url.replace('&sz=w1200', '').replace('&sz=w800', '');
             
             photoEl.innerHTML = `
                 <img src="${thumbnailUrl}" alt="${photo.caption || photo.name}" 
