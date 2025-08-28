@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reCAPTCHA Test</title>
+    <script src="js/config.js"></script>
+    <script>
+        // Load reCAPTCHA
+        if (window.RECAPTCHA_SITE_KEY && window.RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_SITE_KEY_HERE') {
+            const script = document.createElement('script');
+            script.src = `https://www.google.com/recaptcha/api.js?render=${window.RECAPTCHA_SITE_KEY}`;
+            document.head.appendChild(script);
+        }
+    </script>
+</head>
+<body>
+    <h1>reCAPTCHA Configuration Test</h1>
+    
+    <div id="config"></div>
+    <div id="result"></div>
+    
+    <button onclick="testRecaptcha()" style="padding: 10px 20px; margin: 20px;">Test reCAPTCHA</button>
+    
+    <h2>Manual Form Test</h2>
+    <form id="testForm" method="POST" target="testFrame">
+        <input type="text" name="name" value="Test User" /><br>
+        <input type="email" name="email" value="test@example.com" /><br>
+        <input type="hidden" name="formType" value="contact" /><br>
+        <input type="text" name="message" value="Test message" /><br>
+        <input type="text" name="recaptchaToken" id="tokenInput" placeholder="Token will appear here" style="width: 500px;" /><br>
+        <button type="button" onclick="submitWithToken()">Submit with DEV_BYPASS</button>
+        <button type="submit">Submit Form</button>
+    </form>
+    
+    <iframe name="testFrame" style="width: 100%; height: 300px; border: 1px solid #ccc; margin-top: 20px;"></iframe>
+    
+    <script>
+        // Display configuration
+        document.getElementById('config').innerHTML = `
+            <h2>Configuration:</h2>
+            <p>Site Key: ${window.RECAPTCHA_SITE_KEY}</p>
+            <p>Apps Script URL: ${window.GOOGLE_APPS_SCRIPT_URL}</p>
+            <p>Current Domain: ${window.location.hostname}</p>
+        `;
+        
+        // Set form action
+        document.getElementById('testForm').action = window.GOOGLE_APPS_SCRIPT_URL;
+        
+        function testRecaptcha() {
+            const resultDiv = document.getElementById('result');
+            
+            if (typeof grecaptcha === 'undefined') {
+                resultDiv.innerHTML = '<p style="color: red;">grecaptcha not loaded!</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p>Getting token...</p>';
+            
+            grecaptcha.ready(function() {
+                grecaptcha.execute(window.RECAPTCHA_SITE_KEY, { action: 'test' }).then(function(token) {
+                    resultDiv.innerHTML = `
+                        <p style="color: green;">Token received!</p>
+                        <p>Token (first 50 chars): ${token.substring(0, 50)}...</p>
+                        <p>Full token length: ${token.length}</p>
+                    `;
+                    document.getElementById('tokenInput').value = token;
+                }).catch(function(error) {
+                    resultDiv.innerHTML = `<p style="color: red;">Error: ${error}</p>`;
+                });
+            });
+        }
+        
+        function submitWithToken() {
+            document.getElementById('tokenInput').value = 'DEV_BYPASS';
+            document.getElementById('testForm').submit();
+        }
+    </script>
+</body>
+</html>
