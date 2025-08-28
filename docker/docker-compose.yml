@@ -1,54 +1,35 @@
+# Docker Compose for MTÜ Kaiu Kodukant Website
+# Simplified production deployment with build-time variable injection
+
 services:
   web:
     build:
       context: ../
       dockerfile: docker/Dockerfile
-    container_name: kaiumtu-web
+      args:
+        - GOOGLE_APPS_SCRIPT_URL=${GOOGLE_APPS_SCRIPT_URL}
+        - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
+    container_name: kaiumtu
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     environment:
       - DOMAIN_NAME=${DOMAIN_NAME:-localhost}
-      - GOOGLE_APPS_SCRIPT_URL=${GOOGLE_APPS_SCRIPT_URL}
-      - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
     volumes:
-      # Mount Caddyfile for custom configuration
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      # Persist certificates
-      - caddy_data:/data
-      - caddy_config:/config
-      # For development - mount source files directly (comment out for production)
-      - ..:/usr/share/caddy:ro
-    networks:
-      - web
-    labels:
-      - "com.centurylinklabs.watchtower.enable=false"
-    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
-
-  # Optional: Caddy with automatic HTTPS only (production)
-  caddy-prod:
-    build:
-      context: ../
-      dockerfile: docker/Dockerfile
-    container_name: kaiumtu-caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
-      - GOOGLE_APPS_SCRIPT_URL=${GOOGLE_APPS_SCRIPT_URL}
-      - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
-    volumes:
+      # Use production Caddyfile by default
       - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      # Persist Caddy data (certificates, etc.)
       - caddy_data:/data
       - caddy_config:/config
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
     networks:
       - web
-    profiles:
-      - production
-    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
 
 volumes:
   caddy_data:

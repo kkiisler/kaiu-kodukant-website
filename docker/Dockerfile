@@ -1,57 +1,41 @@
-# Multi-stage build for static website
+# Multi-stage build for MTÜ Kaiu Kodukant Website
+# Build stage with variable substitution
 FROM alpine:3.18 AS builder
 
-# Install required tools for config substitution
-RUN apk add --no-cache gettext
+# Build arguments for configuration
+ARG GOOGLE_APPS_SCRIPT_URL
+ARG RECAPTCHA_SITE_KEY
 
-# Copy website files
+# Copy all website files
 WORKDIR /app
 COPY . .
 
-# Create entrypoint script for runtime config injection
-RUN cat > /app/docker-entrypoint.sh << 'EOF'
-#!/bin/sh
-set -e
+# Replace placeholders at build time
+# This ensures variables are baked into the files
+RUN if [ -n "$GOOGLE_APPS_SCRIPT_URL" ]; then \
+        sed -i "s|YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE|${GOOGLE_APPS_SCRIPT_URL}|g" js/config.js; \
+    fi && \
+    if [ -n "$RECAPTCHA_SITE_KEY" ]; then \
+        sed -i "s|YOUR_RECAPTCHA_SITE_KEY_HERE|${RECAPTCHA_SITE_KEY}|g" js/config.js; \
+    fi
 
-# Replace config placeholders with environment variables
-if [ ! -z "$GOOGLE_APPS_SCRIPT_URL" ]; then
-    find /usr/share/caddy -name "*.html" -exec sed -i "s|YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE|$GOOGLE_APPS_SCRIPT_URL|g" {} \;
-    find /usr/share/caddy -name "*.js" -exec sed -i "s|YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE|$GOOGLE_APPS_SCRIPT_URL|g" {} \;
-fi
+# Verify substitution (for debugging)
+RUN echo "Config.js after substitution:" && head -20 js/config.js
 
-if [ ! -z "$RECAPTCHA_SITE_KEY" ]; then
-    find /usr/share/caddy -name "*.html" -exec sed -i "s|YOUR_RECAPTCHA_SITE_KEY_HERE|$RECAPTCHA_SITE_KEY|g" {} \;
-    find /usr/share/caddy -name "*.js" -exec sed -i "s|YOUR_RECAPTCHA_SITE_KEY_HERE|$RECAPTCHA_SITE_KEY|g" {} \;
-fi
-
-# Execute the main command
-exec "$@"
-EOF
-
-RUN chmod +x /app/docker-entrypoint.sh
-
-# Production image with Caddy
+# Production stage with Caddy
 FROM caddy:2.7-alpine
 
-# No need for bash, use sh which is already in alpine
-
-# Copy static files
+# Copy processed static files from builder
 COPY --from=builder /app/*.html /usr/share/caddy/
 COPY --from=builder /app/css /usr/share/caddy/css
 COPY --from=builder /app/js /usr/share/caddy/js
-COPY --from=builder /app/media /usr/share/caddy/media
-COPY --from=builder /app/docker-entrypoint.sh /docker-entrypoint.sh
+COPY --from=builder /app/media /usr/share/caddy/media 2>/dev/null || true
 
 # Set working directory
 WORKDIR /usr/share/caddy
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1
-
 # Expose ports
 EXPOSE 80 443
 
-# Use custom entrypoint for config injection
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["caddy", "file-server", "--listen", ":80"]
+# Default command - Caddy will use the mounted Caddyfile
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
