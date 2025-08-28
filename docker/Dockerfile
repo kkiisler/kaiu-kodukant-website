@@ -10,17 +10,30 @@ ARG RECAPTCHA_SITE_KEY
 WORKDIR /app
 COPY . .
 
+# Debug: Show build args
+RUN echo "Build args received:" && \
+    echo "GOOGLE_APPS_SCRIPT_URL=${GOOGLE_APPS_SCRIPT_URL}" && \
+    echo "RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}"
+
 # Replace placeholders at build time
 # This ensures variables are baked into the files
-RUN if [ -n "$GOOGLE_APPS_SCRIPT_URL" ]; then \
-        sed -i "s|YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE|${GOOGLE_APPS_SCRIPT_URL}|g" js/config.js; \
+RUN if [ -n "$GOOGLE_APPS_SCRIPT_URL" ] && [ "$GOOGLE_APPS_SCRIPT_URL" != "" ]; then \
+        echo "Replacing GOOGLE_APPS_SCRIPT_URL..." && \
+        sed -i "s|YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE|${GOOGLE_APPS_SCRIPT_URL}|g" /app/js/config.js && \
+        echo "Replacement done for Apps Script URL"; \
+    else \
+        echo "WARNING: GOOGLE_APPS_SCRIPT_URL is empty!"; \
     fi && \
-    if [ -n "$RECAPTCHA_SITE_KEY" ]; then \
-        sed -i "s|YOUR_RECAPTCHA_SITE_KEY_HERE|${RECAPTCHA_SITE_KEY}|g" js/config.js; \
+    if [ -n "$RECAPTCHA_SITE_KEY" ] && [ "$RECAPTCHA_SITE_KEY" != "" ]; then \
+        echo "Replacing RECAPTCHA_SITE_KEY..." && \
+        sed -i "s|YOUR_RECAPTCHA_SITE_KEY_HERE|${RECAPTCHA_SITE_KEY}|g" /app/js/config.js && \
+        echo "Replacement done for reCAPTCHA key"; \
+    else \
+        echo "WARNING: RECAPTCHA_SITE_KEY is empty!"; \
     fi
 
 # Verify substitution (for debugging)
-RUN echo "Config.js after substitution:" && head -20 js/config.js
+RUN echo "=== Config.js after substitution ===" && cat /app/js/config.js
 
 # Production stage with Caddy
 FROM caddy:2.7-alpine

@@ -7,8 +7,8 @@ services:
       context: ../
       dockerfile: docker/Dockerfile
       args:
-        - GOOGLE_APPS_SCRIPT_URL=${GOOGLE_APPS_SCRIPT_URL}
-        - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
+        GOOGLE_APPS_SCRIPT_URL: ${GOOGLE_APPS_SCRIPT_URL}
+        RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY}
     container_name: kaiumtu
     restart: unless-stopped
     ports:
