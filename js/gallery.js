@@ -1,5 +1,27 @@
 // Gallery functionality - Google Drive Implementation
 
+// JSONP utility function for cross-origin requests
+function jsonp(url, onSuccess, onError) {
+    const callbackName = 'jsonp_' + Math.random().toString(36).substring(2, 15);
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        if (onSuccess) onSuccess(data);
+    };
+    
+    script.onerror = function() {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        if (onError) onError(new Error('JSONP request failed'));
+    };
+    
+    const separator = url.includes('?') ? '&' : '?';
+    script.src = url + separator + 'callback=' + callbackName;
+    document.head.appendChild(script);
+}
+
 let galleryInitialized = false;
 let currentAlbumTitle = '';
 let currentAlbumDescription = '';
@@ -81,23 +103,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    async function initializeGallery() {
+    function initializeGallery() {
         if (galleryInitialized) return;
         galleryInitialized = true;
         
         albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galeriide laadimine...</p>';
         
-        try {
-            const url = `${GOOGLE_APPS_SCRIPT_URL}?action=gallery`;
-            console.log('Fetching gallery from:', url);
-            
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
+        const url = `${GOOGLE_APPS_SCRIPT_URL}?action=gallery`;
+        console.log('Fetching gallery from:', url);
+        
+        // Use JSONP to avoid CORS issues
+        jsonp(url, function(data) {
             console.log('Gallery response:', data);
             
             if (data.status === 'success' && data.albums) {
@@ -106,12 +122,13 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (data.status === 'success' && (!data.albums || data.albums.length === 0)) {
                 albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galerii on hetkel tühi.</p>';
             } else {
-                throw new Error(data.message || 'Failed to load albums');
+                console.error('Gallery error:', data.message || 'Failed to load albums');
+                albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Viga galerii laadimisel. Palun proovi hiljem uuesti.</p>';
             }
-        } catch (error) {
+        }, function(error) {
             console.error('Error loading gallery:', error);
             albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Viga galerii laadimisel. Palun proovi hiljem uuesti.</p>';
-        }
+        });
     }
 
     function displayAlbums(albums) {
@@ -145,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    async function loadAlbum(albumId, title, description) {
+    function loadAlbum(albumId, title, description) {
         albumView.classList.add('hidden');
         photoView.classList.remove('hidden');
         window.scrollTo(0, 0);
@@ -154,17 +171,11 @@ document.addEventListener('DOMContentLoaded', function() {
         currentAlbumTitle = title;
         currentAlbumDescription = description;
         
-        try {
-            const url = `${GOOGLE_APPS_SCRIPT_URL}?action=album&id=${encodeURIComponent(albumId)}`;
-            console.log('Fetching album from:', url);
-            
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
+        const url = `${GOOGLE_APPS_SCRIPT_URL}?action=album&id=${encodeURIComponent(albumId)}`;
+        console.log('Fetching album from:', url);
+        
+        // Use JSONP to avoid CORS issues
+        jsonp(url, function(data) {
             console.log('Album response:', data);
             
             if (data.status === 'success' && data.photos) {
@@ -173,12 +184,13 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (data.status === 'success' && (!data.photos || data.photos.length === 0)) {
                 photoGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Selles albumis pole veel pilte.</p>';
             } else {
-                throw new Error(data.message || 'Failed to load photos');
+                console.error('Album error:', data.message || 'Failed to load photos');
+                photoGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Viga piltide laadimisel. Palun proovi hiljem uuesti.</p>';
             }
-        } catch (error) {
+        }, function(error) {
             console.error('Error loading album:', error);
             photoGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Viga piltide laadimisel. Palun proovi hiljem uuesti.</p>';
-        }
+        });
     }
 
     function displayAlbumPhotos(photos) {

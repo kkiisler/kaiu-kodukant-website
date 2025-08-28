@@ -1,5 +1,27 @@
 // Calendar functionality for events page
 
+// JSONP utility function for cross-origin requests
+function jsonp(url, onSuccess, onError) {
+    const callbackName = 'jsonp_' + Math.random().toString(36).substring(2, 15);
+    const script = document.createElement('script');
+    
+    window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        if (onSuccess) onSuccess(data);
+    };
+    
+    script.onerror = function() {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        if (onError) onError(new Error('JSONP request failed'));
+    };
+    
+    const separator = url.includes('?') ? '&' : '?';
+    script.src = url + separator + 'callback=' + callbackName;
+    document.head.appendChild(script);
+}
+
 let calendar;
 let calendarInitialized = false;
 
@@ -76,40 +98,33 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show loading state
         console.log('Fetching calendar events from backend...');
         
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Calendar response:', data);
+        // Use JSONP to avoid CORS issues
+        jsonp(url, function(data) {
+            console.log('Calendar response:', data);
+            
+            if (data.status === 'success' && data.events) {
+                // Format events for FullCalendar
+                const events = data.events.map(item => ({
+                    id: item.id,
+                    title: item.title,
+                    start: item.start,
+                    end: item.end,
+                    description: item.description || '',
+                    location: item.location || '',
+                    allDay: item.allDay || false
+                }));
                 
-                if (data.status === 'success' && data.events) {
-                    // Format events for FullCalendar
-                    const events = data.events.map(item => ({
-                        id: item.id,
-                        title: item.title,
-                        start: item.start,
-                        end: item.end,
-                        description: item.description || '',
-                        location: item.location || '',
-                        allDay: item.allDay || false
-                    }));
-                    
-                    console.log(`Loaded ${events.length} events${data.cached ? ' (cached)' : ''}`);
-                    successCallback(events);
-                } else {
-                    console.warn('Invalid calendar response, using example events');
-                    loadExampleCalendarEvents(successCallback);
-                }
-            })
-            .catch(error => {
-                console.error('Calendar fetch error:', error);
-                // Fallback to example events
+                console.log(`Loaded ${events.length} events${data.cached ? ' (cached)' : ''}`);
+                successCallback(events);
+            } else {
+                console.warn('Invalid calendar response, using example events');
                 loadExampleCalendarEvents(successCallback);
-            });
+            }
+        }, function(error) {
+            console.error('Calendar fetch error:', error);
+            // Fallback to example events
+            loadExampleCalendarEvents(successCallback);
+        });
     }
     
     function loadExampleCalendarEvents(successCallback) {
