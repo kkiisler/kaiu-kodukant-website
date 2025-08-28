@@ -142,11 +142,16 @@ document.addEventListener('DOMContentLoaded', function() {
         albums.forEach(album => {
             const albumEl = document.createElement('div');
             albumEl.className = 'album-card cursor-pointer bg-white border border-gray-200 hover:border-gray-300 group';
+            
+            // Fix Google Drive URL for cover image by removing size parameter
+            const coverUrl = album.coverImageUrl ? album.coverImageUrl.replace('&sz=w600', '').replace('&sz=w400', '') : '';
+            
             albumEl.innerHTML = `
                 <div class="overflow-hidden aspect-square bg-gray-200">
-                    <img src="${album.coverImageUrl}" alt="${album.title}" 
+                    <img src="${coverUrl}" alt="${album.title}" 
                          class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                         loading="lazy">
+                         loading="lazy"
+                         onerror="this.style.display='none'">
                 </div>
                 <div class="p-6">
                     <h3 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">${album.title}</h3>
@@ -206,18 +211,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         photos.forEach((photo, index) => {
+            // Fix Google Drive URLs by removing the size parameter
+            const fullUrl = photo.url.replace('&sz=w1200', '').replace('&sz=w800', '');
             lightboxPhotos.push({ 
-                src: photo.url, 
+                src: fullUrl, 
                 caption: photo.caption || photo.name
             });
 
             const photoEl = document.createElement('div');
             photoEl.className = 'photo-thumbnail cursor-pointer overflow-hidden rounded-lg aspect-square bg-gray-200 border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300';
+            // Fix Google Drive URLs by removing the size parameter which doesn't work
+            const thumbnailUrl = photo.thumbnailUrl.replace('&sz=w400', '').replace('&sz=w600', '');
+            const fullUrl = photo.url.replace('&sz=w1200', '').replace('&sz=w800', '');
+            
             photoEl.innerHTML = `
-                <img src="${photo.thumbnailUrl}" alt="${photo.caption || photo.name}" 
+                <img src="${thumbnailUrl}" alt="${photo.caption || photo.name}" 
                      loading="lazy" 
                      class="object-cover w-full h-full"
-                     data-full-url="${photo.url}">
+                     data-full-url="${fullUrl}">
             `;
             photoEl.addEventListener('click', () => openLightbox(index));
             photoGrid.appendChild(photoEl);
