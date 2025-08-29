@@ -132,13 +132,18 @@
     </main>
 
     <!-- Gallery Lightbox Modal -->
-    <div id="lightbox" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity duration-300">
-        <button id="lightbox-close" class="absolute top-4 right-4 text-white/80 hover:text-white w-10 h-10 flex items-center justify-center text-4xl">&times;</button>
-        <button id="lightbox-prev" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white w-12 h-12 flex items-center justify-center text-5xl">&lsaquo;</button>
-        <button id="lightbox-next" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white w-12 h-12 flex items-center justify-center text-5xl">&rsaquo;</button>
-        <div class="text-center">
-            <img id="lightbox-img" src="" alt="Galerii pilt" class="lightbox-img object-contain w-auto h-auto rounded-lg shadow-2xl">
-            <p id="lightbox-caption" class="mt-4 text-white/90 text-lg"></p>
+    <div id="lightbox" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] hidden items-center justify-center transition-opacity duration-300">
+        <button id="lightbox-close" class="absolute top-4 right-4 text-white/80 hover:text-white z-[110] w-12 h-12 flex items-center justify-center text-4xl transition-colors">&times;</button>
+        <button id="lightbox-prev" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-[110] w-12 h-12 flex items-center justify-center text-5xl transition-colors">&lsaquo;</button>
+        <button id="lightbox-next" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-[110] w-12 h-12 flex items-center justify-center text-5xl transition-colors">&rsaquo;</button>
+        <div class="relative w-full h-full flex flex-col items-center justify-center p-8">
+            <div class="lightbox-container relative flex items-center justify-center">
+                <div id="lightbox-loader" class="absolute inset-0 flex items-center justify-center hidden">
+                    <div class="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                </div>
+                <img id="lightbox-img" src="" alt="Galerii pilt" class="lightbox-img rounded-lg shadow-2xl">
+            </div>
+            <p id="lightbox-caption" class="mt-4 text-white/90 text-lg max-w-2xl text-center"></p>
         </div>
     </div>
 

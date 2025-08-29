@@ -242,19 +242,45 @@ document.addEventListener('DOMContentLoaded', function() {
             let fullUrl = photo.url;
             
             // Extract file ID and create proper URLs
-            if (thumbnailUrl && thumbnailUrl.includes('drive.google.com/uc?id=')) {
-                const fileId = thumbnailUrl.split('id=')[1]?.split('&')[0];
+            if (thumbnailUrl && thumbnailUrl.includes('drive.google.com')) {
+                let fileId = null;
+                
+                // Try to extract file ID from various URL formats
+                if (thumbnailUrl.includes('id=')) {
+                    fileId = thumbnailUrl.split('id=')[1]?.split('&')[0];
+                } else if (thumbnailUrl.includes('/d/')) {
+                    fileId = thumbnailUrl.split('/d/')[1]?.split('/')[0];
+                } else if (thumbnailUrl.includes('drive.google.com/file/d/')) {
+                    fileId = thumbnailUrl.split('/d/')[1]?.split('/')[0];
+                }
+                
                 if (fileId) {
-                    // Use thumbnail API for thumbnails
+                    // Use thumbnail API for thumbnails with larger size
                     thumbnailUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
-                    // Use direct view link for full size
-                    fullUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                    // Use direct download link for full size (better compatibility)
+                    fullUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                }
+            }
+            
+            // Also fix fullUrl if it's a different format
+            if (fullUrl && fullUrl !== thumbnailUrl && fullUrl.includes('drive.google.com')) {
+                let fileId = null;
+                
+                if (fullUrl.includes('id=')) {
+                    fileId = fullUrl.split('id=')[1]?.split('&')[0];
+                } else if (fullUrl.includes('/d/')) {
+                    fileId = fullUrl.split('/d/')[1]?.split('/')[0];
+                }
+                
+                if (fileId) {
+                    fullUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
                 }
             }
             
             lightboxPhotos.push({ 
                 src: fullUrl, 
-                caption: photo.caption || photo.name
+                caption: photo.caption || photo.name,
+                loaded: false
             });
 
             const photoEl = document.createElement('div');
@@ -279,11 +305,21 @@ document.addEventListener('DOMContentLoaded', function() {
         updateLightboxImage();
         lightbox.classList.remove('hidden');
         lightbox.classList.add('flex');
+        lightbox.style.opacity = '0';
+        setTimeout(() => {
+            lightbox.style.opacity = '1';
+        }, 10);
+        
+        // Preload adjacent images
+        preloadAdjacentImages(index);
     }
 
     function closeLightbox() {
-        lightbox.classList.add('hidden');
-        lightbox.classList.remove('flex');
+        lightbox.style.opacity = '0';
+        setTimeout(() => {
+            lightbox.classList.add('hidden');
+            lightbox.classList.remove('flex');
+        }, 300);
     }
 
     function navigateLightbox(direction) {
@@ -295,13 +331,81 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateLightboxImage() {
         const photo = lightboxPhotos[currentLightboxIndex];
-        lightboxImg.src = photo.src;
-        lightboxImg.alt = photo.caption;
-        lightboxCaption.textContent = photo.caption;
+        const loader = document.getElementById('lightbox-loader');
+        
+        // Show loader
+        if (loader) {
+            loader.classList.remove('hidden');
+        }
+        
+        // Create new image to preload
+        const img = new Image();
+        
+        img.onload = function() {
+            lightboxImg.src = photo.src;
+            lightboxImg.alt = photo.caption;
+            lightboxCaption.textContent = photo.caption;
+            photo.loaded = true;
+            
+            // Hide loader
+            if (loader) {
+                loader.classList.add('hidden');
+            }
+            
+            // Fade in image
+            lightboxImg.style.opacity = '0';
+            setTimeout(() => {
+                lightboxImg.style.opacity = '1';
+            }, 10);
+        };
+        
+        img.onerror = function() {
+            console.error('Failed to load image:', photo.src);
+            
+            // Try alternative URL format
+            const altUrl = photo.src.replace('export=download', 'export=view');
+            if (altUrl !== photo.src) {
+                photo.src = altUrl;
+                img.src = altUrl;
+            } else {
+                // Show error message
+                lightboxImg.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"%3E%3Crect width="400" height="300" fill="%23374151"/%3E%3Ctext x="200" y="150" font-family="Arial" font-size="16" fill="%23ef4444" text-anchor="middle" dominant-baseline="middle"%3EPilti ei õnnestunud laadida%3C/text%3E%3C/svg%3E';
+                lightboxCaption.textContent = 'Viga: ' + photo.caption;
+                
+                // Hide loader
+                if (loader) {
+                    loader.classList.add('hidden');
+                }
+            }
+        };
+        
+        // Add transition class to image
+        lightboxImg.style.transition = 'opacity 0.3s ease';
+        
+        // Start loading
+        img.src = photo.src;
         
         // Update navigation visibility
         lightboxPrev.style.display = lightboxPhotos.length > 1 ? 'flex' : 'none';
         lightboxNext.style.display = lightboxPhotos.length > 1 ? 'flex' : 'none';
+    }
+    
+    function preloadAdjacentImages(currentIndex) {
+        // Preload next image
+        const nextIndex = (currentIndex + 1) % lightboxPhotos.length;
+        if (!lightboxPhotos[nextIndex].loaded) {
+            const nextImg = new Image();
+            nextImg.onload = () => { lightboxPhotos[nextIndex].loaded = true; };
+            nextImg.src = lightboxPhotos[nextIndex].src;
+        }
+        
+        // Preload previous image
+        const prevIndex = currentIndex === 0 ? lightboxPhotos.length - 1 : currentIndex - 1;
+        if (!lightboxPhotos[prevIndex].loaded) {
+            const prevImg = new Image();
+            prevImg.onload = () => { lightboxPhotos[prevIndex].loaded = true; };
+            prevImg.src = lightboxPhotos[prevIndex].src;
+        }
     }
 
     function setupImageLazyLoading() {
