@@ -136,6 +136,35 @@ document.addEventListener('DOMContentLoaded', function() {
         displayAlbums(exampleAlbums);
     }
 
+    // Normalize Google Drive image URLs to use correct formats
+    function normalizeDriveImageUrls({ url, thumbnailUrl, preferWidth = 1600, thumbWidth = 400 }) {
+        // If backend already sent the preferred shapes, keep them
+        const isUcSz = u => typeof u === 'string' && u.includes('drive.google.com/uc') && /[?&]id=/.test(u) && /[?&]sz=w\d+/.test(u);
+        const isThumb = u => typeof u === 'string' && u.includes('drive.google.com/thumbnail') && /[?&]id=/.test(u);
+
+        let fileId = null;
+
+        function extractId(u) {
+            if (!u) return null;
+            if (/[?&]id=/.test(u)) return u.split('id=')[1].split('&')[0];
+            if (u.includes('/file/d/')) return u.split('/file/d/')[1].split('/')[0];
+            if (u.includes('/d/')) return u.split('/d/')[1].split('/')[0];
+            return null;
+        }
+
+        if (isUcSz(url) && isThumb(thumbnailUrl)) {
+            return { full: url, thumb: thumbnailUrl };
+        }
+
+        fileId = extractId(url) || extractId(thumbnailUrl);
+        if (!fileId) return { full: url, thumb: thumbnailUrl }; // give up gracefully
+
+        return {
+            full: `https://drive.google.com/uc?id=${fileId}&sz=w${preferWidth}`,
+            thumb: `https://drive.google.com/thumbnail?id=${fileId}&sz=w${thumbWidth}`
+        };
+    }
+
     function displayAlbums(albums) {
         albumGrid.innerHTML = '';
         
@@ -237,48 +266,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         photos.forEach((photo, index) => {
-            // Fix Google Drive URLs - convert to proper format
-            let thumbnailUrl = photo.thumbnailUrl;
-            let fullUrl = photo.url;
-            
-            // Extract file ID and create proper URLs
-            if (thumbnailUrl && thumbnailUrl.includes('drive.google.com')) {
-                let fileId = null;
-                
-                // Try to extract file ID from various URL formats
-                if (thumbnailUrl.includes('id=')) {
-                    fileId = thumbnailUrl.split('id=')[1]?.split('&')[0];
-                } else if (thumbnailUrl.includes('/d/')) {
-                    fileId = thumbnailUrl.split('/d/')[1]?.split('/')[0];
-                } else if (thumbnailUrl.includes('drive.google.com/file/d/')) {
-                    fileId = thumbnailUrl.split('/d/')[1]?.split('/')[0];
-                }
-                
-                if (fileId) {
-                    // Use thumbnail API for thumbnails with larger size
-                    thumbnailUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
-                    // Use direct view link for full size images in lightbox
-                    fullUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-                }
+            // Use the normalizer to get correct URLs
+            const { full, thumb } = normalizeDriveImageUrls({
+                url: photo.url,
+                thumbnailUrl: photo.thumbnailUrl,
+                preferWidth: 1600,
+                thumbWidth: 400
+            });
+
+            // Extract file ID for alternate URLs
+            let fileId = null;
+            if (photo.url && /[?&]id=/.test(photo.url)) {
+                fileId = photo.url.split('id=')[1]?.split('&')[0];
+            } else if (photo.thumbnailUrl && /[?&]id=/.test(photo.thumbnailUrl)) {
+                fileId = photo.thumbnailUrl.split('id=')[1]?.split('&')[0];
+            } else if (photo.id) {
+                fileId = photo.id;
             }
-            
-            // Also fix fullUrl if it's a different format
-            if (fullUrl && fullUrl !== thumbnailUrl && fullUrl.includes('drive.google.com')) {
-                let fileId = null;
-                
-                if (fullUrl.includes('id=')) {
-                    fileId = fullUrl.split('id=')[1]?.split('&')[0];
-                } else if (fullUrl.includes('/d/')) {
-                    fileId = fullUrl.split('/d/')[1]?.split('/')[0];
-                }
-                
-                if (fileId) {
-                    fullUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-                }
-            }
-            
-            lightboxPhotos.push({ 
-                src: fullUrl, 
+
+            lightboxPhotos.push({
+                src: full,
+                // Keep alternates for fallback attempts
+                alt1: fileId ? `https://drive.google.com/uc?id=${fileId}&sz=w1200` : null,
+                alt2: fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600` : null,
                 caption: photo.caption || photo.name,
                 loaded: false
             });
@@ -287,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
             photoEl.className = 'photo-thumbnail cursor-pointer overflow-hidden rounded-lg aspect-square bg-gray-200 border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300';
             
             photoEl.innerHTML = `
-                <img src="${thumbnailUrl}" 
+                <img src="${thumb}" 
                      alt="${photo.caption || photo.name}" 
                      loading="lazy" 
                      class="object-cover w-full h-full"
@@ -332,76 +342,44 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateLightboxImage() {
         const photo = lightboxPhotos[currentLightboxIndex];
         const loader = document.getElementById('lightbox-loader');
-        
-        // Show loader
-        if (loader) {
-            loader.classList.remove('hidden');
-        }
-        
-        // Create new image to preload
+
+        if (loader) loader.classList.remove('hidden');
+
+        // Build list of URLs to try in order
+        const tryList = [photo.src, photo.alt1, photo.alt2].filter(Boolean);
+        let attempt = 0;
+
         const img = new Image();
-        
+
         img.onload = function() {
-            lightboxImg.src = photo.src;
+            lightboxImg.src = img.src;
             lightboxImg.alt = photo.caption;
             lightboxCaption.textContent = photo.caption;
             photo.loaded = true;
-            
-            // Hide loader
-            if (loader) {
-                loader.classList.add('hidden');
-            }
-            
-            // Fade in image
+            if (loader) loader.classList.add('hidden');
             lightboxImg.style.opacity = '0';
-            setTimeout(() => {
-                lightboxImg.style.opacity = '1';
-            }, 10);
+            setTimeout(() => { lightboxImg.style.opacity = '1'; }, 10);
         };
-        
+
         img.onerror = function() {
-            console.error('Failed to load image:', photo.src);
-            
-            // Try alternative URL formats
-            let altUrl = photo.src;
-            
-            // If using export=view, try export=download
-            if (altUrl.includes('export=view')) {
-                altUrl = altUrl.replace('export=view', 'export=download');
-            }
-            // If using export=download, try export=view
-            else if (altUrl.includes('export=download')) {
-                altUrl = altUrl.replace('export=download', 'export=view');
-            }
-            // Try thumbnail API with maximum size as fallback
-            else if (photo.src.includes('drive.google.com/uc?') && photo.src.includes('id=')) {
-                const fileId = photo.src.split('id=')[1]?.split('&')[0];
-                if (fileId) {
-                    altUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`;
-                }
-            }
-            
-            if (altUrl !== photo.src) {
-                photo.src = altUrl;
-                img.src = altUrl;
+            attempt++;
+            if (attempt < tryList.length) {
+                console.log('Trying alternate URL:', tryList[attempt]);
+                img.src = tryList[attempt]; // Try next candidate
             } else {
-                // Show error message
+                console.error('Failed to load image after all attempts:', tryList[0]);
+                if (loader) loader.classList.add('hidden');
                 lightboxImg.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300"%3E%3Crect width="400" height="300" fill="%23374151"/%3E%3Ctext x="200" y="150" font-family="Arial" font-size="16" fill="%23ef4444" text-anchor="middle" dominant-baseline="middle"%3EPilti ei õnnestunud laadida%3C/text%3E%3C/svg%3E';
-                lightboxCaption.textContent = 'Viga: ' + photo.caption;
-                
-                // Hide loader
-                if (loader) {
-                    loader.classList.add('hidden');
-                }
+                lightboxCaption.textContent = 'Viga: ' + (photo.caption || '');
             }
         };
-        
-        // Add transition class to image
+
+        // Add transition
         lightboxImg.style.transition = 'opacity 0.3s ease';
-        
-        // Start loading
-        img.src = photo.src;
-        
+
+        // Kick off loading
+        img.src = tryList[attempt];
+
         // Update navigation visibility
         lightboxPrev.style.display = lightboxPhotos.length > 1 ? 'flex' : 'none';
         lightboxNext.style.display = lightboxPhotos.length > 1 ? 'flex' : 'none';
