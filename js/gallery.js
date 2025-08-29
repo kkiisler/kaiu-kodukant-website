@@ -257,8 +257,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (fileId) {
                     // Use thumbnail API for thumbnails with larger size
                     thumbnailUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
-                    // Use direct download link for full size (better compatibility)
-                    fullUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                    // Use direct view link for full size images in lightbox
+                    fullUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
                 }
             }
             
@@ -273,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 if (fileId) {
-                    fullUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                    fullUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
                 }
             }
             
@@ -362,8 +362,25 @@ document.addEventListener('DOMContentLoaded', function() {
         img.onerror = function() {
             console.error('Failed to load image:', photo.src);
             
-            // Try alternative URL format
-            const altUrl = photo.src.replace('export=download', 'export=view');
+            // Try alternative URL formats
+            let altUrl = photo.src;
+            
+            // If using export=view, try export=download
+            if (altUrl.includes('export=view')) {
+                altUrl = altUrl.replace('export=view', 'export=download');
+            }
+            // If using export=download, try export=view
+            else if (altUrl.includes('export=download')) {
+                altUrl = altUrl.replace('export=download', 'export=view');
+            }
+            // Try thumbnail API with maximum size as fallback
+            else if (photo.src.includes('drive.google.com/uc?') && photo.src.includes('id=')) {
+                const fileId = photo.src.split('id=')[1]?.split('&')[0];
+                if (fileId) {
+                    altUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`;
+                }
+            }
+            
             if (altUrl !== photo.src) {
                 photo.src = altUrl;
                 img.src = altUrl;
