@@ -138,30 +138,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Normalize Google Drive image URLs to use correct formats
     function normalizeDriveImageUrls({ url, thumbnailUrl, preferWidth = 1600, thumbWidth = 400 }) {
-        // If backend already sent the preferred shapes, keep them
-        const isUcSz = u => typeof u === 'string' && u.includes('drive.google.com/uc') && /[?&]id=/.test(u) && /[?&]sz=w\d+/.test(u);
-        const isThumb = u => typeof u === 'string' && u.includes('drive.google.com/thumbnail') && /[?&]id=/.test(u);
-
-        let fileId = null;
-
-        function extractId(u) {
+        const getId = (u) => {
             if (!u) return null;
             if (/[?&]id=/.test(u)) return u.split('id=')[1].split('&')[0];
             if (u.includes('/file/d/')) return u.split('/file/d/')[1].split('/')[0];
             if (u.includes('/d/')) return u.split('/d/')[1].split('/')[0];
             return null;
-        }
+        };
 
-        if (isUcSz(url) && isThumb(thumbnailUrl)) {
-            return { full: url, thumb: thumbnailUrl };
-        }
-
-        fileId = extractId(url) || extractId(thumbnailUrl);
-        if (!fileId) return { full: url, thumb: thumbnailUrl }; // give up gracefully
+        const fileId = getId(url) || getId(thumbnailUrl);
+        if (!fileId) return { full: url, thumb: thumbnailUrl };
 
         return {
-            full: `https://drive.google.com/uc?id=${fileId}&sz=w${preferWidth}`,
-            thumb: `https://drive.google.com/uc?id=${fileId}&sz=w${thumbWidth}`
+            // viewable full image with export=view
+            full: `https://drive.google.com/uc?id=${fileId}&export=view&sz=w${preferWidth}`,
+            // reliable thumb using thumbnail endpoint
+            thumb: `https://drive.google.com/thumbnail?id=${fileId}&sz=w${thumbWidth}`
         };
     }
 
@@ -177,15 +169,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const albumEl = document.createElement('div');
             albumEl.className = 'album-card cursor-pointer bg-white border border-gray-200 hover:border-gray-300 group';
             
-            // Use the same normalizer for cover images as we use for photos
+            // Build cover with the thumbnail endpoint
             let coverImageHtml = '';
             if (album.coverImageUrl) {
-                const { thumb } = normalizeDriveImageUrls({
-                    url: album.coverImageUrl,
-                    thumbnailUrl: album.coverImageUrl, // same, since backend gives uc?id
-                    thumbWidth: 400
-                });
-                coverImageHtml = `<img src="${thumb}" alt="${album.title}" 
+                // Extract fileId from uc URL
+                const fileId = (album.coverImageUrl.match(/id=([^&]+)/) || [])[1];
+                const coverThumb = fileId
+                    ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`
+                    : album.coverImageUrl; // fallback
+                
+                coverImageHtml = `<img src="${coverThumb}" alt="${album.title}" 
                                      class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                                      loading="lazy"
                                      onerror="this.style.display='none'; this.parentElement.classList.add('bg-gradient-to-br', 'from-gray-200', 'to-gray-300')">`;
@@ -281,9 +274,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             lightboxPhotos.push({
-                src: full,
-                // Keep alternates for fallback attempts
-                alt1: fileId ? `https://drive.google.com/uc?id=${fileId}&sz=w1200` : null,
+                src: full, // from normalizeDriveImageUrls => uc ... export=view
+                // Keep alternates for fallback attempts with export=view
+                alt1: fileId ? `https://drive.google.com/uc?id=${fileId}&sz=w1200&export=view` : null,
                 alt2: fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600` : null,
                 caption: photo.caption || photo.name,
                 loaded: false
