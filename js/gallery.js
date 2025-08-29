@@ -177,19 +177,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const albumEl = document.createElement('div');
             albumEl.className = 'album-card cursor-pointer bg-white border border-gray-200 hover:border-gray-300 group';
             
-            // Fix Google Drive URL - use direct download link format
+            // Use the same normalizer for cover images as we use for photos
             let coverImageHtml = '';
             if (album.coverImageUrl) {
-                // Extract file ID from the URL if it's in the format https://drive.google.com/uc?id=FILE_ID
-                let imageUrl = album.coverImageUrl;
-                if (imageUrl.includes('drive.google.com/uc?id=')) {
-                    const fileId = imageUrl.split('id=')[1]?.split('&')[0];
-                    if (fileId) {
-                        // Use the thumbnail API for cover images
-                        imageUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`;
-                    }
-                }
-                coverImageHtml = `<img src="${imageUrl}" alt="${album.title}" 
+                const { thumb } = normalizeDriveImageUrls({
+                    url: album.coverImageUrl,
+                    thumbnailUrl: album.coverImageUrl, // same, since backend gives uc?id
+                    thumbWidth: 400
+                });
+                coverImageHtml = `<img src="${thumb}" alt="${album.title}" 
                                      class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                                      loading="lazy"
                                      onerror="this.style.display='none'; this.parentElement.classList.add('bg-gradient-to-br', 'from-gray-200', 'to-gray-300')">`;
