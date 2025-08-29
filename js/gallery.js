@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return {
             full: `https://drive.google.com/uc?id=${fileId}&sz=w${preferWidth}`,
-            thumb: `https://drive.google.com/thumbnail?id=${fileId}&sz=w${thumbWidth}`
+            thumb: `https://drive.google.com/uc?id=${fileId}&sz=w${thumbWidth}`
         };
     }
 
