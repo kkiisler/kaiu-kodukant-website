@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
         displayAlbums(exampleAlbums);
     }
 
-    // Normalize Google Drive image URLs to use correct formats
+    // Normalize Google Drive image URLs to use correct formats with fallbacks
     function normalizeDriveImageUrls({ url, thumbnailUrl, preferWidth = 1600, thumbWidth = 400 }) {
         const getId = (u) => {
             if (!u) return null;
@@ -147,14 +147,16 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         const fileId = getId(url) || getId(thumbnailUrl);
-        if (!fileId) return { full: url, thumb: thumbnailUrl };
+        if (!fileId) return { full: url, thumb: thumbnailUrl, altFull: null, altThumb: null, fileId: null };
 
-        return {
-            // viewable full image with export=view
-            full: `https://drive.google.com/uc?id=${fileId}&export=view&sz=w${preferWidth}`,
-            // reliable thumb using thumbnail endpoint
-            thumb: `https://drive.google.com/thumbnail?id=${fileId}&sz=w${thumbWidth}`
-        };
+        // Primary + alternates
+        const full    = `https://drive.google.com/uc?id=${fileId}&sz=w${preferWidth}`;
+        const altFull = `https://drive.google.com/thumbnail?id=${fileId}&sz=w${preferWidth}`;
+
+        const thumb    = `https://drive.google.com/thumbnail?id=${fileId}&sz=w${thumbWidth}`;
+        const altThumb = `https://drive.google.com/uc?id=${fileId}&sz=w${thumbWidth}`;
+
+        return { full, thumb, altFull, altThumb, fileId };
     }
 
     function displayAlbums(albums) {
@@ -169,40 +171,57 @@ document.addEventListener('DOMContentLoaded', function() {
             const albumEl = document.createElement('div');
             albumEl.className = 'album-card cursor-pointer bg-white border border-gray-200 hover:border-gray-300 group';
             
-            // Build cover with the thumbnail endpoint
-            let coverImageHtml = '';
+            // Build cover with programmatic fallback
+            const coverWrap = document.createElement('div');
+            coverWrap.className = 'overflow-hidden aspect-square bg-gray-200';
+            
             if (album.coverImageUrl) {
-                // Extract fileId from uc URL
                 const fileId = (album.coverImageUrl.match(/id=([^&]+)/) || [])[1];
                 const coverThumb = fileId
                     ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`
-                    : album.coverImageUrl; // fallback
-                
-                coverImageHtml = `<img src="${coverThumb}" alt="${album.title}" 
-                                     class="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                                     loading="lazy"
-                                     onerror="this.style.display='none'; this.parentElement.classList.add('bg-gradient-to-br', 'from-gray-200', 'to-gray-300')">`;
+                    : album.coverImageUrl;
+                const coverAlt = fileId
+                    ? `https://drive.google.com/uc?id=${fileId}&sz=w400`
+                    : '';
+
+                const img = document.createElement('img');
+                img.src = coverThumb;
+                img.alt = album.title;
+                img.loading = 'lazy';
+                img.className = 'object-cover w-full h-full group-hover:scale-105 transition-transform duration-500';
+                img.dataset.alt = coverAlt;
+                img.addEventListener('error', function () {
+                    if (this.dataset.alt && this.dataset.triedAlt !== '1') {
+                        this.dataset.triedAlt = '1';
+                        this.src = this.dataset.alt;      // fallback to uc
+                    } else {
+                        this.style.display = 'none';
+                        this.parentElement.classList.add('bg-gradient-to-br','from-gray-200','to-gray-300');
+                    }
+                });
+                coverWrap.appendChild(img);
             } else {
-                coverImageHtml = `<div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                    </svg>
-                                  </div>`;
+                coverWrap.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                                          <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                          </svg>
+                                        </div>`;
             }
             
-            albumEl.innerHTML = `
-                <div class="overflow-hidden aspect-square bg-gray-200">
-                    ${coverImageHtml}
+            // Build the rest of the card
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'p-6';
+            contentDiv.innerHTML = `
+                <h3 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">${album.title}</h3>
+                <div class="flex items-center justify-between text-sm text-gray-600 mb-3">
+                    <span class="font-medium">${album.date}</span>
+                    <span class="bg-gray-100 px-3 py-1 rounded-full">${album.imageCount} pilti</span>
                 </div>
-                <div class="p-6">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">${album.title}</h3>
-                    <div class="flex items-center justify-between text-sm text-gray-600 mb-3">
-                        <span class="font-medium">${album.date}</span>
-                        <span class="bg-gray-100 px-3 py-1 rounded-full">${album.imageCount} pilti</span>
-                    </div>
-                    ${album.description ? `<p class="text-gray-600 text-sm leading-relaxed">${album.description}</p>` : ''}
-                </div>
+                ${album.description ? `<p class="text-gray-600 text-sm leading-relaxed">${album.description}</p>` : ''}
             `;
+            
+            albumEl.appendChild(coverWrap);
+            albumEl.appendChild(contentDiv);
             albumEl.addEventListener('click', () => loadAlbumPhotos(album.id, album.title, album.description));
             albumGrid.appendChild(albumEl);
         });
@@ -255,28 +274,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         photos.forEach((photo, index) => {
-            // Use the normalizer to get correct URLs
-            const { full, thumb } = normalizeDriveImageUrls({
+            // Use the normalizer to get correct URLs with fallbacks
+            const { full, thumb, altFull, altThumb, fileId } = normalizeDriveImageUrls({
                 url: photo.url,
                 thumbnailUrl: photo.thumbnailUrl,
                 preferWidth: 1600,
                 thumbWidth: 400
             });
 
-            // Extract file ID for alternate URLs
-            let fileId = null;
-            if (photo.url && /[?&]id=/.test(photo.url)) {
-                fileId = photo.url.split('id=')[1]?.split('&')[0];
-            } else if (photo.thumbnailUrl && /[?&]id=/.test(photo.thumbnailUrl)) {
-                fileId = photo.thumbnailUrl.split('id=')[1]?.split('&')[0];
-            } else if (photo.id) {
-                fileId = photo.id;
-            }
-
             lightboxPhotos.push({
-                src: full, // from normalizeDriveImageUrls => uc ... export=view
-                // Keep alternates for fallback attempts with export=view
-                alt1: fileId ? `https://drive.google.com/uc?id=${fileId}&sz=w1200&export=view` : null,
+                src: full,
+                alt1: altFull,
                 alt2: fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600` : null,
                 caption: photo.caption || photo.name,
                 loaded: false
@@ -284,14 +292,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const photoEl = document.createElement('div');
             photoEl.className = 'photo-thumbnail cursor-pointer overflow-hidden rounded-lg aspect-square bg-gray-200 border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300';
-            
-            photoEl.innerHTML = `
-                <img src="${thumb}" 
-                     alt="${photo.caption || photo.name}" 
-                     loading="lazy" 
-                     class="object-cover w-full h-full"
-                     onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' width=\\\'100\\\' height=\\\'100\\\' viewBox=\\\'0 0 100 100\\\'%3E%3Crect width=\\\'100\\\' height=\\\'100\\\' fill=\\\'%23e5e7eb\\\'/%3E%3Ctext x=\\\'50\\\' y=\\\'50\\\' font-family=\\\'Arial\\\' font-size=\\\'14\\\' fill=\\\'%239ca3af\\\' text-anchor=\\\'middle\\\' dominant-baseline=\\\'middle\\\'%3ENo Image%3C/text%3E%3C/svg%3E'">
-            `;
+
+            const imgTag = document.createElement('img');
+            imgTag.loading = 'lazy';
+            imgTag.alt = photo.caption || photo.name;
+            imgTag.className = 'object-cover w-full h-full';
+            imgTag.src = thumb;
+            imgTag.dataset.alt = altThumb || '';
+            imgTag.addEventListener('error', function () {
+                if (this.dataset.alt && this.dataset.triedAlt !== '1') {
+                    this.dataset.triedAlt = '1';
+                    this.src = this.dataset.alt;        // fallback to uc?sz=...
+                } else {
+                    this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23e5e7eb"/%3E%3Ctext x="50" y="50" font-size="14" fill="%239ca3af" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+                    console.warn('Thumb failed for', fileId);
+                }
+            });
+
+            photoEl.appendChild(imgTag);
             photoEl.addEventListener('click', () => openLightbox(index));
             photoGrid.appendChild(photoEl);
         });
