@@ -1,0 +1,733 @@
+// MTÜ Kaiu Kodukant Forms Backend - Google Apps Script
+// This script handles both membership registration and contact form submissions
+
+// Configuration
+const MEMBERSHIP_SPREADSHEET_ID = '1scwMSkGu0wz0pZYSGX1lQvo2xJnR_UdFhGT_wEa-Upw'; // !!! Replace with your Google Spreadsheet ID !!!
+const CONTACT_SPREADSHEET_ID = '1U0gW3V6DLbuVSDfryuIVzfaoOe1JqG-DXo9NXIm3AF0'; // !!! Replace with your Google Spreadsheet ID !!!
+const MEMBERSHIP_SHEET_NAME = 'Liikmed'; // Membership registrations
+const CONTACT_SHEET_NAME = 'Sõnumid'; // Contact messages
+const RECAPTCHA_THRESHOLD = 0.5; // Adjust based on your reCAPTCHA needs
+const RATE_LIMIT_HOURS = 1; // Hours before same email can submit again
+const ALLOWED_DOMAIN = 'https://tore.kaiukodukant.ee'; // !!! Change to your domain in production !!!
+
+// Google Calendar Configuration
+const GOOGLE_CALENDAR_ID = 'a0b18dc4b7e4b9b40858746a7edddaa51b41014085ba2f4b2f89bf038ac13f12@group.calendar.google.com'; // Your calendar ID
+const CALENDAR_CACHE_MINUTES = 15; // Cache calendar data for 15 minutes
+
+// Google Drive Gallery Configuration
+const GALLERY_DRIVE_FOLDER_ID = '1t2olfDcjsRHFWovLbiOTRBFMYbZQdNdg'; // !!! Replace with your Google Drive gallery folder ID !!!
+const GALLERY_CACHE_MINUTES = 30; // Cache gallery albums for 30 minutes
+const ALBUM_CACHE_MINUTES = 60; // Cache album photos for 60 minutes
+
+/**
+ * Helper function to return an HTML page that posts a message to the parent iframe.
+ * This is the correct way to handle form submission responses to avoid CORS issues.
+ */
+function respondToIframe(ok, formType, message, details) {
+  const payload = {
+    ok: !!ok,
+    formType: formType || '',
+    message: message || '',
+    details: details || ''
+  };
+  // Return a tiny HTML page that notifies the parent and closes
+  const html = `
+<!DOCTYPE html>
+<html><body>
+<script>
+  try { 
+    parent && parent.postMessage(${JSON.stringify(payload)}, "*"); 
+  } catch(e){}
+  setTimeout(function(){ document.open(); document.write(""); document.close(); }, 0);
+</script>
+</body></html>`;
+  return HtmlService.createHtmlOutput(html)
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL); // allow iframe embedding
+}
+
+/**
+ * Handles POST requests from web forms
+ * Routes to appropriate handler based on form type
+ */
+function doPost(e) {
+  try {
+    if (!e || !e.parameter) {
+       return respondToIframe(false, '', 'Serveri viga: kehtetu päring.');
+    }
+    let data = e.parameter;
+
+    if (data.formType === 'membership') {
+      return handleMembershipForm(data);
+    } else if (data.formType === 'contact') {
+      return handleContactForm(data);
+    }
+    return respondToIframe(false, '', 'Vigane vormitüüp.');
+  } catch (err) {
+    console.error('doPost error:', err);
+    return respondToIframe(false, '', 'Serveri viga.', err.toString());
+  }
+}
+
+/**
+ * Handles membership form submissions
+ */
+function handleMembershipForm(data) {
+  if (!data.name || !data.email || !data.recaptchaToken) {
+    return respondToIframe(false, 'membership', 'Kõik väljad on nõutud.');
+  }
+  const scriptProperties = PropertiesService.getScriptProperties();
+  const recaptchaSecretKey = scriptProperties.getProperty('RECAPTCHA_SECRET_KEY');
+  if (!recaptchaSecretKey) {
+    return respondToIframe(false, 'membership', 'Serveri seadistus puudulik (reCAPTCHA).');
+  }
+  const verificationResult = verifyRecaptcha(recaptchaSecretKey, data.recaptchaToken);
+  if (!verificationResult.success) {
+    return respondToIframe(false, 'membership', 'Turvakontroll ebaõnnestus.', verificationResult.message);
+  }
+
+  const sheet = SpreadsheetApp.openById(MEMBERSHIP_SPREADSHEET_ID).getSheetByName(MEMBERSHIP_SHEET_NAME);
+  if (!sheet) return respondToIframe(false, 'membership', 'Serveri seadistuse viga.');
+
+  if (checkDuplicateEmail(sheet, data.email)) {
+    return respondToIframe(false, 'membership', 'See e-posti aadress on juba registreeritud!');
+  }
+  const rate = checkRateLimit(sheet, data.email, RATE_LIMIT_HOURS);
+  if (!rate.allowed) {
+    return respondToIframe(false, 'membership', `See e-posti aadress on hiljuti juba registreeritud. Palun proovi uuesti ${rate.nextAllowedTime} pärast.`);
+  }
+
+  sheet.appendRow([new Date(), data.name, data.email, verificationResult.score || 'N/A']);
+  notifyMembershipSignup(data.name, data.email, verificationResult.score);
+
+  return respondToIframe(true, 'membership', 'Aitäh! Sinu liikmestaotus on vastu võetud.');
+}
+
+/**
+ * Handles contact form submissions
+ */
+function handleContactForm(data) {
+  if (!data.name || !data.email || !data.message || !data.recaptchaToken) {
+    return respondToIframe(false, 'contact', 'Nimi, e-post ja sõnum on nõutud.');
+  }
+  const scriptProperties = PropertiesService.getScriptProperties();
+  const recaptchaSecretKey = scriptProperties.getProperty('RECAPTCHA_SECRET_KEY');
+  if (!recaptchaSecretKey) {
+    return respondToIframe(false, 'contact', 'Serveri seadistus puudulik (reCAPTCHA).');
+  }
+  const verificationResult = verifyRecaptcha(recaptchaSecretKey, data.recaptchaToken);
+  if (!verificationResult.success) {
+    return respondToIframe(false, 'contact', 'Turvakontroll ebaõnnestus.');
+  }
+
+  const sheet = SpreadsheetApp.openById(CONTACT_SPREADSHEET_ID).getSheetByName(CONTACT_SHEET_NAME);
+  if (!sheet) return respondToIframe(false, 'contact', 'Serveri seadistuse viga.');
+
+  const rate = checkRateLimit(sheet, data.email, RATE_LIMIT_HOURS);
+  if (!rate.allowed) {
+    return respondToIframe(false, 'contact', `See e-posti aadress on hiljuti juba sõnumi saatnud. Palun proovi uuesti ${rate.nextAllowedTime} pärast.`);
+  }
+
+  sheet.appendRow([new Date(), data.name, data.email, data.subject || 'Teema puudub', data.message, verificationResult.score || 'N/A']);
+  notifyContactMessage(data.name, data.email, data.subject, data.message, verificationResult.score);
+
+  return respondToIframe(true, 'contact', 'Aitäh! Sinu sõnum on edastatud.');
+}
+
+
+/**
+ * Verifies reCAPTCHA token
+ */
+function verifyRecaptcha(secretKey, token) {
+  try {
+    const verificationUrl = 'https://www.google.com/recaptcha/api/siteverify';
+    
+    const response = UrlFetchApp.fetch(verificationUrl, {
+      method: 'POST',
+      payload: {
+        secret: secretKey,
+        response: token
+      },
+      muteHttpExceptions: true
+    });
+    
+    const result = JSON.parse(response.getContentText());
+    console.log('reCAPTCHA API response:', JSON.stringify(result));
+    
+    if (!result.success) {
+      return {
+        success: false,
+        message: 'reCAPTCHA verification failed',
+        errors: result['error-codes'] || []
+      };
+    }
+    
+    if (result.score !== undefined && result.score < RECAPTCHA_THRESHOLD) {
+      return {
+        success: false,
+        message: `Score too low: ${result.score}`,
+        score: result.score
+      };
+    }
+    
+    return {
+      success: true,
+      score: result.score,
+      action: result.action,
+      challenge_ts: result.challenge_ts,
+      hostname: result.hostname
+    };
+    
+  } catch (error) {
+    console.error('Error during reCAPTCHA verification:', error.toString());
+    return {
+      success: false,
+      message: 'Failed to verify reCAPTCHA',
+      error: error.toString()
+    };
+  }
+}
+
+/**
+ * Checks rate limiting based on email
+ */
+function checkRateLimit(sheet, email, limitHours) {
+  try {
+    const now = new Date();
+    const limitTime = new Date(now.getTime() - (limitHours * 60 * 60 * 1000));
+    
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return { allowed: true };
+    
+    // Get timestamps (col 1) and emails (col 3) from the sheet
+    const data = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+    
+    // Check from most recent entries backwards
+    for (let i = data.length - 1; i >= 0; i--) {
+      const [timestamp, , existingEmail] = data[i];
+      if (existingEmail && existingEmail.toString().toLowerCase() === email.toLowerCase()) {
+        if (new Date(timestamp) > limitTime) {
+          const nextAllowedTime = new Date(new Date(timestamp).getTime() + (limitHours * 60 * 60 * 1000));
+          return { 
+            allowed: false, 
+            nextAllowedTime: nextAllowedTime.toLocaleTimeString('et-EE')
+          };
+        }
+        break;
+      }
+    }
+    
+    return { allowed: true };
+  } catch (error) {
+    console.error('Error checking rate limit:', error);
+    return { allowed: true };
+  }
+}
+
+/**
+ * Checks for duplicate email addresses
+ */
+function checkDuplicateEmail(sheet, email) {
+  try {
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return false;
+    
+    // Get all emails (assuming they're in column 3)
+    const data = sheet.getRange(2, 3, lastRow - 1, 1).getValues();
+    
+    return data.some(row => 
+      row[0] && row[0].toString().toLowerCase() === email.toLowerCase()
+    );
+  } catch (error) {
+    console.error('Error checking for duplicate email:', error);
+    return false;
+  }
+}
+
+/**
+ * Creates JSON or JSONP response
+ */
+function createResponse(data, _statusCode, callback) {
+  const json = JSON.stringify(data);
+  if (callback) {
+    // JSONP response
+    return ContentService
+      .createTextOutput(`${callback}(${json})`)
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } else {
+    // Plain JSON response
+    return ContentService
+      .createTextOutput(json)
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Sends notification for new membership
+ */
+function notifyMembershipSignup(name, email, score) {
+  try {
+    const recipient = 'kaiukodukant@gmail.com'; // !!! Replace with actual recipient !!!
+    const subject = 'Uus liikmestaotus MTÜ Kaiu Kodukant';
+    const body = `
+      Uus liikmestaotus vastu võetud!
+      
+      Nimi: ${name}
+      E-post: ${email}
+      reCAPTCHA Score: ${score}
+      Aeg: ${new Date().toLocaleString('et-EE')}
+      
+      Koguarv taotlusi: ${SpreadsheetApp.openById(MEMBERSHIP_SPREADSHEET_ID).getSheetByName(MEMBERSHIP_SHEET_NAME).getLastRow() - 1}
+    `;
+    
+    GmailApp.sendEmail(recipient, subject, body);
+    
+  } catch (error) {
+    console.error('Error sending membership notification email:', error);
+  }
+}
+
+/**
+ * Sends notification for new contact message
+ */
+function notifyContactMessage(name, email, subject, message, score) {
+  try {
+    const recipient = 'kaiukodukant@gmail.com'; // !!! Replace with actual recipient !!!
+    const emailSubject = 'Uus sõnum MTÜ Kaiu Kodukant kodulehelt';
+    const body = `
+      Uus sõnum kodulehelt vastu võetud!
+      
+      Nimi: ${name}
+      E-post: ${email}
+      Teema: ${subject}
+      Sõnum: ${message}
+      reCAPTCHA Score: ${score}
+      Aeg: ${new Date().toLocaleString('et-EE')}
+    `;
+    
+    GmailApp.sendEmail(recipient, emailSubject, body);
+    
+  } catch (error) {
+    console.error('Error sending contact notification email:', error);
+  }
+}
+
+/**
+ * Handles GET requests for calendar data and gallery data
+ */
+function doGet(e) {
+  const callback = e && e.parameter && e.parameter.callback;
+
+  try {
+    if (!e || !e.parameter || !e.parameter.action) {
+      return createResponse({ status:'error', message:'Invalid request: action parameter is missing.' }, 400, callback);
+    }
+
+    const action = e.parameter.action;
+
+    if (action === 'calendar') {
+      return getCalendarEvents(callback);
+    } 
+    if (action === 'gallery') {
+      return getGalleryData(callback);
+    } 
+    if (action === 'album') {
+      const albumId = e.parameter.id;
+      if (!albumId) {
+        return createResponse({ status:'error', message:'Album ID required' }, 400, callback);
+      }
+      return getAlbumPhotos(albumId, callback);
+    }
+
+    return createResponse({ status:'error', message:'Invalid action' }, 400, callback);
+  } catch (err) {
+    return createResponse({ status:'error', message:'Server error occurred', details: err.toString() }, 500, callback);
+  }
+}
+
+/**
+ * Gets gallery albums from Google Drive with caching
+ */
+function getGalleryData(callback) {
+  try {
+    // Check cache first
+    const cache = CacheService.getScriptCache();
+    const cacheKey = 'gallery_albums';
+    const cachedData = cache.get(cacheKey);
+    
+    if (cachedData) {
+      console.log('Returning cached gallery data');
+      return createResponse({
+        status: 'success',
+        albums: JSON.parse(cachedData),
+        cached: true
+      }, 200, callback);
+    }
+    
+    // Check if gallery folder is configured
+    if (GALLERY_DRIVE_FOLDER_ID === 'YOUR_GALLERY_FOLDER_ID') {
+      console.warn('Gallery folder not configured');
+      return getExampleGalleryData(callback);
+    }
+    
+    // Get fresh data from Google Drive
+    const galleryFolder = DriveApp.getFolderById(GALLERY_DRIVE_FOLDER_ID);
+    const albumFolders = galleryFolder.getFolders();
+    const albums = [];
+    
+    while (albumFolders.hasNext()) {
+      const folder = albumFolders.next();
+      const album = processAlbumFolder(folder);
+      if (album) albums.push(album);
+    }
+    
+    // Sort albums by date (newest first)
+    albums.sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
+    
+    // Cache the data
+    cache.put(cacheKey, JSON.stringify(albums), GALLERY_CACHE_MINUTES * 60);
+    console.log(`Cached ${albums.length} gallery albums for ${GALLERY_CACHE_MINUTES} minutes`);
+    
+    return createResponse({
+      status: 'success',
+      albums: albums,
+      cached: false,
+      count: albums.length
+    }, 200, callback);
+    
+  } catch (error) {
+    console.error('Error getting gallery data:', error.toString());
+    return createResponse({
+      status: 'error',
+      message: 'Failed to load gallery albums',
+      details: error.toString()
+    }, 500, callback);
+  }
+}
+
+/**
+ * Caches photos for a specific album and updates the cache index.
+ */
+function cacheAlbumPhotos(folderId, photos) {
+  const cache = CacheService.getScriptCache();
+  const key = `album_photos_${folderId}`;
+  cache.put(key, JSON.stringify(photos), ALBUM_CACHE_MINUTES * 60);
+
+  const indexKey = 'album_photo_keys_index';
+  const current = cache.get(indexKey);
+  const set = current ? new Set(JSON.parse(current)) : new Set();
+  set.add(key);
+  cache.put(indexKey, JSON.stringify([...set]), 6 * 3600); // keep index ~6h
+}
+
+
+/**
+ * Gets photos from a specific album folder
+ */
+function getAlbumPhotos(folderId, callback) {
+  try {
+    // Check cache first
+    const cache = CacheService.getScriptCache();
+    const cacheKey = `album_photos_${folderId}`;
+    const cachedData = cache.get(cacheKey);
+    
+    if (cachedData) {
+      console.log('Returning cached album photos');
+      return createResponse({
+        status: 'success',
+        photos: JSON.parse(cachedData),
+        cached: true
+      }, 200, callback);
+    }
+    
+    // Get album folder
+    const albumFolder = DriveApp.getFolderById(folderId);
+    const files = albumFolder.getFiles();
+    const photos = [];
+    
+    while (files.hasNext()) {
+      const file = files.next();
+      if (isImageFile(file)) {
+        photos.push({
+          id: file.getId(),
+          name: file.getName(),
+          url: getOptimizedImageUrl(file.getId(), 1200), // Full size
+          thumbnailUrl: getOptimizedImageUrl(file.getId(), 400), // Thumbnail
+          caption: getImageCaption(file.getName()),
+          dateCreated: file.getDateCreated().toISOString()
+        });
+      }
+    }
+    
+    // Sort photos by date created
+    photos.sort((a, b) => new Date(a.dateCreated) - new Date(b.dateCreated));
+    
+    // Cache the data
+    cacheAlbumPhotos(folderId, photos);
+    console.log(`Cached ${photos.length} photos for album ${folderId}`);
+    
+    return createResponse({
+      status: 'success',
+      photos: photos,
+      cached: false,
+      count: photos.length
+    }, 200, callback);
+    
+  } catch (error) {
+    console.error('Error getting album photos:', error.toString());
+    return createResponse({
+      status: 'error',
+      message: 'Failed to load album photos',
+      details: error.toString()
+    }, 500, callback);
+  }
+}
+
+/**
+ * Processes a single album folder to extract metadata
+ */
+function processAlbumFolder(folder) {
+  try {
+    const files = folder.getFiles();
+    let coverImageId = null;
+    let imageCount = 0;
+    let albumInfo = null;
+    
+    // Look for cover image, count images, and get info
+    while (files.hasNext()) {
+      const file = files.next();
+      
+      if (isImageFile(file)) {
+        imageCount++;
+        // Use first image as cover if no specific cover.jpg found
+        if (!coverImageId || file.getName().toLowerCase().includes('cover')) {
+          coverImageId = file.getId();
+        }
+      } else if (file.getName().toLowerCase() === 'info.txt') {
+        albumInfo = file.getBlob().getDataAsString();
+      }
+    }
+    
+    // Skip folders with no images
+    if (imageCount === 0) {
+      console.log(`Skipping folder ${folder.getName()} - no images found`);
+      return null;
+    }
+    
+    // Parse album info (date and description)
+    let albumDate = folder.getDateCreated().toLocaleDateString('et-EE');
+    let albumDescription = '';
+    
+    if (albumInfo) {
+      const lines = albumInfo.split('\n');
+      if (lines.length > 0 && lines[0].trim()) albumDate = lines[0].trim();
+      if (lines.length > 1) albumDescription = lines.slice(1).join('\n').trim();
+    }
+    
+    return {
+      id: folder.getId(),
+      title: folder.getName().replace(/^\d{4}-/, '').replace(/-/g, ' '), // Clean up folder name
+      date: albumDate,
+      description: albumDescription,
+      coverImageUrl: coverImageId ? getOptimizedImageUrl(coverImageId, 600) : '',
+      imageCount: imageCount,
+      dateCreated: folder.getDateCreated().toISOString()
+    };
+    
+  } catch (error) {
+    console.error(`Error processing album folder ${folder.getName()}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Checks if a file is an image
+ */
+function isImageFile(file) {
+  const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  return imageTypes.includes(file.getBlob().getContentType());
+}
+
+/**
+ * Generates optimized Google Drive image URL with size parameter
+ */
+function getOptimizedImageUrl(fileId, size = 800) {
+  return `https://drive.google.com/uc?id=${fileId}&sz=w${size}`;
+}
+
+/**
+ * Extracts caption from filename (removes extension and cleans up)
+ */
+function getImageCaption(filename) {
+  return filename
+    .replace(/\.[^/.]+$/, '') // Remove extension
+    .replace(/[-_]/g, ' ') // Replace dashes and underscores with spaces
+    .replace(/^\d+[-.\s]*/, '') // Remove leading numbers
+    .trim();
+}
+
+/**
+ * Returns example gallery data when Drive folder is not configured
+ */
+function getExampleGalleryData(callback) {
+  const exampleAlbums = [
+    {
+      id: 'example1',
+      title: 'Suvefestival 2024 (Näidis)',
+      date: '15. juuli 2024',
+      description: 'Traditsioonilne suvefestival kogu perele',
+      coverImageUrl: 'https://placehold.co/600x400/cfcabe/111111?text=Suvefestival',
+      imageCount: 8
+    },
+    {
+      id: 'example2',
+      title: 'Kevadkorrastus 2024 (Näidis)',
+      date: '20. aprill 2024',
+      description: 'Kogukonna ühine kevadkorrastus',
+      coverImageUrl: 'https://placehold.co/600x400/cfcabe/111111?text=Kevadkorrastus',
+      imageCount: 12
+    }
+  ];
+  
+  return createResponse({
+    status: 'success',
+    albums: exampleAlbums,
+    cached: false,
+    example: true
+  }, 200, callback);
+}
+
+/**
+ * Clears all gallery caches (useful for manual refresh)
+ */
+function clearGalleryCaches() {
+  const cache = CacheService.getScriptCache();
+  cache.remove('gallery_albums');
+
+  const indexKey = 'album_photo_keys_index';
+  const current = cache.get(indexKey);
+  if (current) {
+    JSON.parse(current).forEach(k => cache.remove(k));
+    cache.remove(indexKey);
+  }
+  console.log('All gallery caches cleared');
+}
+
+
+/**
+ * Clears the calendar cache (useful for manual refresh)
+ */
+function clearCalendarCache() {
+  const cache = CacheService.getScriptCache();
+  cache.remove('calendar_events');
+  console.log('Calendar cache cleared');
+}
+
+/**
+ * Gets calendar events from Google Calendar with caching
+ * Called via: GET ?action=calendar
+ */
+function getCalendarEvents(callback) {
+  try {
+    // Check cache first (15-minute cache)
+    const cache = CacheService.getScriptCache();
+    const cacheKey = 'calendar_events';
+    const cachedData = cache.get(cacheKey);
+    
+    if (cachedData) {
+      console.log('Returning cached calendar events');
+      return createResponse({
+        status: 'success',
+        events: JSON.parse(cachedData),
+        cached: true
+      }, 200, callback);
+    }
+    
+    // Get calendar
+    const calendar = CalendarApp.getCalendarById(GOOGLE_CALENDAR_ID);
+    if (!calendar) {
+      console.error('Calendar not found:', GOOGLE_CALENDAR_ID);
+      return getExampleCalendarEvents(callback);
+    }
+    
+    // Define time range (1 month ago to 6 months ahead)
+    const now = new Date();
+    const timeMin = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const timeMax = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+    
+    // Get events
+    const events = calendar.getEvents(timeMin, timeMax);
+    console.log(`Found ${events.length} calendar events`);
+    
+    // Format events for FullCalendar
+    const formattedEvents = events.map(event => ({
+      id: event.getId(),
+      title: event.getTitle(),
+      start: event.getStartTime().toISOString(),
+      end: event.getEndTime().toISOString(),
+      description: event.getDescription() || '',
+      location: event.getLocation() || '',
+      allDay: event.isAllDayEvent()
+    }));
+    
+    // Cache the formatted events
+    cache.put(cacheKey, JSON.stringify(formattedEvents), CALENDAR_CACHE_MINUTES * 60);
+    console.log(`Cached ${formattedEvents.length} events for ${CALENDAR_CACHE_MINUTES} minutes`);
+    
+    return createResponse({
+      status: 'success',
+      events: formattedEvents,
+      cached: false,
+      count: formattedEvents.length
+    }, 200, callback);
+    
+  } catch (error) {
+    console.error('Error getting calendar events:', error.toString());
+    // Fallback to example events
+    return getExampleCalendarEvents(callback);
+  }
+}
+
+/**
+ * Returns example calendar events when Calendar API fails or is not configured
+ */
+function getExampleCalendarEvents(callback) {
+  const now = new Date();
+  const exampleEvents = [
+    {
+      id: 'example1',
+      title: 'Näidisündmus - Kogukonna koosolek',
+      start: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString(),
+      description: 'See on näidisündmus. Palun seadista Google Calendar backend.',
+      location: 'Kaiu Kultuurimaja',
+      allDay: false
+    },
+    {
+      id: 'example2',
+      title: 'Suvefestival (Näidis)',
+      start: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      description: 'Traditsioonilline suvefestival kogu perele.',
+      location: 'Kaiu keskväljak',
+      allDay: true
+    },
+    {
+      id: 'example3',
+      title: 'Kevadkorrastus (Näidis)',
+      start: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      description: 'Kogukonna ühine kevadkorrastus.',
+      location: 'Kaiu alevik',
+      allDay: true
+    }
+  ];
+  
+  console.log('Returning example calendar events');
+  
+  return createResponse({
+    status: 'success',
+    events: exampleEvents,
+    cached: false,
+    example: true
+  }, 200, callback);
+}

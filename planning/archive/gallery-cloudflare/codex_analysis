@@ -1,0 +1,112 @@
+Gallery responsiveness analysis (based on planning/gallery docs and current implementation)
+
+Scope
+- Goal: Improve visual and behavioral responsiveness of the gallery (grid and lightbox) across screen sizes and network conditions.
+- Inputs analyzed: planning/gallery/*.md (apps-script-updates, cloudflare-worker, frontend-changes, implementation-phases, monitoring, performance-optimization, progress-tracker, testing-checklist) and current js/gallery.js, gallery.html, css/styles.css.
+
+Current behavior (from code)
+- Grid
+  - Uses fixed square thumbnails (aspect-square) with object-cover; always requests ~400px thumbs.
+  - No srcset/sizes; same resource for all DPRs and viewports.
+  - Lazy loading via loading="lazy" and IntersectionObserver fade-in.
+  - No explicit width/height attributes to reserve space (risk of CLS on slow networks).
+- Lightbox
+  - Constrains image to max-height ~85vh and max-width 90vw; simple keyboard navigation; preloads adjacent images.
+  - Uses a single “full” URL (~1600w target) with two alternates; no srcset/sizes.
+- Robustness
+  - Drive URL normalization and fallbacks are solid; graceful placeholder on failure.
+- HTML/CSS
+  - Gallery grid uses fixed column breakpoints; no preconnect/dns-prefetch hints in gallery.html head.
+  - Animations/hover transform present; no prefers-reduced-motion adjustments.
+
+What the planning docs already propose (good and applicable)
+- Responsive images with srcset/sizes per context (grid vs lightbox).
+- Smaller thumbnail sizes for grid (e.g., 300/600) and multiple widths for lightbox (800/1200/1600).
+- Preconnect/dns-prefetch for drive.google.com, lh3.googleusercontent.com, optional CDN domain.
+- Optional CDN proxy for caching and deterministic cache headers; version param for invalidation.
+- Monitoring and testing checklists to validate improvements.
+
+Gaps vs responsiveness needs
+- Intrinsic sizing: Missing width/height attributes on img to reserve aspect ratio and reduce layout shift.
+- Adaptive layout: Always square thumbnails; portrait images are heavily cropped on small screens. No masonry/justified option or content-aware crop.
+- Breakpoints: Fixed grid steps may show too-large gaps or cramped items on small/large screens; could tune per breakpoint.
+- Lightbox UX on mobile: Controls are clickable but small on some devices; no swipe gestures; caption may push content below the fold on very small heights.
+- Accessibility: Focus management not handled on lightbox open/close; no focus trap; ESC and arrows supported but tab order may leak to background.
+- Network responsiveness: No Save-Data awareness; always loads same quality on constrained networks.
+- Motion sensitivity: No prefers-reduced-motion handling for hover/zoom/fade.
+
+Prioritized recommendations
+
+Quick wins (frontend-only, no backend/CDN required)
+1) Responsive images in grid and lightbox
+   - Grid: use srcset with 300w and 600w thumbs; add sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px".
+   - Lightbox: use srcset 800w, 1200w, 1600w with sizes="(max-width: 800px) 100vw, (max-width: 1200px) 90vw, 1200px".
+   - Set decoding="async" and fetchpriority="low" on grid images; fetchpriority="high" on first visible items.
+2) Intrinsic dimensions and CLS reduction
+   - Provide width/height attributes on img tags that match the intended rendered size (e.g., 300x300 for square grid) or use aspect-ratio CSS on wrappers and explicit width/height to let browsers reserve space.
+   - Where available, pass natural width/height in JSON so the frontend can set width/height attributes accurately (see Medium changes below).
+3) Preconnect/DNS Prefetch
+   - Add preconnect and dns-prefetch for Drive domains (and CDN if used) to gallery.html head as proposed in frontend-changes.md.
+4) Touch-friendly lightbox controls
+   - Increase hit areas for prev/next/close to at least 44x44 CSS px on mobile; ensure they don’t overlap content.
+   - Keep caption concise; clamp lines on very small screens (CSS line-clamp) to avoid pushing image too small.
+5) Accessibility fixes
+   - When opening lightbox: focus the close button; trap focus within the modal; set aria-hidden="true" on background; restore focus to last active element when closing.
+   - Add aria-labels to navigation buttons and role="dialog" with aria-modal="true".
+6) Reduce motion when requested
+   - Respect prefers-reduced-motion: disable hover scale on thumbnails and reduce cross-fades/transitions.
+
+Medium changes (small backend aid; optional CDN later)
+7) Provide image metadata in API
+   - Add width and height (or aspect ratio) for each photo in Apps Script responses. This allows the grid to set width/height on <img> precisely, improving responsiveness and avoiding CLS even if not square.
+   - For cover images, include natural dimensions too.
+8) Smarter layout options
+   - Consider offering a “compact” layout on mobile: reduce gaps (gap-2), allow 3 columns on medium screens if content density is preferred.
+   - Optional: switch from strict squares to aspect-ratio based containers that better preserve portrait vs landscape compositions. A simple start: use aspect-[4/3] on md+ and aspect-[1/1] on sm; or read aspect from metadata and apply class accordingly.
+9) Save-Data awareness
+   - Detect navigator.connection.saveData; if true, prefer the smallest srcset candidate and avoid lightbox prefetch.
+
+Advanced (optional but impactful)
+10) CDN proxy and versioning (as in cloudflare-worker.md and apps-script-updates.md)
+   - Use CDN URLs with version parameter for cache busting; continue to provide Drive URL as final fallback.
+   - With CDN in place, expand srcset candidates to include 1600/2000 for large, high-DPR screens without over-fetching.
+11) Gesture support in lightbox
+   - Add swipe left/right for navigation on touch devices; pinch-to-zoom if needed (libraries or lightweight custom implementation).
+
+Concrete code-change pointers
+- gallery.html (head): add preconnect/dns-prefetch links per frontend-changes.md.
+- js/gallery.js
+  - In displayAlbumPhotos:
+    - Build an ImageUrlBuilder as proposed in frontend-changes.md to produce src, srcset, sizes, fallback.
+    - Create img with width/height attributes (e.g., 300x300) and decoding="async". For first N images above the fold, consider fetchpriority="high".
+    - Keep existing Drive fallback logic; extend to set img.srcset and img.sizes if available.
+  - In openLightbox/updateLightboxImage:
+    - Provide responsive srcset/sizes and let the browser pick the best variant.
+    - Ensure the loader hides promptly on error; set a placeholder image to keep layout stable.
+  - In setupImageLazyLoading:
+    - IntersectionObserver exists; add rootMargin to start loading slightly before entering viewport (e.g., 100px).
+- css/styles.css
+  - Add classes/utilities for line-clamping captions; ensure lightbox captions wrap nicely on small widths.
+  - Add @media (prefers-reduced-motion: reduce) to turn off hover scale and reduce transition durations.
+  - Ensure .lightbox-container and .lightbox-img scale well between portrait/landscape; test on devices from 320px up to 1440px.
+
+Validation checklist (from testing-checklist.md plus responsiveness specifics)
+- Grid
+  - srcset/sizes picks smaller resources on mobile; 2x on retina.
+  - No layout shift when images load; CLS stays < 0.1.
+  - Thumbnails look good for portrait and landscape; cropping acceptable or alternative aspect handling applied.
+- Lightbox
+  - Controls are easily tappable on mobile (>=44px target size).
+  - Images fit within viewport with caption visible; no overflow.
+  - Keyboard (Esc, arrows) and focus trapping work; background is not tabbable.
+- Network
+  - Save-Data forces smallest variants; preloading avoided.
+  - Preconnect entries appear in the waterfall before first image fetch.
+
+Effort estimate
+- Quick wins: ~2–3 hours (srcset/sizes, width/height, preconnect, minor CSS/JS, basic a11y improvements).
+- Medium: ~3–5 hours (API metadata + adaptive layout tweaks + Save-Data handling).
+- Advanced: 4–6 hours (CDN worker, versioning, gesture support).
+
+Notes
+- The planning docs already cover most of the performance groundwork; this analysis focuses on visual and behavioral responsiveness. Implementing the quick wins first will yield immediate improvements without backend changes, while the medium changes unlock better CLS and layout quality. CDN+versioning will further improve repeat-visit responsiveness and allow richer srcset pyramids.

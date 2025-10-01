@@ -291,8 +291,7 @@ function hmacSHA256(message, key, hexOutput = false) {
     keyToUse = key;
   } else if (Array.isArray(key)) {
     // Key is a byte array from previous HMAC operation
-    // Convert byte array to string for Apps Script
-    keyToUse = key.map(byte => String.fromCharCode((byte + 256) % 256)).join('');
+    keyToUse = key;
   } else {
     keyToUse = key;
   }

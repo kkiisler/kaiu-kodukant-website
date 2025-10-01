@@ -112,15 +112,19 @@ Solution:
 **Date**: 2025-10-01
 **Start Time**: N/A (Code generation completed)
 **End Time**: N/A
-**Time Spent**: ~1 hour
+**Time Spent**: ~2 hours (including S3 auth debugging)
 
-#### Code Deployment - ✅ CODE GENERATED (Ready for deployment)
+#### Code Deployment - ✅ CODE GENERATED AND DEBUGGED
 - [✓] Generate s3-utils.gs for Apps Script
   - [✓] AWS Signature V4 implementation complete
   - [✓] Upload, delete, and signing functions
+  - [✓] URI encoding fix applied (encodeS3Key function)
+  - [✓] Host header handling fixed for Apps Script
+  - [✓] Byte array handling simplified in hmacSHA256
 - [✓] Generate config.gs for Apps Script
   - [✓] S3, Calendar, and Gallery configuration
   - [✓] Script Properties verification function
+  - [✓] Region set to eu-west-1 (Pilvio default)
 - [✓] Generate calendar-sync.gs for Apps Script
   - [✓] Calendar event fetching and formatting
   - [✓] S3 upload with error handling
