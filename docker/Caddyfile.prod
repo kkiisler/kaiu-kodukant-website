@@ -20,6 +20,29 @@
 	}
 	rewrite @pages /pages{path}.html
 
+	# S3 Proxy for calendar events (bypasses CORS)
+	handle /api/calendar/events.json {
+		reverse_proxy https://s3.pilw.io {
+			header_up Host s3.pilw.io
+			header_down Access-Control-Allow-Origin "{$DOMAIN_NAME}"
+			header_down Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+			header_down Access-Control-Allow-Headers "*"
+			header_down Cache-Control "public, max-age=300"
+			rewrite /kaiugalerii/calendar/events.json
+		}
+	}
+
+	# S3 Proxy for gallery (Phase 2)
+	handle_path /api/gallery/* {
+		reverse_proxy https://s3.pilw.io {
+			header_up Host s3.pilw.io
+			header_down Access-Control-Allow-Origin "{$DOMAIN_NAME}"
+			header_down Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+			header_down Access-Control-Allow-Headers "*"
+			rewrite /kaiugalerii/gallery{path}
+		}
+	}
+
 	file_server
 
 	# Enable compression

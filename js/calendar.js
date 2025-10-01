@@ -96,15 +96,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     async function loadCalendarEvents(successCallback, failureCallback) {
-        // Build URL for S3 endpoint
-        const baseUrl = window.S3_CONFIG.baseUrl;
-        const eventsUrl = `${baseUrl}${window.S3_CONFIG.endpoints.calendarEvents}`;
+        // Use local proxy endpoint to bypass CORS
+        const eventsUrl = '/api/calendar/events.json';
 
         // Show loading state
-        console.log('Fetching calendar events from S3...');
+        console.log('Fetching calendar events via proxy...');
 
         try {
-            // Fetch events from S3
+            // Fetch events via Caddy proxy
             const response = await fetch(eventsUrl);
 
             if (!response.ok) {
