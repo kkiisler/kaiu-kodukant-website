@@ -41,8 +41,9 @@ function uploadToS3(key, content, contentType, isPublic = true) {
   }
   const payloadHash = sha256Hash(payload);
 
-  // Prepare headers for signing (minimal set for better compatibility)
+  // Prepare headers for signing - include ONLY headers we can actually send
   const headersForSigning = {
+    'Content-Type': contentType,  // Include Content-Type in signature
     'x-amz-content-sha256': payloadHash,
     'x-amz-date': ''  // Will be filled by signRequest
   };
@@ -51,11 +52,8 @@ function uploadToS3(key, content, contentType, isPublic = true) {
     headersForSigning['x-amz-acl'] = 'public-read';
   }
 
-  // Generate AWS Signature V4
+  // Generate AWS Signature V4 - NO Host header since Apps Script can't send it
   const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, payload);
-
-  // Add Content-Type after signing
-  signedHeaders['Content-Type'] = contentType;
 
   // Make the request
   const options = {
