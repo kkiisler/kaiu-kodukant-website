@@ -41,8 +41,9 @@ function uploadToS3(key, content, contentType, isPublic = true) {
   }
   const payloadHash = sha256Hash(payload);
 
-  // Prepare headers for signing (without Host for Ceph/Pilvio compatibility)
+  // Prepare headers for signing (Host needed for signature but won't be sent)
   const headersForSigning = {
+    'Host': endpoint,  // Include for signature calculation
     'Content-Type': contentType,
     'x-amz-content-sha256': payloadHash
   };
@@ -56,6 +57,9 @@ function uploadToS3(key, content, contentType, isPublic = true) {
 
   // Generate AWS Signature V4
   const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, payload);
+
+  // Remove Host header after signing (Apps Script sets it automatically)
+  delete signedHeaders['Host'];
 
   // Make the request
   const options = {
@@ -94,10 +98,14 @@ function deleteFromS3(key) {
   const url = `https://${endpoint}/${bucket}/${key}`;
 
   const headersForSigning = {
+    'Host': endpoint,  // Include for signature calculation
     'x-amz-content-sha256': sha256Hash('')
   };
 
   const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, '');
+
+  // Remove Host header after signing
+  delete signedHeaders['Host'];
 
   const options = {
     method: method,
@@ -174,12 +182,16 @@ function signRequest(method, path, headers, payload) {
 
   // Debug logging (remove after testing)
   Logger.log('=== AWS Signature V4 Debug ===');
+  Logger.log('AccessKeyId: ' + accessKeyId);
+  Logger.log('Region: ' + region);
+  Logger.log('Service: ' + service);
   Logger.log('Date: ' + amzDate);
   Logger.log('Method: ' + method);
   Logger.log('Path: ' + path);
   Logger.log('Canonical Headers:\n' + canonicalHeaders);
   Logger.log('Signed Headers: ' + signedHeaders);
   Logger.log('Payload Hash: ' + payloadHash);
+  Logger.log('Canonical Request:\n' + canonicalRequest);
 
   // Create string to sign
   const algorithm = 'AWS4-HMAC-SHA256';
