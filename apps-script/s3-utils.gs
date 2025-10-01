@@ -13,8 +13,8 @@
  * @returns {object} Response object
  */
 function uploadToS3(key, content, contentType, isPublic = true) {
-  // Debug logging
-  Logger.log(`uploadToS3 called with: key=${key}, content=${content}, contentType=${contentType}`);
+  // Debug logging can be removed later
+  // Logger.log(`uploadToS3 called with: key=${key}, content=${content}, contentType=${contentType}`);
 
   if (content === undefined || content === null) {
     throw new Error('Content parameter is undefined or null');
@@ -180,6 +180,15 @@ function signRequest(method, path, headers, payload) {
     payloadHash
   ].join('\n');
 
+  // Debug logging (remove after testing)
+  Logger.log('=== AWS Signature V4 Debug ===');
+  Logger.log('Date: ' + amzDate);
+  Logger.log('Method: ' + method);
+  Logger.log('Path: ' + path);
+  Logger.log('Canonical Headers:\n' + canonicalHeaders);
+  Logger.log('Signed Headers: ' + signedHeaders);
+  Logger.log('Payload Hash: ' + payloadHash);
+
   // Create string to sign
   const algorithm = 'AWS4-HMAC-SHA256';
   const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
@@ -192,6 +201,8 @@ function signRequest(method, path, headers, payload) {
     canonicalRequestHash
   ].join('\n');
 
+  Logger.log('String to Sign:\n' + stringToSign);
+
   // Calculate signature
   const kDate = hmacSHA256(dateStamp, 'AWS4' + secretAccessKey);
   const kRegion = hmacSHA256(region, kDate);
@@ -199,8 +210,12 @@ function signRequest(method, path, headers, payload) {
   const kSigning = hmacSHA256('aws4_request', kService);
   const signature = hmacSHA256(stringToSign, kSigning, true);
 
+  Logger.log('Signature: ' + signature);
+
   // Add authorization header
   headers['Authorization'] = `${algorithm} Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+
+  Logger.log('Authorization Header: ' + headers['Authorization']);
 
   return headers;
 }
