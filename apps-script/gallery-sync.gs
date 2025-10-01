@@ -10,7 +10,7 @@
 function syncGallery() {
   const startTime = new Date().getTime();
   const MAX_RUNTIME = 5 * 60 * 1000; // 5 minutes (1 min safety buffer)
-  const BATCH_SIZE = 50; // Process max 50 images per run
+  const BATCH_SIZE = 10; // Reduced to 10 images per run (each image = 4 uploads)
 
   Logger.log('=== Starting Gallery Sync ===');
 
@@ -55,12 +55,14 @@ function syncGallery() {
           return { status: 'paused', processed: processedCount };
         }
 
-        // Process one photo (skip generation, just metadata)
+        // Process one photo with actual S3 upload
         const photo = album.photos[photoIndex];
         try {
-          // For now, we'll just use Drive URLs directly
-          // In production, you'd generate thumbnails here
-          processPhotoMetadata(photo, album);
+          // Check if already processed (has S3 URLs)
+          if (!photo.smallS3Url) {
+            // Process and upload photo to S3
+            processPhotoToS3(photo, album);
+          }
           processedCount++;
 
           if (processedCount % 10 === 0) {
@@ -216,11 +218,14 @@ function uploadAlbumToS3(album) {
     photos: album.photos.map(photo => ({
       id: photo.id,
       name: photo.name,
-      thumbnailUrl: photo.thumbnailUrl,
-      mediumUrl: photo.mediumUrl,
-      largeUrl: photo.largeUrl,
-      originalUrl: photo.originalUrl,
-      created: photo.created
+      // Use S3 URLs if available, otherwise Drive URLs
+      thumbnailUrl: photo.smallS3Url || photo.thumbnailUrl,
+      mediumUrl: photo.mediumS3Url || photo.mediumUrl,
+      largeUrl: photo.largeS3Url || photo.largeUrl,
+      originalUrl: photo.originalS3Url || photo.originalUrl,
+      created: photo.created,
+      // Include S3 status
+      s3Processed: !!(photo.smallS3Url && photo.mediumS3Url && photo.largeS3Url)
     }))
   };
 
@@ -243,8 +248,8 @@ function uploadGalleryManifest(albums) {
       modified: album.modified,
       photoCount: album.photos ? album.photos.length : 0,
       coverPhoto: album.photos && album.photos.length > 0 ? {
-        thumbnailUrl: album.photos[0].thumbnailUrl,
-        mediumUrl: album.photos[0].mediumUrl
+        thumbnailUrl: album.photos[0].smallS3Url || album.photos[0].thumbnailUrl,
+        mediumUrl: album.photos[0].mediumS3Url || album.photos[0].mediumUrl
       } : null
     })),
     totalAlbums: albums.length,
