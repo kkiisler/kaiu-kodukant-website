@@ -41,9 +41,10 @@ function uploadToS3(key, content, contentType, isPublic = true) {
   }
   const payloadHash = sha256Hash(payload);
 
-  // Prepare headers for signing - include ONLY headers we can actually send
+  // Prepare headers for signing - Host MUST be included for valid AWS signature
   const headersForSigning = {
-    'Content-Type': contentType,  // Include Content-Type in signature
+    'Host': endpoint,  // Required by AWS Signature V4 spec
+    'Content-Type': contentType,
     'x-amz-content-sha256': payloadHash,
     'x-amz-date': ''  // Will be filled by signRequest
   };
@@ -52,8 +53,12 @@ function uploadToS3(key, content, contentType, isPublic = true) {
     headersForSigning['x-amz-acl'] = 'public-read';
   }
 
-  // Generate AWS Signature V4 - NO Host header since Apps Script can't send it
+  // Generate AWS Signature V4
   const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, payload);
+
+  // Remove Host header from the request headers (Apps Script sets it automatically)
+  // But it was included in the signature calculation
+  delete signedHeaders['Host'];
 
   // Make the request
   const options = {
@@ -92,11 +97,15 @@ function deleteFromS3(key) {
   const url = `https://${endpoint}/${bucket}/${key}`;
 
   const headersForSigning = {
+    'Host': endpoint,  // Required by AWS Signature V4 spec
     'x-amz-content-sha256': sha256Hash(''),
     'x-amz-date': ''  // Will be filled by signRequest
   };
 
   const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, '');
+
+  // Remove Host header from the request
+  delete signedHeaders['Host'];
 
   const options = {
     method: method,
