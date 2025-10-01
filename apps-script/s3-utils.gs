@@ -196,8 +196,7 @@ function signRequest(method, path, headers, payload) {
 function sha256Hash(data) {
   const signature = Utilities.computeDigest(
     Utilities.DigestAlgorithm.SHA_256,
-    data,
-    Utilities.Charset.UTF_8
+    data
   );
   return signature.map(byte => {
     const v = (byte < 0) ? 256 + byte : byte;
