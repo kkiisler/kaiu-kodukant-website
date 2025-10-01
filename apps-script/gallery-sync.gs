@@ -5,12 +5,12 @@
 
 /**
  * Main gallery sync function with batch processing
- * Called by 15-minute trigger, processes 50 images per run
+ * Called by 15-minute trigger
  */
 function syncGallery() {
   const startTime = new Date().getTime();
   const MAX_RUNTIME = 5 * 60 * 1000; // 5 minutes (1 min safety buffer)
-  const BATCH_SIZE = 10; // Reduced to 10 images per run (each image = 4 uploads)
+  const BATCH_SIZE = 30; // Optimized to 30 images per run (~3.5 minutes)
 
   Logger.log('=== Starting Gallery Sync ===');
 
@@ -65,7 +65,7 @@ function syncGallery() {
           }
           processedCount++;
 
-          if (processedCount % 10 === 0) {
+          if (processedCount % 5 === 0) {
             Logger.log(`Progress: ${processedCount} photos processed in this run`);
           }
         } catch (error) {
