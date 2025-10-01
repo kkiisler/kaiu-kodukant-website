@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar Debug - MTÜ Kaiu Kodukant</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Calendar Debug Tool</h1>
+
+    <div class="debug-section">
+        <h2>1. Test S3 Events Fetch</h2>
+        <button onclick="testS3Fetch()">Test S3 Fetch</button>
+        <div id="s3-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>2. Check Event Format</h2>
+        <button onclick="checkEventFormat()">Check Event Format</button>
+        <div id="format-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>3. Test FullCalendar Integration</h2>
+        <button onclick="testFullCalendar()">Test FullCalendar</button>
+        <div id="fullcalendar-test" style="margin-top: 20px;"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>4. Raw S3 Response</h2>
+        <button onclick="showRawResponse()">Show Raw Response</button>
+        <pre id="raw-response"></pre>
+    </div>
+
+    <!-- Include FullCalendar -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js'></script>
+
+    <script>
+        const S3_URL = 'https://s3.pilw.io/kaiugalerii/calendar/events.json';
+        let cachedData = null;
+
+        async function testS3Fetch() {
+            const resultDiv = document.getElementById('s3-result');
+            resultDiv.innerHTML = '<p class="info">Testing S3 fetch...</p>';
+
+            try {
+                const response = await fetch(S3_URL);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                cachedData = data;
+
+                resultDiv.innerHTML = `
+                    <p class="success">✅ S3 fetch successful!</p>
+                    <ul>
+                        <li>Status: ${response.status}</li>
+                        <li>Events found: ${data.events ? data.events.length : 0}</li>
+                        <li>Last updated: ${data.lastUpdated || 'unknown'}</li>
+                        <li>Has events array: ${Array.isArray(data.events) ? 'Yes' : 'No'}</li>
+                    </ul>
+                `;
+
+                // Check CORS headers
+                console.log('Response headers:', response.headers);
+
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ S3 fetch failed!</p>
+                    <p>Error: ${error.message}</p>
+                    <p>This could be a CORS issue. Check browser console for details.</p>
+                `;
+                console.error('S3 fetch error:', error);
+            }
+        }
+
+        async function checkEventFormat() {
+            const resultDiv = document.getElementById('format-result');
+
+            if (!cachedData) {
+                resultDiv.innerHTML = '<p class="error">Please run S3 fetch test first</p>';
+                return;
+            }
+
+            if (!cachedData.events || !Array.isArray(cachedData.events)) {
+                resultDiv.innerHTML = '<p class="error">No events array found in response</p>';
+                return;
+            }
+
+            const events = cachedData.events;
+            let html = `<p class="success">Found ${events.length} events</p>`;
+
+            if (events.length > 0) {
+                const sampleEvent = events[0];
+                html += '<h3>Sample Event Structure:</h3>';
+                html += '<pre>' + JSON.stringify(sampleEvent, null, 2) + '</pre>';
+
+                // Check required fields
+                html += '<h3>Field Validation:</h3><ul>';
+                const requiredFields = ['id', 'title', 'start'];
+                const optionalFields = ['end', 'description', 'location', 'allDay'];
+
+                requiredFields.forEach(field => {
+                    const hasField = sampleEvent.hasOwnProperty(field);
+                    html += `<li>${hasField ? '✅' : '❌'} ${field} (required): ${hasField ? 'present' : 'missing'}</li>`;
+                });
+
+                optionalFields.forEach(field => {
+                    const hasField = sampleEvent.hasOwnProperty(field);
+                    html += `<li>${hasField ? '✅' : '⚪'} ${field} (optional): ${hasField ? 'present' : 'not set'}</li>`;
+                });
+
+                html += '</ul>';
+
+                // Check date format
+                html += '<h3>Date Format Check:</h3>';
+                try {
+                    const startDate = new Date(sampleEvent.start);
+                    html += `<p class="success">Start date is valid: ${startDate.toString()}</p>`;
+
+                    if (sampleEvent.end) {
+                        const endDate = new Date(sampleEvent.end);
+                        html += `<p class="success">End date is valid: ${endDate.toString()}</p>`;
+                    }
+                } catch (e) {
+                    html += `<p class="error">Date parsing error: ${e.message}</p>`;
+                }
+            }
+
+            resultDiv.innerHTML = html;
+        }
+
+        async function testFullCalendar() {
+            const testDiv = document.getElementById('fullcalendar-test');
+
+            if (!cachedData || !cachedData.events) {
+                testDiv.innerHTML = '<p class="error">Please run S3 fetch test first</p>';
+                return;
+            }
+
+            testDiv.innerHTML = '<p class="info">Initializing FullCalendar with S3 data...</p>';
+
+            // Create calendar container
+            const calendarDiv = document.createElement('div');
+            calendarDiv.id = 'test-calendar';
+            calendarDiv.style.marginTop = '20px';
+            testDiv.innerHTML = '';
+            testDiv.appendChild(calendarDiv);
+
+            try {
+                // Format events for FullCalendar
+                const formattedEvents = cachedData.events.map(event => ({
+                    id: event.id,
+                    title: event.title || 'Unnamed Event',
+                    start: event.start,
+                    end: event.end,
+                    allDay: event.allDay || false,
+                    extendedProps: {
+                        description: event.description,
+                        location: event.location
+                    }
+                }));
+
+                // Initialize FullCalendar
+                const calendar = new FullCalendar.Calendar(calendarDiv, {
+                    initialView: 'dayGridMonth',
+                    locale: 'et',
+                    firstDay: 1,
+                    height: 'auto',
+                    events: formattedEvents,
+                    eventClick: function(info) {
+                        alert(`Event: ${info.event.title}\nStart: ${info.event.start}\nDescription: ${info.event.extendedProps.description || 'No description'}`);
+                    }
+                });
+
+                calendar.render();
+
+                const summary = document.createElement('p');
+                summary.className = 'success';
+                summary.innerHTML = `✅ FullCalendar initialized with ${formattedEvents.length} events`;
+                testDiv.insertBefore(summary, calendarDiv);
+
+            } catch (error) {
+                testDiv.innerHTML = `<p class="error">❌ FullCalendar initialization failed: ${error.message}</p>`;
+                console.error('FullCalendar error:', error);
+            }
+        }
+
+        async function showRawResponse() {
+            const preElement = document.getElementById('raw-response');
+
+            try {
+                const response = await fetch(S3_URL);
+                const text = await response.text();
+
+                preElement.textContent = text;
+
+                // Try to parse and format JSON
+                try {
+                    const json = JSON.parse(text);
+                    preElement.textContent = JSON.stringify(json, null, 2);
+                } catch (e) {
+                    // Not JSON, show as-is
+                }
+
+            } catch (error) {
+                preElement.textContent = `Error fetching: ${error.message}`;
+            }
+        }
+
+        // Auto-run S3 fetch on load
+        window.addEventListener('load', () => {
+            testS3Fetch();
+        });
+    </script>
+</body>
+</html>
