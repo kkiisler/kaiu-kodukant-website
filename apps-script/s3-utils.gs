@@ -41,25 +41,21 @@ function uploadToS3(key, content, contentType, isPublic = true) {
   }
   const payloadHash = sha256Hash(payload);
 
-  // Prepare headers for signing (Host needed for signature but won't be sent)
+  // Prepare headers for signing (minimal set for better compatibility)
   const headersForSigning = {
-    'Host': endpoint,  // Include for signature calculation
-    'Content-Type': contentType,
-    'x-amz-content-sha256': payloadHash
+    'x-amz-content-sha256': payloadHash,
+    'x-amz-date': ''  // Will be filled by signRequest
   };
 
   if (isPublic) {
     headersForSigning['x-amz-acl'] = 'public-read';
   }
 
-  // Add cache control for versioning
-  headersForSigning['Cache-Control'] = 'public, max-age=86400'; // 24 hours
-
   // Generate AWS Signature V4
   const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, payload);
 
-  // Remove Host header after signing (Apps Script sets it automatically)
-  delete signedHeaders['Host'];
+  // Add Content-Type after signing
+  signedHeaders['Content-Type'] = contentType;
 
   // Make the request
   const options = {
@@ -98,14 +94,11 @@ function deleteFromS3(key) {
   const url = `https://${endpoint}/${bucket}/${key}`;
 
   const headersForSigning = {
-    'Host': endpoint,  // Include for signature calculation
-    'x-amz-content-sha256': sha256Hash('')
+    'x-amz-content-sha256': sha256Hash(''),
+    'x-amz-date': ''  // Will be filled by signRequest
   };
 
   const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, '');
-
-  // Remove Host header after signing
-  delete signedHeaders['Host'];
 
   const options = {
     method: method,
