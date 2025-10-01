@@ -13,7 +13,7 @@
 const S3_CONFIG = {
   endpoint: 's3.pilw.io',
   bucket: 'kaiugalerii',
-  region: 'ee-east',  // Pilvio region (Estonia East based on error response)
+  region: 'eu-west-1',  // Pilvio default region
   // Credentials loaded from Script Properties for security
   accessKeyId: PropertiesService.getScriptProperties().getProperty('S3_ACCESS_KEY_ID'),
   secretAccessKey: PropertiesService.getScriptProperties().getProperty('S3_SECRET_ACCESS_KEY')
