@@ -95,19 +95,27 @@ document.addEventListener('DOMContentLoaded', function() {
         calendarInitialized = true;
     }
     
-    function loadCalendarEvents(successCallback, failureCallback) {
-        // Build URL for Apps Script endpoint
-        const url = `${GOOGLE_APPS_SCRIPT_URL}?action=calendar`;
-        
+    async function loadCalendarEvents(successCallback, failureCallback) {
+        // Build URL for S3 endpoint
+        const baseUrl = window.S3_CONFIG.baseUrl;
+        const eventsUrl = `${baseUrl}${window.S3_CONFIG.endpoints.calendarEvents}`;
+
         // Show loading state
-        console.log('Fetching calendar events from backend...');
-        
-        // Use JSONP to avoid CORS issues
-        jsonp(url, function(data) {
-            console.log('Calendar response:', data);
-            
-            if (data.status === 'success' && data.events) {
-                // Format events for FullCalendar
+        console.log('Fetching calendar events from S3...');
+
+        try {
+            // Fetch events from S3
+            const response = await fetch(eventsUrl);
+
+            if (!response.ok) {
+                throw new Error(`S3 fetch failed: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Calendar response from S3:', data);
+
+            if (data.events && Array.isArray(data.events)) {
+                // Events are already formatted for FullCalendar from Apps Script
                 const events = data.events.map(item => ({
                     id: item.id,
                     title: item.title,
@@ -117,24 +125,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     location: item.location || '',
                     allDay: item.allDay || false
                 }));
-                
+
                 // Store all events
                 allEvents = events;
-                
+
                 // Update upcoming events list
                 updateUpcomingEventsList();
-                
-                console.log(`Loaded ${events.length} events${data.cached ? ' (cached)' : ''}`);
+
+                // Check staleness
+                if (data.lastUpdated) {
+                    const lastUpdated = new Date(data.lastUpdated);
+                    const age = (new Date() - lastUpdated) / (1000 * 60); // minutes
+
+                    if (age > window.S3_CONFIG.staleness.calendar) {
+                        console.warn(`Calendar data is ${Math.round(age)} minutes old (threshold: ${window.S3_CONFIG.staleness.calendar} min)`);
+                    }
+                }
+
+                console.log(`Loaded ${events.length} events from S3 (last updated: ${data.lastUpdated})`);
                 successCallback(events);
             } else {
-                console.warn('Invalid calendar response, using example events');
+                console.warn('Invalid calendar response from S3, using example events');
                 loadExampleCalendarEvents(successCallback);
             }
-        }, function(error) {
-            console.error('Calendar fetch error:', error);
+        } catch (error) {
+            console.error('S3 calendar fetch error:', error);
             // Fallback to example events
             loadExampleCalendarEvents(successCallback);
-        });
+        }
     }
     
     function loadExampleCalendarEvents(successCallback) {

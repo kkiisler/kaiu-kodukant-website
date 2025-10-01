@@ -1,20 +1,38 @@
 // Configuration for MTÜ Kaiu Kodukant Website
 // This file contains configuration values that need to be set for the website to function properly
 
-// Google Apps Script Backend URL
+// Google Apps Script Backend URL (LEGACY - for forms only after S3 migration)
 // Replace this with your actual deployed Apps Script URL
 // Get this from: Google Apps Script Editor > Deploy > Manage Deployments > Web App URL
 window.GOOGLE_APPS_SCRIPT_URL = 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE';
 
-// Example format:
-// window.GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec';
-
-// Note: This URL is used for:
-// - Calendar events (events.html)
+// Note: After S3 migration, this is only used for:
 // - Contact form submissions (contact.html)
 // - Membership registrations (membership.html)
-// - Photo gallery (gallery.html)
+// Calendar and gallery now load from S3 (see S3_CONFIG below)
 
 // reCAPTCHA Site Key (for forms)
 // Get this from: https://www.google.com/recaptcha/admin
 window.RECAPTCHA_SITE_KEY = 'YOUR_RECAPTCHA_SITE_KEY_HERE';
+
+// S3 Configuration (NEW - Phase 1: Calendar & Gallery)
+window.S3_CONFIG = {
+    baseUrl: 'https://s3.pilw.io/kaiugalerii',
+    endpoints: {
+        version: '/metadata/version.json',
+        calendarEvents: '/calendar/events.json',
+        galleryAlbums: '/gallery/albums.json',
+        galleryAlbum: '/gallery/albums/album-{id}.json',
+        images: '/images/{fileId}-{size}.jpg'
+    },
+    imageSizes: {
+        thumbnail: 300,
+        medium: 600,
+        large: 1200
+    },
+    // Staleness thresholds (minutes)
+    staleness: {
+        calendar: 60,
+        gallery: 60
+    }
+};
