@@ -1,129 +1,269 @@
 # MTÜ Kaiu Kodukant - Apps Script Backend
 
-This folder contains Google Apps Script files that sync calendar and gallery data to S3 storage.
+Google Apps Script backend that syncs calendar events and gallery photos from Google services to Pilvio S3 for the static website.
 
-## Files
+## Features
 
-- **config.gs** - Configuration and Script Properties setup
-- **s3-utils.gs** - S3 upload/download utilities with AWS Signature V4
-- **calendar-sync.gs** - Calendar sync logic (Phase 1)
-- **gallery-sync.gs** - Gallery sync logic (Phase 2) - *To be created*
-- **Code.gs** - Main entry points and manual functions
-- **triggers-setup.gs** - Trigger creation utilities
+- **Calendar Sync**: Fetches events from Google Calendar and uploads to S3
+- **Gallery Sync**: Processes photos from Google Drive folders and uploads to S3
+- **Incremental Sync**: Only uploads new/changed content to save resources
+- **Change Detection**: Optional smart sync that only runs when changes detected
+- **Error Handling**: Automatic retries and email alerts on failures
+
+## Files Overview
+
+### Core Files (Required)
+- **`Code.gs`** - Entry point functions for manual testing and management
+- **`config.gs`** - Configuration for S3, Calendar, Gallery, and monitoring
+- **`triggers-setup.gs`** - Functions to create and manage triggers
+
+### S3 Operations
+- **`s3-utils.gs`** - AWS Signature V4 implementation for Pilvio S3
+
+### Calendar Sync
+- **`calendar-sync.gs`** - Fetches Google Calendar events and syncs to S3
+
+### Gallery Sync
+- **`gallery-sync-incremental.gs`** - Main gallery sync with incremental processing
+- **`image-processor.gs`** - Downloads and processes images from Drive to S3
+- **`drive-change-trigger.gs`** - Optional change detection for smart syncing
 
 ## Setup Instructions
 
-### 1. Create Apps Script Project
+### 1. Configure Script Properties
 
-1. Go to [script.google.com](https://script.google.com)
-2. Create a new project
-3. Name it "MTU Kaiu Kodukant S3 Sync"
+In Apps Script Editor, go to Project Settings > Script Properties and add:
 
-### 2. Copy Code Files
+```
+S3_ACCESS_KEY_ID = your_pilvio_access_key
+S3_SECRET_ACCESS_KEY = your_pilvio_secret_key
+ADMIN_EMAIL = your_email@example.com (optional, for alerts)
+```
 
-Copy all `.gs` files from this folder to your Apps Script project:
-- config.gs
-- s3-utils.gs
-- calendar-sync.gs
-- Code.gs
-- triggers-setup.gs
+### 2. Deploy Files
 
-### 3. Configure Script Properties
+Copy all `.gs` files to your Google Apps Script project:
+1. Open [script.google.com](https://script.google.com)
+2. Create a new project or open existing
+3. Copy each `.gs` file content
+4. Save the project
 
-1. In Apps Script editor, click ⚙️ **Project Settings**
-2. Scroll to **Script Properties**
-3. Add the following properties:
+### 3. Initial Configuration
 
-| Property | Value | Description |
-|----------|-------|-------------|
-| `S3_ACCESS_KEY_ID` | `G1ZW8BDISGFYVG2SIKZ7` | Pilvio S3 access key |
-| `S3_SECRET_ACCESS_KEY` | `TEXyfkbNFK4Vff8YBxCS9onsuw9KQD0SLb31VQFO` | Pilvio S3 secret key |
-| `ADMIN_EMAIL` | `kaur.kiisler@gmail.com` | Email for error alerts |
+Run these functions once to verify setup:
 
-### 4. Enable Google Calendar API
+```javascript
+// Verify configuration
+runVerifyConfiguration();
 
-1. In Apps Script editor, click ➕ next to **Services**
-2. Find **Google Calendar API**
-3. Click **Add**
+// Test S3 connection
+runTestS3Connection();
+```
 
-### 5. Test Configuration
+### 4. Setup Triggers
 
-Run these functions from Apps Script editor to verify setup:
+Choose one of two approaches:
 
-1. **Test configuration**: Run `runVerifyConfiguration()`
-   - Should log "✓ Configuration verified"
+#### Option A: Standard Time-Based Sync
+```javascript
+// Syncs on schedule regardless of changes
+setupTriggers(false);
+// Calendar: every 5 minutes
+// Gallery: every 15 minutes
+```
 
-2. **Test S3 connection**: Run `runTestS3Connection()`
-   - Should upload and delete a test file
-   - Check logs for success messages
-
-3. **Test calendar sync**: Run `runCalendarSync()`
-   - Should sync events to S3
-   - Check S3 bucket for `calendar/events.json`
-
-### 6. Setup Triggers
-
-Once testing is successful, create automatic triggers:
-
-1. Run `setupTriggers()` function
-2. This creates a trigger to run `syncCalendar()` every 5 minutes
-3. Verify triggers in **Triggers** menu (clock icon on left sidebar)
+#### Option B: Smart Change-Based Sync (Recommended)
+```javascript
+// Only syncs when changes detected
+setupTriggers(true);
+// Calendar: every 5 minutes (always)
+// Gallery: checks every 10 min, syncs only if changes
+```
 
 ## Usage
 
 ### Manual Functions
 
-Run these from Apps Script editor:
+Run these from Apps Script editor for testing:
 
-- `runCalendarSync()` - Manually sync calendar
-- `runViewSyncStatus()` - View last sync times and status
-- `runTestS3Connection()` - Test S3 connectivity
-- `listTriggers()` - List all active triggers
+```javascript
+runCalendarSync();        // Manual calendar sync
+runGallerySync();         // Manual gallery sync
+runCheckGalleryStatus();  // Check sync progress
+runResetGallerySync();    // Clear stuck sync state
+runTestChangeDetection(); // Test change detection
+```
 
-### Monitoring
+### Monitor Sync Status
 
-- Check **Executions** tab (▶️ icon) to see sync history
-- Failed syncs will send email alerts after 3 consecutive failures
-- Logs are written to S3 at `logs/calendar-sync-YYYY-MM-DD.json`
+```javascript
+// View all system status
+viewSystemStatus();
 
-## S3 Structure
+// Check gallery sync progress
+debugSyncState();
+
+// List active triggers
+listTriggers();
+```
+
+### Switch Between Sync Modes
+
+```javascript
+// Switch to change-based (smart) sync
+switchToChangeBasedSync();
+
+// Switch back to time-based sync
+removeAllTriggers();
+setupTriggers(false);
+```
+
+## Configuration Details
+
+### Calendar Settings (config.gs)
+
+```javascript
+CALENDAR_CONFIG = {
+  calendarId: 'your_calendar_id@group.calendar.google.com',
+  monthsBack: 1,    // Fetch events from 1 month ago
+  monthsForward: 6  // Fetch events up to 6 months ahead
+}
+```
+
+### Gallery Settings (config.gs)
+
+```javascript
+GALLERY_CONFIG = {
+  folderId: 'google_drive_folder_id', // Root gallery folder
+  imageSizes: {
+    small: 300,   // Thumbnail
+    medium: 600,  // Preview
+    large: 1200   // Full view
+  }
+}
+```
+
+### S3 Structure
+
+Files are uploaded to Pilvio S3 with this structure:
 
 ```
 kaiugalerii/
 ├── calendar/
-│   └── events.json              # Calendar events for FullCalendar.js
-├── metadata/
-│   └── version.json             # Version numbers for cache busting
+│   └── events.json              # Calendar events
+├── gallery/
+│   ├── albums.json              # Album list and metadata
+│   └── albums/
+│       └── {albumId}.json       # Individual album data
+├── images/
+│   ├── {photoId}-300.jpg        # Small thumbnail
+│   ├── {photoId}-600.jpg        # Medium size
+│   ├── {photoId}-1200.jpg       # Large size
+│   └── {photoId}-original.jpg   # Original (if <10MB)
 └── logs/
-    ├── calendar-sync-*.json     # Sync logs
-    └── gallery-sync-*.json      # Gallery sync logs (Phase 2)
+    └── {type}-sync-{date}.json  # Sync logs
+```
+
+## How It Works
+
+### Calendar Sync
+1. Fetches events from Google Calendar API
+2. Filters events within date range
+3. Formats events for frontend display
+4. Uploads JSON to S3
+5. Runs every 5 minutes
+
+### Gallery Sync
+1. Scans Google Drive folders (albums)
+2. Loads existing S3 metadata to check what's already uploaded
+3. Downloads new photos from Drive
+4. Creates multiple sizes using Drive's thumbnail API
+5. Uploads images and metadata to S3
+6. Processes in batches (30 images per run) to avoid timeouts
+
+### Incremental Sync
+- Checks existing content in S3 before uploading
+- Skips photos that already exist
+- Updates only changed metadata
+- Tracks sync state to resume if interrupted
+
+### Change Detection (Optional)
+- Checks Drive for changes every 10 minutes
+- Compares file timestamps with last check
+- Only triggers sync if new/modified files found
+- Reduces unnecessary API calls by ~95%
+
+## Monitoring
+
+### Execution Logs
+View in Apps Script Editor > Executions
+
+Look for:
+- `✅ SYNC COMPLETE` - Successful completion
+- `⏸ Timeout approaching` - Partial sync (will resume)
+- `⏭ Skipped X existing photos` - Incremental sync working
+- `✗ Error` - Something failed
+
+### Email Alerts
+After 3 consecutive failures, sends alert to `ADMIN_EMAIL`
+
+### Manual Health Check
+```javascript
+getGallerySyncStats();
+// Returns: lastCheck, lastSync, pendingChanges, syncState
 ```
 
 ## Troubleshooting
 
-### "Missing required Script Properties"
+### Gallery sync stuck
+```javascript
+runResetGallerySync(); // Clear state
+runGallerySync();      // Restart
+```
 
-- Make sure all three Script Properties are configured (see Setup step 3)
+### S3 authentication errors
+- Verify Script Properties are set correctly
+- Check S3 credentials are valid
+- Ensure bucket name is correct (`kaiugalerii`)
 
-### "S3 upload failed"
+### Photos not uploading
+- Check Drive folder permissions
+- Verify folder ID in config.gs
+- Look for errors in execution logs
 
-- Verify S3 credentials are correct
-- Check Pilvio dashboard for bucket permissions
-- Ensure bucket name is `kaiugalerii`
+### Sync taking too long
+- Normal for initial sync (200+ photos = ~2 hours)
+- Subsequent syncs much faster with incremental mode
+- Consider reducing batch size if timeouts occur
 
-### "Calendar API error"
+## Performance
 
-- Make sure Google Calendar API is enabled (see Setup step 4)
-- Verify calendar ID in `config.gs` is correct
+### Initial Sync
+- First run processes all content
+- 200 photos: ~7-8 runs over 2 hours
+- Calendar: immediate
 
-### Trigger not running
+### Incremental Sync
+- Only processes new/changed content
+- Typical run: <1 minute
+- Skips existing content
 
-- Check **Triggers** tab to verify trigger exists
-- Look at **Executions** tab for error messages
-- Triggers may take 5-15 minutes to start after creation
+### Resource Usage
+- Apps Script quota: 6 min/execution, 90 min/day
+- Drive API: 1,000,000 queries/day
+- S3 API: Based on Pilvio plan
 
-## Next Steps
+## Security
 
-After Phase 1 (Calendar) is complete:
-- Phase 2 will add gallery sync with batch processing
-- Gallery sync will run every 15 minutes
+- No API keys in code (uses Script Properties)
+- S3 credentials never exposed
+- Uses AWS Signature V4 for secure uploads
+- CORS headers configured for website domain only
+
+## Support
+
+For issues or questions:
+- Check execution logs first
+- Verify all Script Properties are set
+- Test with manual functions before automation
+- Ensure Google services permissions are granted

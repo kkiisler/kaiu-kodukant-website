@@ -127,21 +127,13 @@ function processBatchOfPhotos(photos, startIndex, batchSize, album) {
 
 /**
  * Check if image already exists in S3
- * This can help avoid re-uploading
+ * NOTE: This function is deprecated - use loadS3AlbumData in gallery-sync-incremental.gs instead
+ * Keeping for backward compatibility only
  */
 function imageExistsInS3(key) {
-  try {
-    // Try to get metadata for the object
-    const url = `https://s3.pilw.io/kaiugalerii/${key}`;
-    const response = UrlFetchApp.fetch(url, {
-      method: 'HEAD',
-      muteHttpExceptions: true
-    });
-
-    return response.getResponseCode() === 200;
-  } catch (error) {
-    return false;
-  }
+  // This simple HEAD request doesn't work reliably with Pilvio S3
+  // Use the album metadata approach in gallery-sync-incremental.gs instead
+  return false;
 }
 
 /**

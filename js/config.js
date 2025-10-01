@@ -16,14 +16,15 @@ window.GOOGLE_APPS_SCRIPT_URL = 'YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE';
 window.RECAPTCHA_SITE_KEY = 'YOUR_RECAPTCHA_SITE_KEY_HERE';
 
 // S3 Configuration (NEW - Phase 1: Calendar & Gallery)
+// Using proxy endpoints to bypass CORS
 window.S3_CONFIG = {
-    baseUrl: 'https://s3.pilw.io/kaiugalerii',
+    baseUrl: '',  // Using local proxy paths
     endpoints: {
-        version: '/metadata/version.json',
-        calendarEvents: '/calendar/events.json',
-        galleryAlbums: '/gallery/albums.json',
-        galleryAlbum: '/gallery/albums/album-{id}.json',
-        images: '/images/{fileId}-{size}.jpg'
+        version: '/api/metadata/version.json',
+        calendarEvents: '/api/calendar/events.json',
+        galleryAlbums: '/api/gallery/albums.json',
+        galleryAlbum: '/api/gallery/albums/{id}.json',
+        images: '/api/images/{fileId}-{size}.jpg'
     },
     imageSizes: {
         thumbnail: 300,
