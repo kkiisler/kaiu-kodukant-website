@@ -12,6 +12,18 @@ function runCalendarSync() {
   return manualSyncCalendar();
 }
 
+function runGallerySync() {
+  return manualSyncGallery();
+}
+
+function runCheckGalleryStatus() {
+  return checkGallerySyncStatus();
+}
+
+function runResetGallerySync() {
+  return resetGallerySync();
+}
+
 function runTestS3Connection() {
   return testS3Connection();
 }
@@ -29,6 +41,7 @@ function runViewSyncStatus() {
  */
 function setupTriggers() {
   setupCalendarTrigger();
+  setupGalleryTrigger();
   Logger.log('✓ All triggers set up successfully');
 }
 

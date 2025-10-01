@@ -39,6 +39,7 @@
 			header_down Access-Control-Allow-Origin "{$DOMAIN_NAME}"
 			header_down Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
 			header_down Access-Control-Allow-Headers "*"
+			header_down Cache-Control "public, max-age=300"
 			rewrite /kaiugalerii/gallery{path}
 		}
 	}
