@@ -13,6 +13,13 @@
  * @returns {object} Response object
  */
 function uploadToS3(key, content, contentType, isPublic = true) {
+  // Debug logging
+  Logger.log(`uploadToS3 called with: key=${key}, content=${content}, contentType=${contentType}`);
+
+  if (content === undefined || content === null) {
+    throw new Error('Content parameter is undefined or null');
+  }
+
   const method = 'PUT';
   const bucket = S3_CONFIG.bucket;
   const endpoint = S3_CONFIG.endpoint;
@@ -30,7 +37,7 @@ function uploadToS3(key, content, contentType, isPublic = true) {
     // Content is already bytes array
     payload = content;
   } else {
-    throw new Error(`Invalid content type: ${typeof content}`);
+    throw new Error(`Invalid content type: ${typeof content}. Content value: ${content}`);
   }
   const payloadHash = sha256Hash(payload);
 
@@ -237,10 +244,23 @@ function hmacSHA256(message, key, hexOutput = false) {
 function testS3Connection() {
   Logger.log('Testing S3 connection...');
 
+  // Check S3 config first
+  if (!S3_CONFIG) {
+    throw new Error('S3_CONFIG is not defined. Make sure config.gs is loaded.');
+  }
+  if (!S3_CONFIG.bucket || !S3_CONFIG.endpoint) {
+    throw new Error('S3_CONFIG is incomplete. Check bucket and endpoint settings.');
+  }
+  if (!S3_CONFIG.accessKeyId || !S3_CONFIG.secretAccessKey) {
+    throw new Error('S3 credentials not configured. Check Script Properties.');
+  }
+
   try {
     // Upload test file
     const testKey = 'test/connection-test.txt';
     const testContent = `S3 connection test at ${new Date().toISOString()}`;
+
+    Logger.log(`About to call uploadToS3 with testContent: "${testContent}"`);
 
     uploadToS3(testKey, testContent, 'text/plain', true);
     Logger.log('✓ Upload successful');
