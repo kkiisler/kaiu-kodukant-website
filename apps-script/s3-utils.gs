@@ -4,6 +4,17 @@
  */
 
 /**
+ * URI-encodes an S3 object key's path segments.
+ * Encodes each segment but preserves the '/' separators.
+ *
+ * @param {string} key - The S3 object key
+ * @returns {string} The URI-encoded key
+ */
+function encodeS3Key(key) {
+  return key.split('/').map(encodeURIComponent).join('/');
+}
+
+/**
  * Upload content to S3 bucket
  *
  * @param {string} key - S3 object key (path)
@@ -23,7 +34,8 @@ function uploadToS3(key, content, contentType, isPublic = true) {
   const method = 'PUT';
   const bucket = S3_CONFIG.bucket;
   const endpoint = S3_CONFIG.endpoint;
-  const url = `https://${endpoint}/${bucket}/${key}`;
+  const encodedKey = encodeS3Key(key);  // Encode the key for URL and signature
+  const url = `https://${endpoint}/${bucket}/${encodedKey}`;
 
   // Convert content to bytes
   let payload;
@@ -54,7 +66,7 @@ function uploadToS3(key, content, contentType, isPublic = true) {
   }
 
   // Generate AWS Signature V4
-  const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, payload);
+  const signedHeaders = signRequest(method, `/${bucket}/${encodedKey}`, headersForSigning, payload);
 
   // Remove Host header from the request headers (Apps Script sets it automatically)
   // But it was included in the signature calculation
@@ -94,7 +106,8 @@ function deleteFromS3(key) {
   const method = 'DELETE';
   const bucket = S3_CONFIG.bucket;
   const endpoint = S3_CONFIG.endpoint;
-  const url = `https://${endpoint}/${bucket}/${key}`;
+  const encodedKey = encodeS3Key(key);  // Encode the key for URL and signature
+  const url = `https://${endpoint}/${bucket}/${encodedKey}`;
 
   const headersForSigning = {
     'Host': endpoint,  // Required by AWS Signature V4 spec
@@ -102,7 +115,7 @@ function deleteFromS3(key) {
     'x-amz-date': ''  // Will be filled by signRequest
   };
 
-  const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, '');
+  const signedHeaders = signRequest(method, `/${bucket}/${encodedKey}`, headersForSigning, '');
 
   // Remove Host header from the request
   delete signedHeaders['Host'];
@@ -143,9 +156,16 @@ function signRequest(method, path, headers, payload) {
   const secretAccessKey = S3_CONFIG.secretAccessKey;
   const region = S3_CONFIG.region;
   const service = 's3';
+  const endpointHost = S3_CONFIG.endpoint;
 
   if (!accessKeyId || !secretAccessKey) {
     throw new Error('S3 credentials not configured in Script Properties');
+  }
+
+  // Ensure host header is always present for canonical request
+  const hasHostHeader = Object.keys(headers).some(key => key.toLowerCase() === 'host');
+  if (!hasHostHeader) {
+    headers['Host'] = endpointHost;
   }
 
   // Get current date/time
@@ -156,16 +176,29 @@ function signRequest(method, path, headers, payload) {
   // Add required headers
   headers['x-amz-date'] = amzDate;
 
-  // Create canonical request
-  const canonicalHeaders = Object.keys(headers)
-    .sort()
-    .map(key => `${key.toLowerCase()}:${headers[key].trim()}`)
+  // Normalize header keys for canonical string
+  const normalizedHeaders = {};
+  Object.keys(headers).forEach(key => {
+    const lowerKey = key.toLowerCase();
+    const value = headers[key];
+    if (value === undefined || value === null) {
+      return;
+    }
+    normalizedHeaders[lowerKey] = String(value).trim();
+  });
+
+  // Ensure host is present after normalization (just in case)
+  if (!normalizedHeaders['host']) {
+    normalizedHeaders['host'] = endpointHost;
+  }
+
+  const sortedHeaderKeys = Object.keys(normalizedHeaders).sort();
+
+  const canonicalHeaders = sortedHeaderKeys
+    .map(key => `${key}:${normalizedHeaders[key]}`)
     .join('\n') + '\n';
 
-  const signedHeaders = Object.keys(headers)
-    .sort()
-    .map(key => key.toLowerCase())
-    .join(';');
+  const signedHeaders = sortedHeaderKeys.join(';');
 
   const payloadHash = typeof payload === 'string'
     ? sha256Hash(payload)
