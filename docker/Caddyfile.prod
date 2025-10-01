@@ -4,6 +4,19 @@
 {$DOMAIN_NAME} {
 	# Enable file server
 	root * /usr/share/caddy
+
+	# URL rewriting for clean URLs (pages/ directory)
+	@html {
+		path /
+		path /about
+		path /events
+		path /gallery
+		path /membership
+		path /contact
+	}
+	rewrite @html /pages{path}.html
+	rewrite / /pages/index.html
+
 	file_server
 
 	# Enable compression

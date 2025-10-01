@@ -39,7 +39,7 @@ RUN echo "=== Config.js after substitution ===" && cat /app/js/config.js
 FROM caddy:2.7-alpine
 
 # Copy processed static files from builder
-COPY --from=builder /app/*.html /usr/share/caddy/
+COPY --from=builder /app/pages /usr/share/caddy/pages
 COPY --from=builder /app/css /usr/share/caddy/css
 COPY --from=builder /app/js /usr/share/caddy/js
 COPY --from=builder /app/media /usr/share/caddy/media

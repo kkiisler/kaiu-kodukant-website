@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galerii - MTÜ Kaiu Kodukant</title>
+    <title>Sündmused - MTÜ Kaiu Kodukant</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com/"></script>
@@ -12,6 +12,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     
     <!-- Tailwind Configuration -->
     <script>
@@ -60,23 +63,23 @@
     </script>
 
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="bg-background-primary text-text-primary">
 
     <!-- Header -->
     <header class="bg-background-primary/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200">
         <nav class="global-padding max-w-wide mx-auto flex items-center justify-between py-4">
-            <a href="index.html">
-                <img src="media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
+            <a href="/">
+                <img src="/media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
             </a>
             <div class="hidden md:flex items-center space-x-8">
-                <a href="index.html" class="nav-link font-medium hover:underline">Esileht</a>
-                <a href="events.html" class="nav-link font-medium hover:underline">Sündmused</a>
-                <a href="gallery.html" class="nav-link font-medium hover:underline active">Galerii</a>
-                <a href="about.html" class="nav-link font-medium hover:underline">Meist</a>
-                <a href="contact.html" class="nav-link font-medium hover:underline">Kontakt</a>
-                <a href="membership.html" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors">Saa liikmeks</a>
+                <a href="/" class="nav-link font-medium hover:underline">Esileht</a>
+                <a href="/events" class="nav-link font-medium hover:underline active">Sündmused</a>
+                <a href="/gallery" class="nav-link font-medium hover:underline">Galerii</a>
+                <a href="/about" class="nav-link font-medium hover:underline">Meist</a>
+                <a href="/contact" class="nav-link font-medium hover:underline">Kontakt</a>
+                <a href="/membership" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors">Saa liikmeks</a>
             </div>
             <!-- Mobile Menu Button -->
             <button id="hamburger-menu" class="md:hidden">
@@ -85,12 +88,12 @@
         </nav>
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden global-padding pb-4">
-            <a href="index.html" class="block py-2 mobile-nav-link">Esileht</a>
-            <a href="events.html" class="block py-2 mobile-nav-link">Sündmused</a>
-            <a href="gallery.html" class="block py-2 mobile-nav-link active">Galerii</a>
-            <a href="about.html" class="block py-2 mobile-nav-link">Meist</a>
-            <a href="contact.html" class="block py-2 mobile-nav-link">Kontakt</a>
-            <a href="membership.html" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link">Saa liikmeks</a>
+            <a href="/" class="block py-2 mobile-nav-link">Esileht</a>
+            <a href="/events" class="block py-2 mobile-nav-link active">Sündmused</a>
+            <a href="/gallery" class="block py-2 mobile-nav-link">Galerii</a>
+            <a href="/about" class="block py-2 mobile-nav-link">Meist</a>
+            <a href="/contact" class="block py-2 mobile-nav-link">Kontakt</a>
+            <a href="/membership" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link">Saa liikmeks</a>
         </div>
     </header>
 
@@ -98,52 +101,68 @@
     <main>
         <!-- Page Title -->
         <div class="page-title-component">
-            <h1>Galerii</h1>
-            <p class="lead max-w-2xl mx-auto">Meie tegemised ja üritused piltides. Siit leiad fotosid kogukonna üritustest ja ühisest tegevusest.</p>
+            <h1>Sündmused</h1>
+            <p class="lead max-w-2xl mx-auto">Siit leiad meie tulevased üritused ja kogukonna kokkusaamised. Löö kaasa ja tule meie üritustele!</p>
         </div>
         
         <section class="global-padding">
-            <div id="gallery-container" class="max-w-wide mx-auto">
-                <!-- Album View -->
-                <div id="album-view">
-                    <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Albums will be loaded here by JavaScript -->
+            <div class="max-w-wide mx-auto">
+                <div class="section-card">
+                    <div id='calendar-container'>
+                        <div id='calendar'></div>
                     </div>
                 </div>
-
-                <!-- Photo View -->
-                <div id="photo-view" class="hidden">
-                    <button id="back-to-albums" class="mb-8 inline-flex items-center bg-white border border-gray-300 rounded-lg px-4 py-3 text-text-secondary hover:text-text-primary hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        Tagasi albumite juurde
-                    </button>
-                    <div class="text-center mb-12">
-                        <h2 id="photo-album-title" class="mb-4"></h2>
-                        <p id="photo-album-description" class="text-xl max-w-3xl mx-auto text-gray-600"></p>
+                
+                <!-- Upcoming events list -->
+                <div class="section-card mt-6">
+                    <h3 class="text-lg font-semibold mb-4">Järgmised sündmused</h3>
+                    <div id="upcoming-events" class="space-y-3">
+                        <p class="text-center text-text-secondary p-4">Sündmuste laadimine...</p>
                     </div>
-                    <div id="photo-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                        <!-- Photos will be loaded here by JavaScript -->
+                </div>
+                
+                <!-- Quick info cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h4 class="text-gray-900 font-semibold">Regulaarsed kokkusaamised</h4>
+                                <p class="text-gray-600 text-sm mt-1">Juhatus koguneb igal kuul, et planeerida kogukonna tegevusi</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h4 class="text-gray-900 font-semibold">Kogukonna üritused</h4>
+                                <p class="text-gray-600 text-sm mt-1">Suvefestivalid, korrastustööd ja muud kogunemised</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Gallery Lightbox Modal -->
-    <div id="lightbox" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] hidden items-center justify-center transition-opacity duration-300">
-        <button id="lightbox-close" class="absolute top-4 right-4 text-white/80 hover:text-white z-[110] w-12 h-12 flex items-center justify-center text-4xl transition-colors">&times;</button>
-        <button id="lightbox-prev" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-[110] w-12 h-12 flex items-center justify-center text-5xl transition-colors">&lsaquo;</button>
-        <button id="lightbox-next" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-[110] w-12 h-12 flex items-center justify-center text-5xl transition-colors">&rsaquo;</button>
-        <div class="relative w-full h-full flex flex-col items-center justify-center p-8">
-            <div class="lightbox-container relative flex items-center justify-center">
-                <div id="lightbox-loader" class="absolute inset-0 flex items-center justify-center hidden">
-                    <div class="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-                </div>
-                <img id="lightbox-img" src="" alt="Galerii pilt" class="lightbox-img rounded-lg shadow-2xl">
-            </div>
-            <p id="lightbox-caption" class="mt-4 text-white/90 text-lg max-w-2xl text-center"></p>
+    <!-- Event Modal -->
+    <div id="event-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 relative">
+            <button id="modal-close" class="absolute top-3 right-3 text-gray-400 hover:text-black w-8 h-8 flex items-center justify-center text-2xl rounded-full hover:bg-gray-100">&times;</button>
+            <h2 id="modal-title" class="text-2xl md:text-3xl font-bold text-text-primary pr-8"></h2>
+            <p id="modal-time" class="text-text-secondary mt-2"></p>
+            <hr class="my-4">
+            <div id="modal-description" class="mt-4 text-text-secondary prose"></div>
+            <p id="modal-location" class="mt-4 text-sm text-text-secondary font-semibold"></p>
         </div>
     </div>
 
@@ -157,7 +176,7 @@
             <div class="grid md:grid-cols-4 gap-8">
                 <!-- Column 1 - Brand -->
                 <div class="md:col-span-2 space-y-6">
-                    <img src="media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" class="h-12 w-auto" style="filter: brightness(0) invert(1);">
+                    <img src="/media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" class="h-12 w-auto" style="filter: brightness(0) invert(1);">
                     <p class="text-gray-300 text-lg leading-relaxed max-w-md">Edendame Kaiu kandi kogukonnaelu ja hoiame meie kodukoha väärtusi tulevastele põlvedele.</p>
                     <div class="flex items-center space-x-6">
                         <div class="text-center">
@@ -179,22 +198,22 @@
                 <div>
                     <h4 class="font-semibold text-white mb-6 text-lg">Navigatsioon</h4>
                     <ul class="space-y-3">
-                        <li><a href="index.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                        <li><a href="/" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Esileht
                         </a></li>
-                        <li><a href="events.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                        <li><a href="/events" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Sündmused
                         </a></li>
-                        <li><a href="gallery.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                        <li><a href="/gallery" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Galerii
                         </a></li>
-                        <li><a href="about.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                        <li><a href="/about" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Meist
                         </a></li>
-                        <li><a href="contact.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                        <li><a href="/contact" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Kontakt
                         </a></li>
-                        <li><a href="membership.html" class="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200 flex items-center group">
+                        <li><a href="/membership" class="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-blue-300 transition-colors duration-200"></span>Saa liikmeks
                         </a></li>
                     </ul>
@@ -235,15 +254,15 @@
             
             <div class="mt-12 pt-8 border-t border-gray-700">
                 <div class="flex flex-col md:flex-row justify-between items-center">
-                    <p class="text-gray-400 text-sm">&copy; 2025 MTÜ Kaiu Kodukant. Kõik õigused kaitstud.</p>
+                    <p class="text-gray-400 text-sm">&copy; 2024 MTÜ Kaiu Kodukant. Kõik õigused kaitstud.</p>
                 </div>
             </div>
         </div>
     </footer>
 
     <!-- JavaScript -->
-    <script src="js/config.js"></script>
-    <script src="js/common.js"></script>
-    <script src="js/gallery.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/common.js"></script>
+    <script src="/js/calendar.js"></script>
 </body>
 </html>

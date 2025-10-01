@@ -2,137 +2,229 @@
 // This script handles both membership registration and contact form submissions
 
 // Configuration
-const MEMBERSHIP_SPREADSHEET_ID = '1scwMSkGu0wz0pZYSGX1lQvo2xJnR_UdFhGT_wEa-Upw'; // !!! Replace with your Google Spreadsheet ID !!!
-const CONTACT_SPREADSHEET_ID = '1U0gW3V6DLbuVSDfryuIVzfaoOe1JqG-DXo9NXIm3AF0'; // !!! Replace with your Google Spreadsheet ID !!!
+const MEMBERSHIP_SPREADSHEET_ID = 'YOUR_MEMBERSHIP_SPREADSHEET_ID'; // !!! Replace with your Google Spreadsheet ID !!!
+const CONTACT_SPREADSHEET_ID = 'YOUR_CONTACT_SPREADSHEET_ID'; // !!! Replace with your Google Spreadsheet ID !!!
 const MEMBERSHIP_SHEET_NAME = 'Liikmed'; // Membership registrations
 const CONTACT_SHEET_NAME = 'Sõnumid'; // Contact messages
 const RECAPTCHA_THRESHOLD = 0.5; // Adjust based on your reCAPTCHA needs
 const RATE_LIMIT_HOURS = 1; // Hours before same email can submit again
-const ALLOWED_DOMAIN = 'https://tore.kaiukodukant.ee'; // !!! Change to your domain in production !!!
+const ALLOWED_DOMAIN = 'https://yourdomain.com'; // !!! Change to your domain in production !!!
 
 // Google Calendar Configuration
-const GOOGLE_CALENDAR_ID = 'a0b18dc4b7e4b9b40858746a7edddaa51b41014085ba2f4b2f89bf038ac13f12@group.calendar.google.com'; // Your calendar ID
+const GOOGLE_CALENDAR_ID = '3ab658c2becd62b9af62343da736243b73e1d56523c7c04b8ed46d944eb0e8fb@group.calendar.google.com'; // Your calendar ID
 const CALENDAR_CACHE_MINUTES = 15; // Cache calendar data for 15 minutes
 
 // Google Drive Gallery Configuration
-const GALLERY_DRIVE_FOLDER_ID = '1t2olfDcjsRHFWovLbiOTRBFMYbZQdNdg'; // !!! Replace with your Google Drive gallery folder ID !!!
+const GALLERY_DRIVE_FOLDER_ID = 'YOUR_GALLERY_FOLDER_ID'; // !!! Replace with your Google Drive gallery folder ID !!!
 const GALLERY_CACHE_MINUTES = 30; // Cache gallery albums for 30 minutes
 const ALBUM_CACHE_MINUTES = 60; // Cache album photos for 60 minutes
-
-/**
- * Helper function to return an HTML page that posts a message to the parent iframe.
- * This is the correct way to handle form submission responses to avoid CORS issues.
- */
-function respondToIframe(ok, formType, message, details) {
-  const payload = {
-    ok: !!ok,
-    formType: formType || '',
-    message: message || '',
-    details: details || ''
-  };
-  // Return a tiny HTML page that notifies the parent and closes
-  const html = `
-<!DOCTYPE html>
-<html><body>
-<script>
-  try { 
-    parent && parent.postMessage(${JSON.stringify(payload)}, "*"); 
-  } catch(e){}
-  setTimeout(function(){ document.open(); document.write(""); document.close(); }, 0);
-</script>
-</body></html>`;
-  return HtmlService.createHtmlOutput(html)
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL); // allow iframe embedding
-}
 
 /**
  * Handles POST requests from web forms
  * Routes to appropriate handler based on form type
  */
 function doPost(e) {
-  try {
-    if (!e || !e.parameter) {
-       return respondToIframe(false, '', 'Serveri viga: kehtetu päring.');
-    }
-    let data = e.parameter;
+  const headers = {
+    'Access-Control-Allow-Origin': ALLOWED_DOMAIN,
+    'Access-Control-Allow-Methods': 'POST',
+    'Access-Control-Allow-Headers': 'Content-Type'
+  };
 
-    if (data.formType === 'membership') {
-      return handleMembershipForm(data);
-    } else if (data.formType === 'contact') {
-      return handleContactForm(data);
+  try {
+    let data;
+    
+    // Parse incoming data
+    if (e.postData && e.postData.type === 'application/json') {
+      data = JSON.parse(e.postData.contents);
+    } else if (e.parameter) {
+      data = e.parameter;
+    } else {
+      console.error('No data received in the request.');
+      return createResponse({ 
+        status: 'error', 
+        message: 'No data received' 
+      }, 400, headers);
     }
-    return respondToIframe(false, '', 'Vigane vormitüüp.');
-  } catch (err) {
-    console.error('doPost error:', err);
-    return respondToIframe(false, '', 'Serveri viga.', err.toString());
+    
+    // Route to appropriate form handler based on form type
+    if (data.formType === 'membership') {
+      return handleMembershipForm(data, headers);
+    } else if (data.formType === 'contact') {
+      return handleContactForm(data, headers);
+    } else {
+      return createResponse({ 
+        status: 'error', 
+        message: 'Invalid form type' 
+      }, 400, headers);
+    }
+    
+  } catch (error) {
+    console.error('Error processing request:', error.toString());
+    return createResponse({ 
+      status: 'error', 
+      message: 'Server error occurred',
+      details: error.toString()
+    }, 500, headers);
   }
 }
 
 /**
  * Handles membership form submissions
  */
-function handleMembershipForm(data) {
+function handleMembershipForm(data, headers) {
+  // Validate required fields for membership
   if (!data.name || !data.email || !data.recaptchaToken) {
-    return respondToIframe(false, 'membership', 'Kõik väljad on nõutud.');
+    console.log('Missing required fields for membership:', { 
+      name: !!data.name, 
+      email: !!data.email, 
+      recaptchaToken: !!data.recaptchaToken 
+    });
+    return createResponse({ 
+      status: 'error', 
+      message: 'Kõik väljad on nõutud' 
+    }, 400, headers);
   }
+  
+  // Verify reCAPTCHA
   const scriptProperties = PropertiesService.getScriptProperties();
   const recaptchaSecretKey = scriptProperties.getProperty('RECAPTCHA_SECRET_KEY');
-  if (!recaptchaSecretKey) {
-    return respondToIframe(false, 'membership', 'Serveri seadistus puudulik (reCAPTCHA).');
-  }
   const verificationResult = verifyRecaptcha(recaptchaSecretKey, data.recaptchaToken);
+  
   if (!verificationResult.success) {
-    return respondToIframe(false, 'membership', 'Turvakontroll ebaõnnestus.', verificationResult.message);
+    console.log('reCAPTCHA verification failed:', verificationResult);
+    return createResponse({ 
+      status: 'error', 
+      message: 'Turvakontroll ebaõnnestus',
+      details: verificationResult.message
+    }, 403, headers);
   }
-
+  
+  // Open membership spreadsheet
   const sheet = SpreadsheetApp.openById(MEMBERSHIP_SPREADSHEET_ID).getSheetByName(MEMBERSHIP_SHEET_NAME);
-  if (!sheet) return respondToIframe(false, 'membership', 'Serveri seadistuse viga.');
-
-  if (checkDuplicateEmail(sheet, data.email)) {
-    return respondToIframe(false, 'membership', 'See e-posti aadress on juba registreeritud!');
+  if (!sheet) {
+    console.error('Membership sheet not found:', MEMBERSHIP_SHEET_NAME);
+    return createResponse({ 
+      status: 'error', 
+      message: 'Serveri seadistuse viga' 
+    }, 500, headers);
   }
-  const rate = checkRateLimit(sheet, data.email, RATE_LIMIT_HOURS);
-  if (!rate.allowed) {
-    return respondToIframe(false, 'membership', `See e-posti aadress on hiljuti juba registreeritud. Palun proovi uuesti ${rate.nextAllowedTime} pärast.`);
+  
+  // Check for duplicate membership
+  const isDuplicate = checkDuplicateEmail(sheet, data.email);
+  if (isDuplicate) {
+    console.log('Duplicate membership submission:', data.email);
+    return createResponse({ 
+      status: 'error', 
+      message: 'See e-posti aadress on juba registreeritud!' 
+    }, 409, headers);
   }
-
-  sheet.appendRow([new Date(), data.name, data.email, verificationResult.score || 'N/A']);
+  
+  // Rate limiting check
+  const rateLimitCheck = checkRateLimit(sheet, data.email, RATE_LIMIT_HOURS);
+  if (!rateLimitCheck.allowed) {
+    console.log('Rate limit hit for email:', data.email);
+    return createResponse({ 
+      status: 'error', 
+      message: `See e-posti aadress on hiljuti juba registreeritud. Palun proovi uuesti ${rateLimitCheck.nextAllowedTime} pärast.`
+    }, 429, headers);
+  }
+  
+  // Save membership data
+  const timestamp = new Date();
+  const rowData = [
+    timestamp,
+    data.name,
+    data.email,
+    verificationResult.score || 'N/A'
+  ];
+  
+  sheet.appendRow(rowData);
+  
+  console.log('Successfully saved membership:', data.name, data.email);
+  
+  // Send notification email
   notifyMembershipSignup(data.name, data.email, verificationResult.score);
-
-  return respondToIframe(true, 'membership', 'Aitäh! Sinu liikmestaotus on vastu võetud.');
+  
+  return createResponse({ 
+    status: 'success', 
+    message: 'Aitäh! Sinu liikmestaotus on vastu võetud. Juhatus vaatab taotluse üle ja kinnitab liikmeks astumise e-posti teel.'
+  }, 200, headers);
 }
 
 /**
  * Handles contact form submissions
  */
-function handleContactForm(data) {
+function handleContactForm(data, headers) {
+  // Validate required fields for contact
   if (!data.name || !data.email || !data.message || !data.recaptchaToken) {
-    return respondToIframe(false, 'contact', 'Nimi, e-post ja sõnum on nõutud.');
+    console.log('Missing required fields for contact:', { 
+      name: !!data.name, 
+      email: !!data.email, 
+      message: !!data.message,
+      recaptchaToken: !!data.recaptchaToken 
+    });
+    return createResponse({ 
+      status: 'error', 
+      message: 'Nimi, e-post ja sõnum on nõutud' 
+    }, 400, headers);
   }
+  
+  // Verify reCAPTCHA
   const scriptProperties = PropertiesService.getScriptProperties();
   const recaptchaSecretKey = scriptProperties.getProperty('RECAPTCHA_SECRET_KEY');
-  if (!recaptchaSecretKey) {
-    return respondToIframe(false, 'contact', 'Serveri seadistus puudulik (reCAPTCHA).');
-  }
   const verificationResult = verifyRecaptcha(recaptchaSecretKey, data.recaptchaToken);
+  
   if (!verificationResult.success) {
-    return respondToIframe(false, 'contact', 'Turvakontroll ebaõnnestus.');
+    console.log('reCAPTCHA verification failed:', verificationResult);
+    return createResponse({ 
+      status: 'error', 
+      message: 'Turvakontroll ebaõnnestus'
+    }, 403, headers);
   }
-
+  
+  // Open contact spreadsheet
   const sheet = SpreadsheetApp.openById(CONTACT_SPREADSHEET_ID).getSheetByName(CONTACT_SHEET_NAME);
-  if (!sheet) return respondToIframe(false, 'contact', 'Serveri seadistuse viga.');
-
-  const rate = checkRateLimit(sheet, data.email, RATE_LIMIT_HOURS);
-  if (!rate.allowed) {
-    return respondToIframe(false, 'contact', `See e-posti aadress on hiljuti juba sõnumi saatnud. Palun proovi uuesti ${rate.nextAllowedTime} pärast.`);
+  if (!sheet) {
+    console.error('Contact sheet not found:', CONTACT_SHEET_NAME);
+    return createResponse({ 
+      status: 'error', 
+      message: 'Serveri seadistuse viga' 
+    }, 500, headers);
   }
-
-  sheet.appendRow([new Date(), data.name, data.email, data.subject || 'Teema puudub', data.message, verificationResult.score || 'N/A']);
+  
+  // Rate limiting check for contact messages
+  const rateLimitCheck = checkRateLimit(sheet, data.email, RATE_LIMIT_HOURS);
+  if (!rateLimitCheck.allowed) {
+    console.log('Rate limit hit for contact email:', data.email);
+    return createResponse({ 
+      status: 'error', 
+      message: `See e-posti aadress on hiljuti juba sõnumi saatnud. Palun proovi uuesti ${rateLimitCheck.nextAllowedTime} pärast.`
+    }, 429, headers);
+  }
+  
+  // Save contact message
+  const timestamp = new Date();
+  const rowData = [
+    timestamp,
+    data.name,
+    data.email,
+    data.subject || 'Teema puudub',
+    data.message,
+    verificationResult.score || 'N/A'
+  ];
+  
+  sheet.appendRow(rowData);
+  
+  console.log('Successfully saved contact message:', data.name, data.email);
+  
+  // Send notification email
   notifyContactMessage(data.name, data.email, data.subject, data.message, verificationResult.score);
-
-  return respondToIframe(true, 'contact', 'Aitäh! Sinu sõnum on edastatud.');
+  
+  return createResponse({ 
+    status: 'success', 
+    message: 'Aitäh! Sinu sõnum on edastatud. Võtame Sinuga peatselt ühendust.'
+  }, 200, headers);
 }
-
 
 /**
  * Verifies reCAPTCHA token
@@ -244,21 +336,29 @@ function checkDuplicateEmail(sheet, email) {
 }
 
 /**
- * Creates JSON or JSONP response
+ * Creates JSON response
  */
-function createResponse(data, _statusCode, callback) {
-  const json = JSON.stringify(data);
-  if (callback) {
-    // JSONP response
-    return ContentService
-      .createTextOutput(`${callback}(${json})`)
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
-  } else {
-    // Plain JSON response
-    return ContentService
-      .createTextOutput(json)
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+function createResponse(data, statusCode = 200, headers = {}) {
+  // statusCode is kept for compatibility but not used by ContentService
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeaders(headers);
+}
+
+/**
+ * Handles OPTIONS requests for CORS
+ */
+function doOptions() {
+  return ContentService
+    .createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT)
+    .setHeaders({
+      'Access-Control-Allow-Origin': ALLOWED_DOMAIN,
+      'Access-Control-Allow-Methods': 'GET, POST',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '3600'
+    });
 }
 
 /**
@@ -266,7 +366,7 @@ function createResponse(data, _statusCode, callback) {
  */
 function notifyMembershipSignup(name, email, score) {
   try {
-    const recipient = 'kaiukodukant@gmail.com'; // !!! Replace with actual recipient !!!
+    const recipient = 'info@kaiukodukant.ee'; // !!! Replace with actual recipient !!!
     const subject = 'Uus liikmestaotus MTÜ Kaiu Kodukant';
     const body = `
       Uus liikmestaotus vastu võetud!
@@ -291,7 +391,7 @@ function notifyMembershipSignup(name, email, score) {
  */
 function notifyContactMessage(name, email, subject, message, score) {
   try {
-    const recipient = 'kaiukodukant@gmail.com'; // !!! Replace with actual recipient !!!
+    const recipient = 'info@kaiukodukant.ee'; // !!! Replace with actual recipient !!!
     const emailSubject = 'Uus sõnum MTÜ Kaiu Kodukant kodulehelt';
     const body = `
       Uus sõnum kodulehelt vastu võetud!
@@ -315,39 +415,49 @@ function notifyContactMessage(name, email, subject, message, score) {
  * Handles GET requests for calendar data and gallery data
  */
 function doGet(e) {
-  const callback = e && e.parameter && e.parameter.callback;
-
+  const headers = {
+    'Access-Control-Allow-Origin': ALLOWED_DOMAIN,
+    'Access-Control-Allow-Methods': 'GET, POST',
+    'Access-Control-Allow-Headers': 'Content-Type'
+  };
+  
   try {
-    if (!e || !e.parameter || !e.parameter.action) {
-      return createResponse({ status:'error', message:'Invalid request: action parameter is missing.' }, 400, callback);
-    }
-
     const action = e.parameter.action;
-
+    
     if (action === 'calendar') {
-      return getCalendarEvents(callback);
-    } 
-    if (action === 'gallery') {
-      return getGalleryData(callback);
-    } 
-    if (action === 'album') {
+      return getCalendarEvents(headers);
+    } else if (action === 'gallery') {
+      return getGalleryData(headers);
+    } else if (action === 'album') {
       const albumId = e.parameter.id;
       if (!albumId) {
-        return createResponse({ status:'error', message:'Album ID required' }, 400, callback);
+        return createResponse({ 
+          status: 'error', 
+          message: 'Album ID required' 
+        }, 400, headers);
       }
-      return getAlbumPhotos(albumId, callback);
+      return getAlbumPhotos(albumId, headers);
+    } else {
+      return createResponse({ 
+        status: 'error', 
+        message: 'Invalid action' 
+      }, 400, headers);
     }
-
-    return createResponse({ status:'error', message:'Invalid action' }, 400, callback);
-  } catch (err) {
-    return createResponse({ status:'error', message:'Server error occurred', details: err.toString() }, 500, callback);
+    
+  } catch (error) {
+    console.error('Error processing GET request:', error.toString());
+    return createResponse({ 
+      status: 'error', 
+      message: 'Server error occurred',
+      details: error.toString()
+    }, 500, headers);
   }
 }
 
 /**
  * Gets gallery albums from Google Drive with caching
  */
-function getGalleryData(callback) {
+function getGalleryData(headers) {
   try {
     // Check cache first
     const cache = CacheService.getScriptCache();
@@ -360,13 +470,13 @@ function getGalleryData(callback) {
         status: 'success',
         albums: JSON.parse(cachedData),
         cached: true
-      }, 200, callback);
+      }, 200, headers);
     }
     
     // Check if gallery folder is configured
     if (GALLERY_DRIVE_FOLDER_ID === 'YOUR_GALLERY_FOLDER_ID') {
       console.warn('Gallery folder not configured');
-      return getExampleGalleryData(callback);
+      return getExampleGalleryData(headers);
     }
     
     // Get fresh data from Google Drive
@@ -392,7 +502,7 @@ function getGalleryData(callback) {
       albums: albums,
       cached: false,
       count: albums.length
-    }, 200, callback);
+    }, 200, headers);
     
   } catch (error) {
     console.error('Error getting gallery data:', error.toString());
@@ -400,30 +510,14 @@ function getGalleryData(callback) {
       status: 'error',
       message: 'Failed to load gallery albums',
       details: error.toString()
-    }, 500, callback);
+    }, 500, headers);
   }
 }
 
 /**
- * Caches photos for a specific album and updates the cache index.
- */
-function cacheAlbumPhotos(folderId, photos) {
-  const cache = CacheService.getScriptCache();
-  const key = `album_photos_${folderId}`;
-  cache.put(key, JSON.stringify(photos), ALBUM_CACHE_MINUTES * 60);
-
-  const indexKey = 'album_photo_keys_index';
-  const current = cache.get(indexKey);
-  const set = current ? new Set(JSON.parse(current)) : new Set();
-  set.add(key);
-  cache.put(indexKey, JSON.stringify([...set]), 6 * 3600); // keep index ~6h
-}
-
-
-/**
  * Gets photos from a specific album folder
  */
-function getAlbumPhotos(folderId, callback) {
+function getAlbumPhotos(folderId, headers) {
   try {
     // Check cache first
     const cache = CacheService.getScriptCache();
@@ -436,7 +530,7 @@ function getAlbumPhotos(folderId, callback) {
         status: 'success',
         photos: JSON.parse(cachedData),
         cached: true
-      }, 200, callback);
+      }, 200, headers);
     }
     
     // Get album folder
@@ -462,7 +556,7 @@ function getAlbumPhotos(folderId, callback) {
     photos.sort((a, b) => new Date(a.dateCreated) - new Date(b.dateCreated));
     
     // Cache the data
-    cacheAlbumPhotos(folderId, photos);
+    cache.put(cacheKey, JSON.stringify(photos), ALBUM_CACHE_MINUTES * 60);
     console.log(`Cached ${photos.length} photos for album ${folderId}`);
     
     return createResponse({
@@ -470,7 +564,7 @@ function getAlbumPhotos(folderId, callback) {
       photos: photos,
       cached: false,
       count: photos.length
-    }, 200, callback);
+    }, 200, headers);
     
   } catch (error) {
     console.error('Error getting album photos:', error.toString());
@@ -478,7 +572,7 @@ function getAlbumPhotos(folderId, callback) {
       status: 'error',
       message: 'Failed to load album photos',
       details: error.toString()
-    }, 500, callback);
+    }, 500, headers);
   }
 }
 
@@ -528,7 +622,7 @@ function processAlbumFolder(folder) {
       title: folder.getName().replace(/^\d{4}-/, '').replace(/-/g, ' '), // Clean up folder name
       date: albumDate,
       description: albumDescription,
-      coverImageUrl: coverImageId ? getOptimizedImageUrl(coverImageId, 600) : '',
+      coverImageUrl: getOptimizedImageUrl(coverImageId, 600),
       imageCount: imageCount,
       dateCreated: folder.getDateCreated().toISOString()
     };
@@ -568,7 +662,7 @@ function getImageCaption(filename) {
 /**
  * Returns example gallery data when Drive folder is not configured
  */
-function getExampleGalleryData(callback) {
+function getExampleGalleryData(headers) {
   const exampleAlbums = [
     {
       id: 'example1',
@@ -593,7 +687,7 @@ function getExampleGalleryData(callback) {
     albums: exampleAlbums,
     cached: false,
     example: true
-  }, 200, callback);
+  }, 200, headers);
 }
 
 /**
@@ -602,16 +696,17 @@ function getExampleGalleryData(callback) {
 function clearGalleryCaches() {
   const cache = CacheService.getScriptCache();
   cache.remove('gallery_albums');
-
-  const indexKey = 'album_photo_keys_index';
-  const current = cache.get(indexKey);
-  if (current) {
-    JSON.parse(current).forEach(k => cache.remove(k));
-    cache.remove(indexKey);
-  }
+  
+  // Clear album photo caches (this is a bit brute force, but effective)
+  const keys = cache.getAll({});
+  Object.keys(keys).forEach(key => {
+    if (key.startsWith('album_photos_')) {
+      cache.remove(key);
+    }
+  });
+  
   console.log('All gallery caches cleared');
 }
-
 
 /**
  * Clears the calendar cache (useful for manual refresh)
@@ -626,7 +721,7 @@ function clearCalendarCache() {
  * Gets calendar events from Google Calendar with caching
  * Called via: GET ?action=calendar
  */
-function getCalendarEvents(callback) {
+function getCalendarEvents(headers) {
   try {
     // Check cache first (15-minute cache)
     const cache = CacheService.getScriptCache();
@@ -639,14 +734,14 @@ function getCalendarEvents(callback) {
         status: 'success',
         events: JSON.parse(cachedData),
         cached: true
-      }, 200, callback);
+      }, 200, headers);
     }
     
     // Get calendar
     const calendar = CalendarApp.getCalendarById(GOOGLE_CALENDAR_ID);
     if (!calendar) {
       console.error('Calendar not found:', GOOGLE_CALENDAR_ID);
-      return getExampleCalendarEvents(callback);
+      return getExampleCalendarEvents(headers);
     }
     
     // Define time range (1 month ago to 6 months ahead)
@@ -678,19 +773,19 @@ function getCalendarEvents(callback) {
       events: formattedEvents,
       cached: false,
       count: formattedEvents.length
-    }, 200, callback);
+    }, 200, headers);
     
   } catch (error) {
     console.error('Error getting calendar events:', error.toString());
     // Fallback to example events
-    return getExampleCalendarEvents(callback);
+    return getExampleCalendarEvents(headers);
   }
 }
 
 /**
  * Returns example calendar events when Calendar API fails or is not configured
  */
-function getExampleCalendarEvents(callback) {
+function getExampleCalendarEvents(headers) {
   const now = new Date();
   const exampleEvents = [
     {
@@ -729,5 +824,5 @@ function getExampleCalendarEvents(callback) {
     events: exampleEvents,
     cached: false,
     example: true
-  }, 200, callback);
+  }, 200, headers);
 }

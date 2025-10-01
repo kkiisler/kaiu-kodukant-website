@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meist - MTÜ Kaiu Kodukant</title>
+    <title>Galerii - MTÜ Kaiu Kodukant</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com/"></script>
@@ -60,23 +60,23 @@
     </script>
 
     <!-- Custom Styles -->
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="bg-background-primary text-text-primary">
 
     <!-- Header -->
     <header class="bg-background-primary/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200">
         <nav class="global-padding max-w-wide mx-auto flex items-center justify-between py-4">
-            <a href="index.html">
-                <img src="media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
+            <a href="/">
+                <img src="/media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
             </a>
             <div class="hidden md:flex items-center space-x-8">
-                <a href="index.html" class="nav-link font-medium hover:underline">Esileht</a>
-                <a href="events.html" class="nav-link font-medium hover:underline">Sündmused</a>
-                <a href="gallery.html" class="nav-link font-medium hover:underline">Galerii</a>
-                <a href="about.html" class="nav-link font-medium hover:underline active">Meist</a>
-                <a href="contact.html" class="nav-link font-medium hover:underline">Kontakt</a>
-                <a href="membership.html" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors">Saa liikmeks</a>
+                <a href="/" class="nav-link font-medium hover:underline">Esileht</a>
+                <a href="/events" class="nav-link font-medium hover:underline">Sündmused</a>
+                <a href="/gallery" class="nav-link font-medium hover:underline active">Galerii</a>
+                <a href="/about" class="nav-link font-medium hover:underline">Meist</a>
+                <a href="/contact" class="nav-link font-medium hover:underline">Kontakt</a>
+                <a href="/membership" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors">Saa liikmeks</a>
             </div>
             <!-- Mobile Menu Button -->
             <button id="hamburger-menu" class="md:hidden">
@@ -85,12 +85,12 @@
         </nav>
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden global-padding pb-4">
-            <a href="index.html" class="block py-2 mobile-nav-link">Esileht</a>
-            <a href="events.html" class="block py-2 mobile-nav-link">Sündmused</a>
-            <a href="gallery.html" class="block py-2 mobile-nav-link">Galerii</a>
-            <a href="about.html" class="block py-2 mobile-nav-link active">Meist</a>
-            <a href="contact.html" class="block py-2 mobile-nav-link">Kontakt</a>
-            <a href="membership.html" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link">Saa liikmeks</a>
+            <a href="/" class="block py-2 mobile-nav-link">Esileht</a>
+            <a href="/events" class="block py-2 mobile-nav-link">Sündmused</a>
+            <a href="/gallery" class="block py-2 mobile-nav-link active">Galerii</a>
+            <a href="/about" class="block py-2 mobile-nav-link">Meist</a>
+            <a href="/contact" class="block py-2 mobile-nav-link">Kontakt</a>
+            <a href="/membership" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link">Saa liikmeks</a>
         </div>
     </header>
 
@@ -98,65 +98,54 @@
     <main>
         <!-- Page Title -->
         <div class="page-title-component">
-            <h1>Meist</h1>
-            <p class="lead max-w-3xl mx-auto">MTÜ Kaiu Kodukant on enamat kui lihtsalt ühing – see on meie kogukonna süda, mis on pühendunud kodukandi elu edendamisele, pärandi hoidmisele ja helgema tuleviku loomisele.</p>
+            <h1>Galerii</h1>
+            <p class="lead max-w-2xl mx-auto">Meie tegemised ja üritused piltides. Siit leiad fotosid kogukonna üritustest ja ühisest tegevusest.</p>
         </div>
         
         <section class="global-padding">
-            <div class="max-w-wide mx-auto">
-                <div class="grid lg:grid-cols-5 gap-12 lg:gap-16">
-                    <!-- Left Column: Who We Are -->
-                    <div class="lg:col-span-2">
-                        <div class="section-card">
-                            <h3 class="text-xl font-semibold text-text-primary mb-4">Kes me oleme?</h3>
-                            <ul class="mt-6 space-y-4 text-text-secondary">
-                                <li><strong>Ametlik nimi:</strong> MTÜ Kaiu Kodukant.</li>
-                                <li><strong>Asutatud:</strong> Ühingu põhikiri on kinnitatud 10. oktoobril 2022. a asutamiskoosolekul.</li>
-                                <li><strong>Asukoht:</strong> Meie juriidiline aadress on Kaare tn 7-7, Kaiu alevik, Rapla vald, Rapla maakond, 79301.</li>
-                                <li><strong>Tegutsemisvorm:</strong> Oleme tavaline mittetulundusühing, mis järgib oma tegevuses kodanikuühenduste eetilise tegevuse üldtunnustatud põhimõtteid.</li>
-                            </ul>
-                        </div>
+            <div id="gallery-container" class="max-w-wide mx-auto">
+                <!-- Album View -->
+                <div id="album-view">
+                    <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Albums will be loaded here by JavaScript -->
                     </div>
-                    
-                    <!-- Right Column: Our Goals -->
-                    <div class="lg:col-span-3">
-                        <div class="section-card">
-                            <h2 class="mb-8 text-center lg:text-left">Meie eesmärgid</h2>
-                            <div class="space-y-8">
-                                <div class="border-l-4 border-brand-primary pl-6">
-                                    <h3 class="text-lg font-semibold text-text-primary mb-2">Kogukonna edendamine</h3>
-                                    <p class="text-text-secondary">Algatame ja toetame Kaiu kandi kogukonna tegevusi, et tõsta kohalikku heaolu ja parandada elukeskkonda.</p>
-                                </div>
-                                
-                                <div class="border-l-4 border-brand-primary pl-6">
-                                    <h3 class="text-lg font-semibold text-text-primary mb-2">Väärtuste propageerimine</h3>
-                                    <p class="text-text-secondary">Toetame ettevõtmisi, mis väärtustavad eetilisi tõekspidamisi ja hüvede tasakaalustatumat jaotust ühiskonnas.</p>
-                                </div>
-                                
-                                <div class="border-l-4 border-brand-primary pl-6">
-                                    <h3 class="text-lg font-semibold text-text-primary mb-2">Tervis ja keskkond</h3>
-                                    <p class="text-text-secondary">Toetame kogukonna tervise arengut ning propageerime keskkonnasäästlikku eluviisi, pakkudes koolitusi ja kursuseid.</p>
-                                </div>
-                                
-                                <div class="border-l-4 border-brand-primary pl-6">
-                                    <h3 class="text-lg font-semibold text-text-primary mb-2">Pärandi hoidmine</h3>
-                                    <p class="text-text-secondary">Algatame ja viime ellu projekte, mis hoiavad, kaitsevad ja taastavad looduskeskkonda ning kultuuri- ja ajalooväärtusi.</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Call to action -->
-                            <div class="mt-12 pt-8 border-t border-brand-border text-center">
-                                <p class="text-text-secondary mb-4">Kas soovid panustada oma kogukonna arengusse?</p>
-                                <a href="contact.html#liikmeks" class="inline-flex items-center bg-brand-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-primary_hover transition-all duration-200">
-                                    Liitu meiega
-                                </a>
-                            </div>
-                        </div>
+                </div>
+
+                <!-- Photo View -->
+                <div id="photo-view" class="hidden">
+                    <button id="back-to-albums" class="mb-8 inline-flex items-center bg-white border border-gray-300 rounded-lg px-4 py-3 text-text-secondary hover:text-text-primary hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Tagasi albumite juurde
+                    </button>
+                    <div class="text-center mb-12">
+                        <h2 id="photo-album-title" class="mb-4"></h2>
+                        <p id="photo-album-description" class="text-xl max-w-3xl mx-auto text-gray-600"></p>
+                    </div>
+                    <div id="photo-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        <!-- Photos will be loaded here by JavaScript -->
                     </div>
                 </div>
             </div>
         </section>
     </main>
+
+    <!-- Gallery Lightbox Modal -->
+    <div id="lightbox" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[100] hidden items-center justify-center transition-opacity duration-300">
+        <button id="lightbox-close" class="absolute top-4 right-4 text-white/80 hover:text-white z-[110] w-12 h-12 flex items-center justify-center text-4xl transition-colors">&times;</button>
+        <button id="lightbox-prev" class="absolute left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-[110] w-12 h-12 flex items-center justify-center text-5xl transition-colors">&lsaquo;</button>
+        <button id="lightbox-next" class="absolute right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white z-[110] w-12 h-12 flex items-center justify-center text-5xl transition-colors">&rsaquo;</button>
+        <div class="relative w-full h-full flex flex-col items-center justify-center p-8">
+            <div class="lightbox-container relative flex items-center justify-center">
+                <div id="lightbox-loader" class="absolute inset-0 flex items-center justify-center hidden">
+                    <div class="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                </div>
+                <img id="lightbox-img" src="" alt="Galerii pilt" class="lightbox-img rounded-lg shadow-2xl">
+            </div>
+            <p id="lightbox-caption" class="mt-4 text-white/90 text-lg max-w-2xl text-center"></p>
+        </div>
+    </div>
 
     <!-- Footer with complete information -->
     <footer class="bg-gray-900 text-white relative overflow-hidden">
@@ -168,7 +157,7 @@
             <div class="grid md:grid-cols-4 gap-8">
                 <!-- Column 1 - Brand -->
                 <div class="md:col-span-2 space-y-6">
-                    <img src="media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" class="h-12 w-auto" style="filter: brightness(0) invert(1);">
+                    <img src="/media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" class="h-12 w-auto" style="filter: brightness(0) invert(1);">
                     <p class="text-gray-300 text-lg leading-relaxed max-w-md">Edendame Kaiu kandi kogukonnaelu ja hoiame meie kodukoha väärtusi tulevastele põlvedele.</p>
                     <div class="flex items-center space-x-6">
                         <div class="text-center">
@@ -190,22 +179,22 @@
                 <div>
                     <h4 class="font-semibold text-white mb-6 text-lg">Navigatsioon</h4>
                     <ul class="space-y-3">
-                        <li><a href="index.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                        <li><a href="/" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Esileht
                         </a></li>
-                        <li><a href="events.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                        <li><a href="/events" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Sündmused
                         </a></li>
-                        <li><a href="gallery.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                        <li><a href="/gallery" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Galerii
                         </a></li>
-                        <li><a href="about.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                        <li><a href="/about" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Meist
                         </a></li>
-                        <li><a href="contact.html" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
+                        <li><a href="/contact" class="text-gray-300 hover:text-white transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-white transition-colors duration-200"></span>Kontakt
                         </a></li>
-                        <li><a href="membership.html" class="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200 flex items-center group">
+                        <li><a href="/membership" class="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200 flex items-center group">
                             <span class="w-1 h-1 bg-blue-400 rounded-full mr-3 group-hover:bg-blue-300 transition-colors duration-200"></span>Saa liikmeks
                         </a></li>
                     </ul>
@@ -253,6 +242,8 @@
     </footer>
 
     <!-- JavaScript -->
-    <script src="js/common.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/common.js"></script>
+    <script src="/js/gallery.js"></script>
 </body>
 </html>
