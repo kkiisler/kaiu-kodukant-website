@@ -21,8 +21,8 @@ const S3_CONFIG = {
 
 // Google Calendar Configuration
 const CALENDAR_CONFIG = {
-  // Calendar ID for MTÜ Kaiu Kodukant
-  calendarId: '3ab658c2becd62b9af62343da736243b73e1d56523c7c04b8ed46d944eb0e8fb@group.calendar.google.com',
+  // Calendar ID for MTÜ Kaiu Kodukant (from public calendar URL)
+  calendarId: 'a0b18dc4b7e4b9b40858746a7edddaa51b41014085ba2f4b2f89bf038ac13f12@group.calendar.google.com',
 
   // Fetch events from 1 month back to 6 months forward
   monthsBack: 1,
