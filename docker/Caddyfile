@@ -7,16 +7,19 @@
 	root * /usr/share/caddy
 
 	# URL rewriting for clean URLs (pages/ directory)
-	@html_pages {
+	@root {
 		path /
+	}
+	rewrite @root /pages/index.html
+
+	@pages {
 		path /about
 		path /events
 		path /gallery
 		path /membership
 		path /contact
 	}
-	rewrite @html_pages /pages{path}.html
-	rewrite / /pages/index.html
+	rewrite @pages /pages{path}.html
 
 	file_server
 
