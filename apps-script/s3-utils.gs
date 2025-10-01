@@ -213,18 +213,8 @@ function signRequest(method, path, headers, payload) {
     payloadHash
   ].join('\n');
 
-  // Debug logging (remove after testing)
-  Logger.log('=== AWS Signature V4 Debug ===');
-  Logger.log('AccessKeyId: ' + accessKeyId);
-  Logger.log('Region: ' + region);
-  Logger.log('Service: ' + service);
-  Logger.log('Date: ' + amzDate);
-  Logger.log('Method: ' + method);
-  Logger.log('Path: ' + path);
-  Logger.log('Canonical Headers:\n' + canonicalHeaders);
-  Logger.log('Signed Headers: ' + signedHeaders);
-  Logger.log('Payload Hash: ' + payloadHash);
-  Logger.log('Canonical Request:\n' + canonicalRequest);
+  // Minimal debug logging to help diagnose issues when needed
+  Logger.log(`SigV4 ${method} ${path} -> signedHeaders=${signedHeaders}`);
 
   // Create string to sign
   const algorithm = 'AWS4-HMAC-SHA256';
@@ -238,8 +228,6 @@ function signRequest(method, path, headers, payload) {
     canonicalRequestHash
   ].join('\n');
 
-  Logger.log('String to Sign:\n' + stringToSign);
-
   // Calculate signature
   const kDate = hmacSHA256(dateStamp, 'AWS4' + secretAccessKey);
   const kRegion = hmacSHA256(region, kDate);
@@ -247,12 +235,8 @@ function signRequest(method, path, headers, payload) {
   const kSigning = hmacSHA256('aws4_request', kService);
   const signature = hmacSHA256(stringToSign, kSigning, true);
 
-  Logger.log('Signature: ' + signature);
-
   // Add authorization header
   headers['Authorization'] = `${algorithm} Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
-
-  Logger.log('Authorization Header: ' + headers['Authorization']);
 
   return headers;
 }
@@ -284,19 +268,30 @@ function sha256Hash(data) {
  */
 function hmacSHA256(message, key, hexOutput = false) {
   // Handle different key types for Apps Script compatibility
-  let keyToUse;
+  let keyBytes;
+  let messageBytes;
 
   if (typeof key === 'string') {
-    // Key is already a string, use as is
-    keyToUse = key;
+    // Convert key string to bytes explicitly using UTF-8 to avoid implicit char encoding
+    keyBytes = Utilities.newBlob(key, 'application/octet-stream').getBytes();
   } else if (Array.isArray(key)) {
     // Key is a byte array from previous HMAC operation
-    keyToUse = key;
+    keyBytes = key;
   } else {
-    keyToUse = key;
+    keyBytes = key;
   }
 
-  const signature = Utilities.computeHmacSha256Signature(message, keyToUse);
+  if (typeof message === 'string') {
+    messageBytes = Utilities.newBlob(message, 'application/octet-stream').getBytes();
+  } else {
+    messageBytes = message;
+  }
+
+  const signature = Utilities.computeHmacSignature(
+    Utilities.MacAlgorithm.HMAC_SHA_256,
+    messageBytes,
+    keyBytes
+  );
 
   if (hexOutput) {
     return signature.map(byte => {
