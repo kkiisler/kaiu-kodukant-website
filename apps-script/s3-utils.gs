@@ -41,22 +41,25 @@ function uploadToS3(key, content, contentType, isPublic = true) {
   }
   const payloadHash = sha256Hash(payload);
 
-  // Prepare headers
-  const headers = {
+  // Prepare headers for signing (Host must be included for signature)
+  const headersForSigning = {
     'Host': endpoint,
     'Content-Type': contentType,
     'x-amz-content-sha256': payloadHash
   };
 
   if (isPublic) {
-    headers['x-amz-acl'] = 'public-read';
+    headersForSigning['x-amz-acl'] = 'public-read';
   }
 
   // Add cache control for versioning
-  headers['Cache-Control'] = 'public, max-age=86400'; // 24 hours
+  headersForSigning['Cache-Control'] = 'public, max-age=86400'; // 24 hours
 
   // Generate AWS Signature V4
-  const signedHeaders = signRequest(method, `/${bucket}/${key}`, headers, payload);
+  const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, payload);
+
+  // Remove Host header for UrlFetchApp (it sets this automatically and doesn't allow manual override)
+  delete signedHeaders['Host'];
 
   // Make the request
   const options = {
@@ -94,12 +97,15 @@ function deleteFromS3(key) {
   const endpoint = S3_CONFIG.endpoint;
   const url = `https://${endpoint}/${bucket}/${key}`;
 
-  const headers = {
+  const headersForSigning = {
     'Host': endpoint,
     'x-amz-content-sha256': sha256Hash('')
   };
 
-  const signedHeaders = signRequest(method, `/${bucket}/${key}`, headers, '');
+  const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, '');
+
+  // Remove Host header for UrlFetchApp
+  delete signedHeaders['Host'];
 
   const options = {
     method: method,
