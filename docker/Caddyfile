@@ -57,10 +57,10 @@
 	}
 
 	# Cache HTML files for shorter period
-	@html {
+	@html_cache {
 		path *.html
 	}
-	header @html {
+	header @html_cache {
 		Cache-Control "public, max-age=3600"
 	}
 
