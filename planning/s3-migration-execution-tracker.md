@@ -12,11 +12,11 @@
 
 | Component | Status | Last Updated | Notes |
 |-----------|--------|--------------|-------|
-| Repository Restructuring | ✅ Complete | 2025-10-01 | Phase 0 - Commit 9c5736d |
-| Calendar Sync | ✅ Complete | 2025-10-01 | Backend code deployed - Commit 6c89dfb |
-| Calendar Frontend | ✅ Complete | 2025-10-01 | Frontend updated - Commit 6c89dfb |
-| Gallery Sync (with batch processing) | ⬜ Not Started | - | CRITICAL |
-| Gallery Frontend | ⬜ Not Started | - | |
+| Repository Restructuring | ✅ Complete | 2025-10-01 | Phase 0 - Clean URLs working |
+| Calendar Sync | ✅ Complete | 2025-10-01 | S3 sync working with correct calendar ID |
+| Calendar Frontend | ✅ Complete | 2025-10-01 | Using Caddy proxy to bypass CORS |
+| Gallery Sync (with batch processing) | ⬜ Not Started | - | CRITICAL - Phase 2 |
+| Gallery Frontend | ⬜ Not Started | - | Phase 2 |
 | API Backend | ⬜ Not Started | - | Week 2 |
 | Forms Migration | ⬜ Not Started | - | Week 2 |
 
@@ -139,17 +139,14 @@ Solution:
   - [✓] Multi-step key derivation working correctly
   - [✓] Apps Script signature requirements satisfied
 
-#### Manual Sync Test - ✅ S3 CONNECTION WORKING
+#### Manual Sync Test - ✅ COMPLETE
 - [✓] Run `testS3Connection()` from Apps Script editor
   - [✓] S3 authentication successful
   - [✓] Upload and delete operations working
-- [ ] Run `manualSyncCalendar()` from Apps Script editor
-  - Start time: _____
-  - End time: _____
-  - Execution time: _____ seconds
-  - [ ] Execution completed successfully
-  - [ ] Check execution logs for errors
-  - [ ] No errors found
+- [✓] Run `manualSyncCalendar()` from Apps Script editor
+  - [✓] Calendar events successfully synced to S3
+  - [✓] events.json created in S3 bucket
+  - [✓] Frontend loading events via Caddy proxy
 
 #### S3 Verification
 - [ ] Verify `calendar/events.json` exists in S3
