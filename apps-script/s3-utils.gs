@@ -225,10 +225,18 @@ function sha256Hash(data) {
  * @returns {bytes|string} Signature
  */
 function hmacSHA256(message, key, hexOutput = false) {
-  // Convert byte array to Uint8Array if needed (for Apps Script compatibility)
-  let keyToUse = key;
-  if (Array.isArray(key)) {
-    keyToUse = Utilities.newBlob(key).getBytes();
+  // Handle different key types for Apps Script compatibility
+  let keyToUse;
+
+  if (typeof key === 'string') {
+    // Key is already a string, use as is
+    keyToUse = key;
+  } else if (Array.isArray(key)) {
+    // Key is a byte array from previous HMAC operation
+    // Convert byte array to string for Apps Script
+    keyToUse = key.map(byte => String.fromCharCode((byte + 256) % 256)).join('');
+  } else {
+    keyToUse = key;
   }
 
   const signature = Utilities.computeHmacSha256Signature(message, keyToUse);
