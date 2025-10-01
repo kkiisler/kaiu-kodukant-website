@@ -60,8 +60,19 @@ function syncGallery() {
         try {
           // Check if already processed (has S3 URLs)
           if (!photo.smallS3Url) {
-            // Process and upload photo to S3
-            processPhotoToS3(photo, album);
+            // Check if image already exists in S3
+            const testKey = `images/${photo.id}-300.jpg`;
+            if (imageExistsInS3(testKey)) {
+              // Image already in S3, just update URLs
+              Logger.log(`⏭ Skipping ${photo.name} - already in S3`);
+              photo.smallS3Url = `https://s3.pilw.io/kaiugalerii/images/${photo.id}-300.jpg`;
+              photo.mediumS3Url = `https://s3.pilw.io/kaiugalerii/images/${photo.id}-600.jpg`;
+              photo.largeS3Url = `https://s3.pilw.io/kaiugalerii/images/${photo.id}-1200.jpg`;
+              photo.originalS3Url = `https://s3.pilw.io/kaiugalerii/images/${photo.id}-original.jpg`;
+            } else {
+              // Process and upload photo to S3
+              processPhotoToS3(photo, album);
+            }
           }
           processedCount++;
 
