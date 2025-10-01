@@ -220,12 +220,18 @@ function sha256Hash(data) {
  * Compute HMAC-SHA256
  *
  * @param {string} message - Message to sign
- * @param {string|bytes} key - Signing key
+ * @param {string|bytes} key - Signing key (string or byte array)
  * @param {boolean} hexOutput - Return hex string instead of bytes
  * @returns {bytes|string} Signature
  */
 function hmacSHA256(message, key, hexOutput = false) {
-  const signature = Utilities.computeHmacSha256Signature(message, key);
+  // Convert byte array to Uint8Array if needed (for Apps Script compatibility)
+  let keyToUse = key;
+  if (Array.isArray(key)) {
+    keyToUse = Utilities.newBlob(key).getBytes();
+  }
+
+  const signature = Utilities.computeHmacSha256Signature(message, keyToUse);
 
   if (hexOutput) {
     return signature.map(byte => {
