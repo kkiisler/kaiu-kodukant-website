@@ -18,15 +18,19 @@ function uploadToS3(key, content, contentType, isPublic = true) {
   const endpoint = S3_CONFIG.endpoint;
   const url = `https://${endpoint}/${bucket}/${key}`;
 
-  // Convert content to blob if it's a string
-  let blob;
+  // Convert content to bytes
+  let payload;
   if (typeof content === 'string') {
-    blob = Utilities.newBlob(content, contentType, key);
+    // Convert string to bytes using UTF-8 encoding
+    const blob = Utilities.newBlob(content);
+    payload = blob.getBytes();
+  } else if (content.getBytes) {
+    // Content is already a Blob
+    payload = content.getBytes();
   } else {
-    blob = content;
+    // Content is already bytes
+    payload = content;
   }
-
-  const payload = blob.getBytes();
   const payloadHash = sha256Hash(payload);
 
   // Prepare headers
