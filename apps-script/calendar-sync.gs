@@ -67,20 +67,55 @@ function getCalendarEvents() {
   const endDate = new Date(now);
   endDate.setMonth(now.getMonth() + CALENDAR_CONFIG.monthsForward);
 
+  // Try Advanced Calendar Service first (if available)
   try {
-    const events = Calendar.Events.list(calendarId, {
-      timeMin: startDate.toISOString(),
-      timeMax: endDate.toISOString(),
-      singleEvents: true,
-      orderBy: 'startTime',
-      maxResults: 500
-    });
+    if (typeof Calendar !== 'undefined') {
+      Logger.log('Using Advanced Calendar Service...');
+      const events = Calendar.Events.list(calendarId, {
+        timeMin: startDate.toISOString(),
+        timeMax: endDate.toISOString(),
+        singleEvents: true,
+        orderBy: 'startTime',
+        maxResults: 500
+      });
 
-    return events.items || [];
+      return events.items || [];
+    }
+  } catch (error) {
+    Logger.log(`Advanced Calendar Service error: ${error.message}`);
+    Logger.log('Falling back to built-in CalendarApp...');
+  }
+
+  // Fallback to built-in CalendarApp service
+  try {
+    const calendar = CalendarApp.getCalendarById(calendarId);
+
+    if (!calendar) {
+      Logger.log(`Calendar not found with ID: ${calendarId}`);
+      Logger.log('Make sure the calendar is shared with the Apps Script service account');
+      return [];
+    }
+
+    Logger.log(`Using built-in CalendarApp for calendar: ${calendar.getName()}`);
+    const events = calendar.getEvents(startDate, endDate);
+
+    // Convert CalendarApp events to match Advanced Service format
+    return events.map(event => ({
+      id: event.getId(),
+      summary: event.getTitle(),
+      description: event.getDescription(),
+      location: event.getLocation(),
+      start: event.isAllDayEvent() ?
+        { date: Utilities.formatDate(event.getStartTime(), 'UTC', 'yyyy-MM-dd') } :
+        { dateTime: event.getStartTime().toISOString() },
+      end: event.isAllDayEvent() ?
+        { date: Utilities.formatDate(event.getEndTime(), 'UTC', 'yyyy-MM-dd') } :
+        { dateTime: event.getEndTime().toISOString() },
+      status: 'confirmed'
+    }));
 
   } catch (error) {
-    // If Calendar API fails, return empty array to avoid breaking the site
-    Logger.log(`Warning: Calendar API error: ${error.message}`);
+    Logger.log(`CalendarApp error: ${error.message}`);
     return [];
   }
 }
