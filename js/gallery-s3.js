@@ -173,7 +173,6 @@ document.addEventListener('DOMContentLoaded', function() {
                      alt="${photo.name || 'Foto ' + (index + 1)}"
                      loading="lazy"
                      onerror="this.src='/api/placeholder/400/300'">
-                ${photo.name ? `<div class="photo-caption">${photo.name}</div>` : ''}
             `;
 
             photoGrid.appendChild(photoCard);
