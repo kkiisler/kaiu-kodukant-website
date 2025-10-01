@@ -41,9 +41,8 @@ function uploadToS3(key, content, contentType, isPublic = true) {
   }
   const payloadHash = sha256Hash(payload);
 
-  // Prepare headers for signing (Host must be included for signature)
+  // Prepare headers for signing (without Host for Ceph/Pilvio compatibility)
   const headersForSigning = {
-    'Host': endpoint,
     'Content-Type': contentType,
     'x-amz-content-sha256': payloadHash
   };
@@ -57,9 +56,6 @@ function uploadToS3(key, content, contentType, isPublic = true) {
 
   // Generate AWS Signature V4
   const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, payload);
-
-  // Remove Host header for UrlFetchApp (it sets this automatically and doesn't allow manual override)
-  delete signedHeaders['Host'];
 
   // Make the request
   const options = {
@@ -98,14 +94,10 @@ function deleteFromS3(key) {
   const url = `https://${endpoint}/${bucket}/${key}`;
 
   const headersForSigning = {
-    'Host': endpoint,
     'x-amz-content-sha256': sha256Hash('')
   };
 
   const signedHeaders = signRequest(method, `/${bucket}/${key}`, headersForSigning, '');
-
-  // Remove Host header for UrlFetchApp
-  delete signedHeaders['Host'];
 
   const options = {
     method: method,
