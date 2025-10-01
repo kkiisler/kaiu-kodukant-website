@@ -22,14 +22,15 @@ function uploadToS3(key, content, contentType, isPublic = true) {
   let payload;
   if (typeof content === 'string') {
     // Convert string to bytes using UTF-8 encoding
-    const blob = Utilities.newBlob(content);
-    payload = blob.getBytes();
-  } else if (content.getBytes) {
+    payload = Utilities.newBlob(content).getBytes();
+  } else if (content && typeof content.getBytes === 'function') {
     // Content is already a Blob
     payload = content.getBytes();
-  } else {
-    // Content is already bytes
+  } else if (content && Array.isArray(content)) {
+    // Content is already bytes array
     payload = content;
+  } else {
+    throw new Error(`Invalid content type: ${typeof content}`);
   }
   const payloadHash = sha256Hash(payload);
 
