@@ -7,10 +7,10 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++
 
 # Copy package files
-COPY api/package*.json ./
+COPY api/package.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (using npm install since we don't have package-lock.json)
+RUN npm install --omit=dev
 
 # Remove build dependencies to reduce image size
 RUN apk del python3 make g++
