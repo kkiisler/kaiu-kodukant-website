@@ -56,12 +56,34 @@ cp .env.example .env
 nano .env
 ```
 
-Set these values in `.env`:
+Set these required values in `.env`:
 ```env
-DOMAIN_NAME=test.kaiukodukant.ee  # Your test domain
-GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
+# Domain configuration
+DOMAIN_NAME=kaiukodukant.ee
+API_DOMAIN=https://api.kaiukodukant.ee
+
+# reCAPTCHA (get from https://www.google.com/recaptcha/admin)
 RECAPTCHA_SITE_KEY=your_recaptcha_site_key_here
+RECAPTCHA_SECRET_KEY=your_recaptcha_secret_key_here
+
+# Resend email service (get from https://resend.com/api-keys)
+RESEND_API_KEY=re_xxxxx_your_api_key_here
+RESEND_FROM_EMAIL=noreply@kaiukodukant.ee
+INFO_EMAIL=info@kaiukodukant.ee
+
+# Admin authentication
+ADMIN_PASSWORD_HASH=generate_with_bcrypt
+JWT_SECRET=generate_with_openssl
+
+# S3 credentials (for gallery/calendar monitoring)
+S3_ENDPOINT=https://s3.pilw.io
+S3_BUCKET=your-bucket-name
+S3_ACCESS_KEY_ID=your_access_key
+S3_SECRET_ACCESS_KEY=your_secret_key
+S3_REGION=eu-west-1
 ```
+
+See `docker/.env.example` for complete configuration options and setup instructions.
 
 ### 4. Deploy with Docker Compose
 
@@ -147,9 +169,16 @@ The included Caddy configuration provides:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DOMAIN_NAME` | Your domain name | `test.kaiukodukant.ee` |
-| `GOOGLE_APPS_SCRIPT_URL` | Google Apps Script backend URL | `https://script.google.com/...` |
-| `RECAPTCHA_SITE_KEY` | reCAPTCHA v3 site key | `6Le...` |
+| `DOMAIN_NAME` | Your domain name | `kaiukodukant.ee` |
+| `API_DOMAIN` | API subdomain URL | `https://api.kaiukodukant.ee` |
+| `RECAPTCHA_SITE_KEY` | reCAPTCHA v3 site key (frontend) | `6Le...` |
+| `RECAPTCHA_SECRET_KEY` | reCAPTCHA v3 secret key (backend) | `6Le...` |
+| `RESEND_API_KEY` | Resend email API key | `re_xxxxx...` |
+| `RESEND_FROM_EMAIL` | Sender email address | `noreply@kaiukodukant.ee` |
+| `INFO_EMAIL` | Recipient for form notifications | `info@kaiukodukant.ee` |
+| `ADMIN_PASSWORD_HASH` | Bcrypt hash of admin password | `$2b$10$...` |
+| `JWT_SECRET` | Secret for JWT tokens | Base64 string |
+| `S3_*` | S3 credentials for monitoring | Various |
 
 ## Maintenance
 
@@ -304,15 +333,39 @@ For issues specific to:
 Before going to production:
 
 - [ ] Configure production domain in `.env`
-- [ ] Set up Google Apps Script with production URLs
-- [ ] Configure reCAPTCHA for production domain
+- [ ] Configure reCAPTCHA for production domain (both site and secret keys)
+- [ ] Set up Resend account and verify domain
+- [ ] Add Resend API key to `.env`
+- [ ] Configure INFO_EMAIL for form notifications
+- [ ] Generate secure ADMIN_PASSWORD_HASH with bcrypt
+- [ ] Generate secure JWT_SECRET with openssl
+- [ ] Configure S3 credentials for gallery/calendar monitoring
 - [ ] Set up monitoring (e.g., UptimeRobot)
-- [ ] Configure backups
-- [ ] Test all forms and features
+- [ ] Configure backups for database and certificates
+- [ ] Test all forms and verify email delivery
+- [ ] Test admin dashboard login
 - [ ] Review security headers
 - [ ] Set up log rotation
 - [ ] Document emergency procedures
 
+## Architecture Overview
+
+The website consists of two main services:
+
+### Web Service (Caddy)
+- Serves static HTML, CSS, JavaScript
+- Handles HTTPS/TLS with automatic Let's Encrypt certificates
+- Proxies API requests to the API service
+- Runs on ports 80 and 443
+
+### API Service (Node.js + Express)
+- Handles form submissions (contact, membership)
+- Sends email notifications via Resend
+- Stores submissions in SQLite database
+- Provides admin dashboard for viewing submissions
+- Monitors S3 sync status for gallery and calendar
+- Runs on internal port 3000 (not exposed externally)
+
 ---
 
-*Last updated: November 2024*
+*Last updated: October 2025*
