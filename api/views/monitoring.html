@@ -156,7 +156,7 @@
                 });
 
                 if (logsResponse.ok) {
-                    const data = await statusResponse.json();
+                    const data = await logsResponse.json();
                     updateLogs(data.logs || []);
                 }
             } catch (error) {
