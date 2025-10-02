@@ -4,6 +4,7 @@ const router = express.Router();
 const database = require('../services/database');
 const emailService = require('../services/email');
 const recaptcha = require('../services/recaptcha');
+const googleSheets = require('../services/google-sheets');
 const config = require('../config');
 
 // Membership form submission
@@ -70,6 +71,20 @@ router.post('/membership', recaptcha.verifyMiddleware('membership'), async (req,
     }).catch(err => {
       console.error('Failed to send email notification:', err);
     });
+
+    // Sync to Google Sheets if enabled (async - don't wait)
+    if (config.GOOGLE_SHEETS_ENABLED) {
+      googleSheets.appendMembershipSubmission(submissionData)
+        .then(result => {
+          if (result.success) {
+            database.markAsSynced('membership_submissions', submissionId);
+            console.log('Synced to Google Sheets');
+          }
+        })
+        .catch(err => {
+          console.error('Failed to sync to Google Sheets:', err);
+        });
+    }
 
     // Success response
     res.json({
@@ -152,6 +167,20 @@ router.post('/contact', recaptcha.verifyMiddleware('contact'), async (req, res) 
     }).catch(err => {
       console.error('Failed to send email notification:', err);
     });
+
+    // Sync to Google Sheets if enabled (async - don't wait)
+    if (config.GOOGLE_SHEETS_ENABLED) {
+      googleSheets.appendContactSubmission(submissionData)
+        .then(result => {
+          if (result.success) {
+            database.markAsSynced('contact_submissions', submissionId);
+            console.log('Synced to Google Sheets');
+          }
+        })
+        .catch(err => {
+          console.error('Failed to sync to Google Sheets:', err);
+        });
+    }
 
     // Success response
     res.json({
