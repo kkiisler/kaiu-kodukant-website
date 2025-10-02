@@ -48,8 +48,17 @@ async function getS3SyncStatus() {
     const versionData = versionResponse.data;
 
     const now = new Date();
-    const calendarLastSync = versionData.calendar ? new Date(versionData.calendar.lastUpdated) : null;
-    const galleryLastSync = versionData.gallery ? new Date(versionData.gallery.lastUpdated) : null;
+    // Handle both old structure (with objects) and new structure (with timestamps)
+    const calendarLastSync = versionData.calendar
+      ? (typeof versionData.calendar === 'number'
+        ? new Date(versionData.calendar)
+        : new Date(versionData.calendar.lastUpdated))
+      : null;
+    const galleryLastSync = versionData.gallery
+      ? (typeof versionData.gallery === 'number'
+        ? new Date(versionData.gallery)
+        : new Date(versionData.gallery.lastUpdated))
+      : null;
 
     // Calculate staleness in minutes
     const calendarStaleness = calendarLastSync
@@ -67,19 +76,48 @@ async function getS3SyncStatus() {
       return 'error';
     };
 
+    // Try to fetch actual counts from S3 if available
+    let eventsCount = 0;
+    let albumsCount = 0;
+    let photosCount = 0;
+
+    try {
+      // Try to get events count from events.json
+      const eventsUrl = `${config.S3_ENDPOINT}/${config.S3_BUCKET}/calendar/events.json`;
+      const eventsResponse = await axios.get(eventsUrl, { timeout: 3000 });
+      if (eventsResponse.data && Array.isArray(eventsResponse.data)) {
+        eventsCount = eventsResponse.data.length;
+      }
+    } catch (e) {
+      console.log('Could not fetch events count:', e.message);
+    }
+
+    try {
+      // Try to get gallery counts from albums.json
+      const albumsUrl = `${config.S3_ENDPOINT}/${config.S3_BUCKET}/gallery/albums.json`;
+      const albumsResponse = await axios.get(albumsUrl, { timeout: 3000 });
+      if (albumsResponse.data && Array.isArray(albumsResponse.data)) {
+        albumsCount = albumsResponse.data.length;
+        photosCount = albumsResponse.data.reduce((total, album) =>
+          total + (album.photos?.length || 0), 0);
+      }
+    } catch (e) {
+      console.log('Could not fetch gallery counts:', e.message);
+    }
+
     return {
       calendar: {
         lastSync: calendarLastSync ? calendarLastSync.toISOString() : null,
         status: getStatus(calendarStaleness),
         staleness: calendarStaleness,
-        eventsCount: versionData.calendar?.eventsCount || 0
+        eventsCount: eventsCount
       },
       gallery: {
         lastSync: galleryLastSync ? galleryLastSync.toISOString() : null,
         status: getStatus(galleryStaleness),
         staleness: galleryStaleness,
-        albumsCount: versionData.gallery?.albumsCount || 0,
-        photosCount: versionData.gallery?.photosCount || 0
+        albumsCount: albumsCount,
+        photosCount: photosCount
       },
       s3Storage: {
         endpoint: config.S3_ENDPOINT,
