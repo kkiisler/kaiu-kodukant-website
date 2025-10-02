@@ -49,6 +49,7 @@ const corsOptions = {
     // Allow requests from the main domain and localhost for testing
     const allowedOrigins = [
       config.ALLOWED_DOMAIN,
+      'https://api.kaiukodukant.ee',  // Allow API domain itself for admin panel
       'http://localhost:8080',
       'http://localhost:3000'
     ];
