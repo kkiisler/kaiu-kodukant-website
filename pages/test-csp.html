@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSP Test</title>
+</head>
+<body>
+    <h1>CSP Test Page</h1>
+    <button id="testBtn">Test API Call</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('result');
+            try {
+                const response = await fetch('https://api.kaiukodukant.ee/health');
+                const data = await response.json();
+                resultDiv.innerHTML = '<p style="color: green;">Success! API is reachable. Response: ' + JSON.stringify(data) + '</p>';
+            } catch (error) {
+                resultDiv.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+                console.error('Fetch error:', error);
+            }
+        });
+
+        // Check what CSP is active
+        const meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+        if (meta) {
+            console.log('Meta CSP:', meta.content);
+        }
+
+        // Try to read CSP from response headers via Performance API
+        if (window.performance && window.performance.getEntriesByType) {
+            const entries = window.performance.getEntriesByType('navigation');
+            console.log('Navigation timing entries:', entries);
+        }
+    </script>
+</body>
+</html>
