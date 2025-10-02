@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitooring - MTÜ Kaiu Kodukant</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/admin/assets/admin.css">
     <style>
         .status-success { color: #10b981; }
@@ -133,12 +132,6 @@
             </div>
         </div>
 
-        <!-- Success Rate Chart -->
-        <div class="bg-white rounded-lg shadow p-6 mb-8">
-            <h3 class="text-lg font-semibold mb-4">📊 Sync Trend (viimased 24h)</h3>
-            <canvas id="syncChart" width="400" height="100"></canvas>
-        </div>
-
         <!-- Detailed History -->
         <div class="bg-white rounded-lg shadow p-6">
             <div class="flex justify-between items-center mb-4">
@@ -179,7 +172,6 @@
     <script>
         let token = localStorage.getItem('adminToken') || getCookie('adminToken');
         let isLoading = false;
-        let chartInstance = null;
 
         async function loadMonitoringData() {
             if (isLoading) return;
@@ -198,7 +190,6 @@
                     updateStatus(data);
                     updateStats(data.stats);
                     updateTimelines(data.history);
-                    updateChart(data.history);
                 }
 
                 // Load detailed history
@@ -295,91 +286,6 @@
                     return `<span class="timeline-dot ${statusClass}" title="${title}"></span>`;
                 }).join('');
             }
-        }
-
-        function updateChart(history) {
-            const ctx = document.getElementById('syncChart').getContext('2d');
-
-            // Prepare data for last 24 hours
-            const hours = 24;
-            const now = new Date();
-            const labels = [];
-            const calendarData = [];
-            const galleryData = [];
-
-            for (let i = hours - 1; i >= 0; i--) {
-                const hour = new Date(now - i * 60 * 60 * 1000);
-                labels.push(hour.getHours() + ':00');
-
-                // Count successful syncs in this hour
-                const hourStart = new Date(hour);
-                hourStart.setMinutes(0, 0, 0);
-                const hourEnd = new Date(hourStart);
-                hourEnd.setHours(hourEnd.getHours() + 1);
-
-                if (history?.calendar) {
-                    const calendarCount = history.calendar.filter(entry => {
-                        const time = new Date(entry.timestamp);
-                        return time >= hourStart && time < hourEnd && entry.status === 'success';
-                    }).length;
-                    calendarData.push(calendarCount);
-                } else {
-                    calendarData.push(0);
-                }
-
-                if (history?.gallery) {
-                    const galleryCount = history.gallery.filter(entry => {
-                        const time = new Date(entry.timestamp);
-                        return time >= hourStart && time < hourEnd && entry.status === 'success';
-                    }).length;
-                    galleryData.push(galleryCount);
-                } else {
-                    galleryData.push(0);
-                }
-            }
-
-            // Destroy existing chart if it exists
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
-
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Kalender',
-                        data: calendarData,
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4
-                    }, {
-                        label: 'Galerii',
-                        data: galleryData,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
-                }
-            });
         }
 
         async function loadHistory() {
