@@ -148,13 +148,8 @@ api.{$DOMAIN_NAME} {
 		header_up X-Forwarded-Proto {scheme}
 	}
 
-	# CORS headers for API
-	header {
-		Access-Control-Allow-Origin "https://{$DOMAIN_NAME}"
-		Access-Control-Allow-Methods "GET, POST, DELETE, OPTIONS"
-		Access-Control-Allow-Headers "Content-Type, Authorization"
-		Access-Control-Allow-Credentials "true"
-	}
+	# CORS headers are handled by the API server itself
+	# Don't add duplicate headers
 
 	# Security headers
 	header {
