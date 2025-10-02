@@ -112,6 +112,10 @@ app.get('/admin/monitoring', authenticateAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'views/monitoring.html'));
 });
 
+app.get('/admin/monitoring-enhanced', authenticateAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'views/monitoring-enhanced.html'));
+});
+
 // Root redirect
 app.get('/', (req, res) => {
   res.redirect('/admin/login');

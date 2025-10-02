@@ -3,14 +3,33 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const config = require('../config');
+const syncHistory = require('../services/syncHistory');
 
-// Get S3 sync status
+// Get S3 sync status with history
 router.get('/status', async (req, res) => {
   try {
     const status = await getS3SyncStatus();
+
+    // Get recent history and stats
+    const calendarHistory = await syncHistory.getSyncHistory('calendar', 50);
+    const galleryHistory = await syncHistory.getSyncHistory('gallery', 50);
+    const calendarStats = await syncHistory.calculateStats('calendar', 24);
+    const galleryStats = await syncHistory.calculateStats('gallery', 24);
+
+    // Record current status
+    await syncHistory.checkAndRecordStatus();
+
     res.json({
       success: true,
-      ...status
+      ...status,
+      history: {
+        calendar: calendarHistory.slice(0, 10), // Send last 10 for status endpoint
+        gallery: galleryHistory.slice(0, 10)
+      },
+      stats: {
+        calendar: calendarStats,
+        gallery: galleryStats
+      }
     });
   } catch (error) {
     console.error('Error fetching S3 status:', error);
@@ -194,6 +213,35 @@ async function getS3Logs(type, limit) {
     return [];
   }
 }
+
+// Get detailed sync history
+router.get('/history', async (req, res) => {
+  try {
+    const { type = 'all', limit = 100 } = req.query;
+
+    if (type === 'all') {
+      const history = await syncHistory.getSyncHistory(null, parseInt(limit));
+      res.json({
+        success: true,
+        history
+      });
+    } else {
+      const history = await syncHistory.getSyncHistory(type, parseInt(limit));
+      res.json({
+        success: true,
+        history: {
+          [type]: history
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching sync history:', error);
+    res.status(500).json({
+      error: 'Failed to fetch sync history',
+      message: error.message
+    });
+  }
+});
 
 // Get detailed S3 storage info (optional)
 router.get('/storage', async (req, res) => {

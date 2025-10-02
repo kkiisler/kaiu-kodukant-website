@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitooring - MTÜ Kaiu Kodukant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/admin/assets/admin.css">
+    <style>
+        .status-success { color: #10b981; }
+        .status-warning { color: #f59e0b; }
+        .status-error { color: #ef4444; }
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .timeline-success { background-color: #10b981; }
+        .timeline-warning { background-color: #f59e0b; }
+        .timeline-error { background-color: #ef4444; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-800">S3 Sync Monitooring</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/admin" class="text-gray-600 hover:text-gray-900">Tagasi</a>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-700 font-medium">
+                        Logi välja
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Current Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Calendar Status -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-lg font-semibold">📅 Kalendri Sync</h3>
+                    <span id="calendarStatusBadge" class="px-2 py-1 text-xs font-medium rounded-full">-</span>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Viimane sync:</span>
+                        <span id="calendarLastSync" class="font-mono text-sm">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Sündmusi:</span>
+                        <span id="calendarEvents">-</span>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">24h statistika</h4>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                            <span class="text-gray-500">Õnnestumise %:</span>
+                            <span id="calendarSuccessRate" class="font-medium ml-1">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Sync sagedus:</span>
+                            <span id="calendarInterval" class="font-medium ml-1">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Viimased 10 synci</h4>
+                    <div id="calendarTimeline" class="flex gap-1">
+                        <!-- Timeline dots will be added here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery Status -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-lg font-semibold">🖼️ Galerii Sync</h3>
+                    <span id="galleryStatusBadge" class="px-2 py-1 text-xs font-medium rounded-full">-</span>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Viimane sync:</span>
+                        <span id="galleryLastSync" class="font-mono text-sm">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Albumeid:</span>
+                        <span id="galleryAlbums">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Fotosid:</span>
+                        <span id="galleryPhotos">-</span>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">24h statistika</h4>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                            <span class="text-gray-500">Õnnestumise %:</span>
+                            <span id="gallerySuccessRate" class="font-medium ml-1">-</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-500">Sync sagedus:</span>
+                            <span id="galleryInterval" class="font-medium ml-1">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline -->
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Viimased 10 synci</h4>
+                    <div id="galleryTimeline" class="flex gap-1">
+                        <!-- Timeline dots will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Rate Chart -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h3 class="text-lg font-semibold mb-4">📊 Sync Trend (viimased 24h)</h3>
+            <canvas id="syncChart" width="400" height="100"></canvas>
+        </div>
+
+        <!-- Detailed History -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">📋 Detailne Sync Ajalugu</h3>
+                <div class="flex gap-2">
+                    <select id="historyFilter" class="px-3 py-1 border rounded-lg text-sm">
+                        <option value="all">Kõik</option>
+                        <option value="calendar">Kalender</option>
+                        <option value="gallery">Galerii</option>
+                    </select>
+                    <button onclick="refreshAll()" class="text-blue-600 hover:text-blue-700">
+                        Värskenda
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Aeg</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tüüp</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Staatus</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Elemendid</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Allikas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable" class="bg-white divide-y divide-gray-200">
+                        <!-- History will be loaded here -->
+                    </tbody>
+                </table>
+                <div id="noHistory" class="hidden text-center py-4 text-gray-500">
+                    Ajalugu puudub
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('adminToken') || getCookie('adminToken');
+        let isLoading = false;
+        let chartInstance = null;
+
+        async function loadMonitoringData() {
+            if (isLoading) return;
+            isLoading = true;
+
+            try {
+                const response = await fetch(`/api/v1/monitoring/status?t=${Date.now()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus(data);
+                    updateStats(data.stats);
+                    updateTimelines(data.history);
+                    updateChart(data.history);
+                }
+
+                // Load detailed history
+                await loadHistory();
+            } catch (error) {
+                console.error('Error loading monitoring data:', error);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        function updateStatus(data) {
+            // Calendar status
+            if (data.calendar) {
+                const status = data.calendar.status;
+                const badge = document.getElementById('calendarStatusBadge');
+                badge.textContent = status === 'ok' ? '✅ OK' :
+                                   status === 'warning' ? '⚠️ Hoiatus' :
+                                   status === 'error' ? '❌ Viga' : '❓ Teadmata';
+                badge.className = `px-2 py-1 text-xs font-medium rounded-full ${
+                    status === 'ok' ? 'bg-green-100 text-green-800' :
+                    status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                    status === 'error' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                }`;
+
+                document.getElementById('calendarLastSync').textContent =
+                    data.calendar.lastSync ? formatTime(data.calendar.lastSync) : 'Teadmata';
+                document.getElementById('calendarEvents').textContent = data.calendar.eventsCount || 0;
+            }
+
+            // Gallery status
+            if (data.gallery) {
+                const status = data.gallery.status;
+                const badge = document.getElementById('galleryStatusBadge');
+                badge.textContent = status === 'ok' ? '✅ OK' :
+                                   status === 'warning' ? '⚠️ Hoiatus' :
+                                   status === 'error' ? '❌ Viga' : '❓ Teadmata';
+                badge.className = `px-2 py-1 text-xs font-medium rounded-full ${
+                    status === 'ok' ? 'bg-green-100 text-green-800' :
+                    status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                    status === 'error' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                }`;
+
+                document.getElementById('galleryLastSync').textContent =
+                    data.gallery.lastSync ? formatTime(data.gallery.lastSync) : 'Teadmata';
+                document.getElementById('galleryAlbums').textContent = data.gallery.albumsCount || 0;
+                document.getElementById('galleryPhotos').textContent = data.gallery.photosCount || 0;
+            }
+        }
+
+        function updateStats(stats) {
+            if (stats?.calendar) {
+                document.getElementById('calendarSuccessRate').textContent =
+                    stats.calendar.successRate ? `${stats.calendar.successRate}%` : '-';
+                document.getElementById('calendarInterval').textContent =
+                    stats.calendar.averageInterval ? `~${stats.calendar.averageInterval} min` : '-';
+            }
+
+            if (stats?.gallery) {
+                document.getElementById('gallerySuccessRate').textContent =
+                    stats.gallery.successRate ? `${stats.gallery.successRate}%` : '-';
+                document.getElementById('galleryInterval').textContent =
+                    stats.gallery.averageInterval ? `~${stats.gallery.averageInterval} min` : '-';
+            }
+        }
+
+        function updateTimelines(history) {
+            // Calendar timeline
+            if (history?.calendar) {
+                const timeline = document.getElementById('calendarTimeline');
+                timeline.innerHTML = history.calendar.slice(0, 10).reverse().map(entry => {
+                    const status = entry.status || 'unknown';
+                    const statusClass = status === 'success' ? 'timeline-success' :
+                                      status === 'warning' ? 'timeline-warning' :
+                                      status === 'error' ? 'timeline-error' :
+                                      'bg-gray-300';
+                    const title = `${formatTime(entry.timestamp)}\nStatus: ${status}${entry.error ? '\n' + entry.error : ''}`;
+                    return `<span class="timeline-dot ${statusClass}" title="${title}"></span>`;
+                }).join('');
+            }
+
+            // Gallery timeline
+            if (history?.gallery) {
+                const timeline = document.getElementById('galleryTimeline');
+                timeline.innerHTML = history.gallery.slice(0, 10).reverse().map(entry => {
+                    const status = entry.status || 'unknown';
+                    const statusClass = status === 'success' ? 'timeline-success' :
+                                      status === 'warning' ? 'timeline-warning' :
+                                      status === 'error' ? 'timeline-error' :
+                                      'bg-gray-300';
+                    const title = `${formatTime(entry.timestamp)}\nStatus: ${status}${entry.error ? '\n' + entry.error : ''}`;
+                    return `<span class="timeline-dot ${statusClass}" title="${title}"></span>`;
+                }).join('');
+            }
+        }
+
+        function updateChart(history) {
+            const ctx = document.getElementById('syncChart').getContext('2d');
+
+            // Prepare data for last 24 hours
+            const hours = 24;
+            const now = new Date();
+            const labels = [];
+            const calendarData = [];
+            const galleryData = [];
+
+            for (let i = hours - 1; i >= 0; i--) {
+                const hour = new Date(now - i * 60 * 60 * 1000);
+                labels.push(hour.getHours() + ':00');
+
+                // Count successful syncs in this hour
+                const hourStart = new Date(hour);
+                hourStart.setMinutes(0, 0, 0);
+                const hourEnd = new Date(hourStart);
+                hourEnd.setHours(hourEnd.getHours() + 1);
+
+                if (history?.calendar) {
+                    const calendarCount = history.calendar.filter(entry => {
+                        const time = new Date(entry.timestamp);
+                        return time >= hourStart && time < hourEnd && entry.status === 'success';
+                    }).length;
+                    calendarData.push(calendarCount);
+                } else {
+                    calendarData.push(0);
+                }
+
+                if (history?.gallery) {
+                    const galleryCount = history.gallery.filter(entry => {
+                        const time = new Date(entry.timestamp);
+                        return time >= hourStart && time < hourEnd && entry.status === 'success';
+                    }).length;
+                    galleryData.push(galleryCount);
+                } else {
+                    galleryData.push(0);
+                }
+            }
+
+            // Destroy existing chart if it exists
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Kalender',
+                        data: calendarData,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Galerii',
+                        data: galleryData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadHistory() {
+            const filter = document.getElementById('historyFilter').value;
+            try {
+                const response = await fetch(`/api/v1/monitoring/history?type=${filter}&limit=50&t=${Date.now()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateHistoryTable(data.history);
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        function updateHistoryTable(history) {
+            const tbody = document.getElementById('historyTable');
+            const noHistory = document.getElementById('noHistory');
+
+            // Combine all histories
+            const allEntries = [];
+
+            if (history.calendar) {
+                history.calendar.forEach(entry => {
+                    allEntries.push({ ...entry, type: 'calendar' });
+                });
+            }
+
+            if (history.gallery) {
+                history.gallery.forEach(entry => {
+                    allEntries.push({ ...entry, type: 'gallery' });
+                });
+            }
+
+            // Sort by timestamp
+            allEntries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            if (allEntries.length === 0) {
+                tbody.innerHTML = '';
+                noHistory.classList.remove('hidden');
+                return;
+            }
+
+            noHistory.classList.add('hidden');
+            tbody.innerHTML = allEntries.slice(0, 50).map(entry => {
+                const statusClass = entry.status === 'success' ? 'status-success' :
+                                   entry.status === 'warning' ? 'status-warning' :
+                                   entry.status === 'error' ? 'status-error' : '';
+                const statusText = entry.status === 'success' ? '✅ Õnnestus' :
+                                  entry.status === 'warning' ? '⚠️ Hoiatus' :
+                                  entry.status === 'error' ? '❌ Ebaõnnestus' : '❓ Teadmata';
+
+                const counts = entry.type === 'calendar'
+                    ? `${entry.eventsCount || 0} sündmust`
+                    : `${entry.albumsCount || 0} albumit, ${entry.photosCount || 0} fotot`;
+
+                return `
+                    <tr>
+                        <td class="px-4 py-2 text-sm">${formatTime(entry.timestamp)}</td>
+                        <td class="px-4 py-2 text-sm">${entry.type === 'calendar' ? '📅 Kalender' : '🖼️ Galerii'}</td>
+                        <td class="px-4 py-2 text-sm ${statusClass}">${statusText}</td>
+                        <td class="px-4 py-2 text-sm">${counts}</td>
+                        <td class="px-4 py-2 text-sm text-gray-600">${entry.source || 'monitor'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) {
+                return 'Just nüüd';
+            } else if (diff < 3600000) {
+                const mins = Math.floor(diff / 60000);
+                return `${mins} min tagasi`;
+            } else if (diff < 86400000) {
+                const hours = Math.floor(diff / 3600000);
+                return `${hours}h tagasi`;
+            } else {
+                return date.toLocaleString('et-EE');
+            }
+        }
+
+        function refreshAll() {
+            loadMonitoringData();
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            document.cookie = 'adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+            window.location.href = '/admin/login';
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // Filter change handler
+        document.getElementById('historyFilter').addEventListener('change', loadHistory);
+
+        // Load data on page load
+        loadMonitoringData();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadMonitoringData, 30000);
+    </script>
+</body>
+</html>
