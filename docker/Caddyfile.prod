@@ -181,11 +181,10 @@ api.{$DOMAIN_NAME} {
 	}
 }
 
-# Redirect www to non-www (only if DNS record exists)
-# Uncomment if you have a www DNS record:
-# www.{$DOMAIN_NAME} {
-# 	redir https://{$DOMAIN_NAME}{uri} permanent
-# }
+# Redirect www to non-www
+www.{$DOMAIN_NAME} {
+	redir https://{$DOMAIN_NAME}{uri} permanent
+}
 
 # Health check endpoint (internal)
 :8080 {
