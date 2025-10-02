@@ -8,7 +8,38 @@ let submissions = [];
 window.addEventListener('DOMContentLoaded', () => {
     loadStatistics();
     loadSubmissions('all');
+    setupEventListeners();
 });
+
+// Setup event listeners for all buttons
+function setupEventListeners() {
+    // Logout button
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', logout);
+    }
+
+    // Export button
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportData);
+    }
+
+    // Close modal button
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', closeModal);
+    }
+
+    // Filter tabs
+    const filterTabs = document.querySelectorAll('.filter-tab');
+    filterTabs.forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            const filter = this.getAttribute('data-filter');
+            filterSubmissions(filter);
+        });
+    });
+}
 
 async function loadStatistics() {
     try {
@@ -93,7 +124,7 @@ function renderSubmissions(submissions) {
             const preview = submission.message ? submission.message.substring(0, 100) : '';
             content += `<span class="text-gray-600">${escapeHtml(preview)}${submission.message && submission.message.length > 100 ? '...' : ''}</span>`;
             if (submission.message && submission.message.length > 100) {
-                content += ` <button onclick="showMessage('${encodeURIComponent(JSON.stringify(submission))}')" class="text-blue-600 hover:text-blue-700 text-sm">Vaata</button>`;
+                content += ` <button class="view-message-btn text-blue-600 hover:text-blue-700 text-sm" data-submission='${escapeHtml(JSON.stringify(submission))}'>Vaata</button>`;
             }
         }
 
@@ -122,22 +153,46 @@ function renderSubmissions(submissions) {
                     ${score.toFixed(2)}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                    <button onclick="deleteSubmission('${submission.type}', ${submission.id})"
-                            class="text-red-600 hover:text-red-700">
+                    <button class="delete-btn text-red-600 hover:text-red-700" data-type="${submission.type}" data-id="${submission.id}">
                         Kustuta
                     </button>
                 </td>
             </tr>
         `;
     }).join('');
+
+    // Attach event listeners to dynamically created buttons
+    attachDynamicListeners();
+}
+
+function attachDynamicListeners() {
+    // Delete buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const type = this.getAttribute('data-type');
+            const id = this.getAttribute('data-id');
+            deleteSubmission(type, id);
+        });
+    });
+
+    // View message buttons
+    document.querySelectorAll('.view-message-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const submissionData = this.getAttribute('data-submission');
+            const submission = JSON.parse(submissionData);
+            showMessage(submission);
+        });
+    });
 }
 
 function filterSubmissions(type) {
     // Update tab styling
     document.querySelectorAll('.filter-tab').forEach(tab => {
         tab.classList.remove('active');
+        if (tab.getAttribute('data-filter') === type) {
+            tab.classList.add('active');
+        }
     });
-    event.target.classList.add('active');
 
     // Load filtered submissions
     loadSubmissions(type);
@@ -169,8 +224,7 @@ async function deleteSubmission(type, id) {
     }
 }
 
-function showMessage(encodedData) {
-    const submission = JSON.parse(decodeURIComponent(encodedData));
+function showMessage(submission) {
     const modal = document.getElementById('messageModal');
     const content = document.getElementById('modalContent');
 

@@ -17,7 +17,7 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <a href="/admin/monitoring-enhanced" class="text-gray-600 hover:text-gray-900">Monitooring</a>
-                    <button onclick="logout()" class="text-red-600 hover:text-red-700 font-medium">
+                    <button id="logoutBtn" class="text-red-600 hover:text-red-700 font-medium">
                         Logi välja
                     </button>
                 </div>
@@ -61,13 +61,13 @@
         <div class="bg-white rounded-lg shadow mb-4">
             <div class="border-b">
                 <nav class="flex -mb-px">
-                    <button onclick="filterSubmissions('all')" class="filter-tab active px-6 py-3 text-sm font-medium">
+                    <button data-filter="all" class="filter-tab active px-6 py-3 text-sm font-medium">
                         Kõik taotlused
                     </button>
-                    <button onclick="filterSubmissions('membership')" class="filter-tab px-6 py-3 text-sm font-medium">
+                    <button data-filter="membership" class="filter-tab px-6 py-3 text-sm font-medium">
                         Liikmestaotlused
                     </button>
-                    <button onclick="filterSubmissions('contact')" class="filter-tab px-6 py-3 text-sm font-medium">
+                    <button data-filter="contact" class="filter-tab px-6 py-3 text-sm font-medium">
                         Kontaktivormid
                     </button>
                 </nav>
@@ -76,7 +76,7 @@
 
         <!-- Export Button -->
         <div class="mb-4 flex justify-end">
-            <button onclick="exportData()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+            <button id="exportBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
                 Ekspordi CSV
             </button>
         </div>
@@ -127,7 +127,7 @@
             <div class="p-6">
                 <h3 class="text-lg font-semibold mb-4">Sõnumi sisu</h3>
                 <div id="modalContent" class="prose max-w-none"></div>
-                <button onclick="closeModal()" class="mt-4 bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
+                <button id="closeModalBtn" class="mt-4 bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
                     Sulge
                 </button>
             </div>
