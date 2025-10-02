@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitooring - MTÜ Kaiu Kodukant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/admin/assets/admin.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-800">S3 Sync Monitooring</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/admin" class="text-gray-600 hover:text-gray-900">Tagasi</a>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-700 font-medium">
+                        Logi välja
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- S3 Sync Status -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Calendar Sync Status -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">📅 Kalendri Sync</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Staatus:</span>
+                        <span id="calendarStatus" class="font-medium">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Viimane sync:</span>
+                        <span id="calendarLastSync" class="font-mono text-sm">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Vanus:</span>
+                        <span id="calendarStaleness">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Sündmusi:</span>
+                        <span id="calendarEvents">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gallery Sync Status -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">🖼️ Galerii Sync</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Staatus:</span>
+                        <span id="galleryStatus" class="font-medium">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Viimane sync:</span>
+                        <span id="galleryLastSync" class="font-mono text-sm">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Vanus:</span>
+                        <span id="galleryStaleness">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Albumeid:</span>
+                        <span id="galleryAlbums">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Fotosid:</span>
+                        <span id="galleryPhotos">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- S3 Configuration -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h3 class="text-lg font-semibold mb-4">⚙️ S3 Konfiguratsioon</h3>
+            <div class="space-y-2">
+                <div class="flex">
+                    <span class="text-gray-600 w-32">Endpoint:</span>
+                    <span id="s3Endpoint" class="font-mono text-sm">-</span>
+                </div>
+                <div class="flex">
+                    <span class="text-gray-600 w-32">Bucket:</span>
+                    <span id="s3Bucket" class="font-mono text-sm">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sync Logs -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">📋 Viimased Sync Logid</h3>
+                <button onclick="refreshLogs()" class="text-blue-600 hover:text-blue-700">
+                    Värskenda
+                </button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Aeg</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tüüp</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Staatus</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Detailid</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTable" class="bg-white divide-y divide-gray-200">
+                        <!-- Logs will be loaded here -->
+                    </tbody>
+                </table>
+                <div id="noLogs" class="hidden text-center py-4 text-gray-500">
+                    Logisid ei leitud
+                </div>
+            </div>
+        </div>
+
+        <!-- Refresh Button -->
+        <div class="mt-8 text-center">
+            <button onclick="refreshStatus()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                Värskenda kõik
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('adminToken') || getCookie('adminToken');
+
+        async function loadMonitoringData() {
+            try {
+                // Load sync status
+                const statusResponse = await fetch('/api/v1/monitoring/status', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (statusResponse.ok) {
+                    const data = await statusResponse.json();
+                    updateSyncStatus(data);
+                }
+
+                // Load logs
+                const logsResponse = await fetch('/api/v1/monitoring/logs', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (logsResponse.ok) {
+                    const data = await statusResponse.json();
+                    updateLogs(data.logs || []);
+                }
+            } catch (error) {
+                console.error('Error loading monitoring data:', error);
+            }
+        }
+
+        function updateSyncStatus(data) {
+            // Calendar status
+            if (data.calendar) {
+                updateStatusElement('calendarStatus', data.calendar.status);
+                document.getElementById('calendarLastSync').textContent =
+                    data.calendar.lastSync ? new Date(data.calendar.lastSync).toLocaleString('et-EE') : 'Teadmata';
+                document.getElementById('calendarStaleness').textContent =
+                    data.calendar.staleness ? `${data.calendar.staleness} minutit` : '-';
+                document.getElementById('calendarEvents').textContent = data.calendar.eventsCount || 0;
+            }
+
+            // Gallery status
+            if (data.gallery) {
+                updateStatusElement('galleryStatus', data.gallery.status);
+                document.getElementById('galleryLastSync').textContent =
+                    data.gallery.lastSync ? new Date(data.gallery.lastSync).toLocaleString('et-EE') : 'Teadmata';
+                document.getElementById('galleryStaleness').textContent =
+                    data.gallery.staleness ? `${data.gallery.staleness} minutit` : '-';
+                document.getElementById('galleryAlbums').textContent = data.gallery.albumsCount || 0;
+                document.getElementById('galleryPhotos').textContent = data.gallery.photosCount || 0;
+            }
+
+            // S3 config
+            if (data.s3Storage) {
+                document.getElementById('s3Endpoint').textContent = data.s3Storage.endpoint || '-';
+                document.getElementById('s3Bucket').textContent = data.s3Storage.bucket || '-';
+            }
+        }
+
+        function updateStatusElement(elementId, status) {
+            const element = document.getElementById(elementId);
+            element.textContent = status === 'ok' ? '✅ OK' :
+                                 status === 'warning' ? '⚠️ Hoiatus' :
+                                 status === 'error' ? '❌ Viga' : '❓ Teadmata';
+
+            element.className = status === 'ok' ? 'font-medium text-green-600' :
+                               status === 'warning' ? 'font-medium text-yellow-600' :
+                               status === 'error' ? 'font-medium text-red-600' :
+                               'font-medium text-gray-500';
+        }
+
+        function updateLogs(logs) {
+            const tbody = document.getElementById('logsTable');
+            const noLogs = document.getElementById('noLogs');
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '';
+                noLogs.classList.remove('hidden');
+                return;
+            }
+
+            noLogs.classList.add('hidden');
+            tbody.innerHTML = logs.map(log => `
+                <tr>
+                    <td class="px-4 py-2 text-sm">${new Date(log.timestamp || log.syncTime).toLocaleString('et-EE')}</td>
+                    <td class="px-4 py-2 text-sm">${log.type === 'calendar' ? '📅 Kalender' : '🖼️ Galerii'}</td>
+                    <td class="px-4 py-2 text-sm">${log.success ? '✅ Õnnestus' : '❌ Ebaõnnestus'}</td>
+                    <td class="px-4 py-2 text-sm text-gray-600">${log.error || log.message || '-'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function refreshStatus() {
+            loadMonitoringData();
+        }
+
+        function refreshLogs() {
+            loadMonitoringData();
+        }
+
+        function logout() {
+            localStorage.removeItem('adminToken');
+            document.cookie = 'adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+            window.location.href = '/admin/login';
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // Load data on page load
+        loadMonitoringData();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadMonitoringData, 30000);
+    </script>
+</body>
+</html>

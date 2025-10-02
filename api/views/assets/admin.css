@@ -1,0 +1,116 @@
+/* Admin Dashboard Styles */
+
+/* Filter tabs */
+.filter-tab {
+    color: #6b7280;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.filter-tab:hover {
+    color: #374151;
+    border-color: #e5e7eb;
+}
+
+.filter-tab.active {
+    color: #1e40af;
+    border-color: #1e40af;
+}
+
+/* Table styles */
+table {
+    font-size: 0.875rem;
+}
+
+tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Status indicators */
+.status-ok {
+    color: #10b981;
+}
+
+.status-warning {
+    color: #f59e0b;
+}
+
+.status-error {
+    color: #ef4444;
+}
+
+/* Modal styles */
+#messageModal {
+    z-index: 9999;
+}
+
+/* Loading spinner */
+.spinner {
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #1e40af;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Score badges */
+.score-high {
+    background-color: #10b981;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.score-medium {
+    background-color: #f59e0b;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.score-low {
+    background-color: #ef4444;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+/* Responsive tables */
+@media (max-width: 768px) {
+    .overflow-x-auto {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        font-size: 0.75rem;
+    }
+
+    th, td {
+        padding: 0.5rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    nav, button, .no-print {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+    }
+
+    .shadow {
+        box-shadow: none !important;
+    }
+}

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - MTÜ Kaiu Kodukant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/admin/assets/admin.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-gray-800">MTÜ Kaiu Kodukant - Admin</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/admin/monitoring" class="text-gray-600 hover:text-gray-900">Monitooring</a>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-700 font-medium">
+                        Logi välja
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm font-medium text-gray-500 mb-2">Liikmestaotlusi</div>
+                <div class="text-3xl font-bold text-gray-900" id="membershipCount">-</div>
+                <div class="text-sm text-gray-600 mt-1">
+                    <span id="membershipRecent">-</span> viimase 7 päeva jooksul
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm font-medium text-gray-500 mb-2">Kontaktivorme</div>
+                <div class="text-3xl font-bold text-gray-900" id="contactCount">-</div>
+                <div class="text-sm text-gray-600 mt-1">
+                    <span id="contactRecent">-</span> viimase 7 päeva jooksul
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm font-medium text-gray-500 mb-2">Kokku taotlusi</div>
+                <div class="text-3xl font-bold text-gray-900" id="totalCount">-</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="text-sm font-medium text-gray-500 mb-2">Toimingud</div>
+                <div class="space-y-2">
+                    <button onclick="testEmail()" class="text-sm text-blue-600 hover:text-blue-700">
+                        Test email
+                    </button>
+                    <button onclick="runMaintenance()" class="text-sm text-blue-600 hover:text-blue-700">
+                        Käivita hooldus
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="bg-white rounded-lg shadow mb-4">
+            <div class="border-b">
+                <nav class="flex -mb-px">
+                    <button onclick="filterSubmissions('all')" class="filter-tab active px-6 py-3 text-sm font-medium">
+                        Kõik taotlused
+                    </button>
+                    <button onclick="filterSubmissions('membership')" class="filter-tab px-6 py-3 text-sm font-medium">
+                        Liikmestaotlused
+                    </button>
+                    <button onclick="filterSubmissions('contact')" class="filter-tab px-6 py-3 text-sm font-medium">
+                        Kontaktivormid
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Export Button -->
+        <div class="mb-4 flex justify-end">
+            <button onclick="exportData()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                Ekspordi CSV
+            </button>
+        </div>
+
+        <!-- Submissions Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Aeg
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Tüüp
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Nimi
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Email
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Sisu
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                reCAPTCHA
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Tegevused
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="submissionsTable" class="bg-white divide-y divide-gray-200">
+                        <!-- Submissions will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="noSubmissions" class="hidden text-center py-8 text-gray-500">
+                Taotlusi ei leitud
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold mb-4">Sõnumi sisu</h3>
+                <div id="modalContent" class="prose max-w-none"></div>
+                <button onclick="closeModal()" class="mt-4 bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
+                    Sulge
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/admin/assets/admin.js"></script>
+</body>
+</html>
