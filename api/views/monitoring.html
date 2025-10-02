@@ -133,8 +133,17 @@
 
     <script>
         let token = localStorage.getItem('adminToken') || getCookie('adminToken');
+        let isLoading = false;  // Prevent concurrent loads
 
         async function loadMonitoringData() {
+            // Prevent concurrent loads
+            if (isLoading) {
+                console.log('Already loading monitoring data, skipping concurrent request');
+                return;
+            }
+
+            isLoading = true;
+
             try {
                 // Load sync status (with cache bypass)
                 const statusResponse = await fetch(`/api/v1/monitoring/status?t=${Date.now()}`, {
@@ -144,16 +153,21 @@
                     }
                 });
 
+                let statusData = null;
                 if (statusResponse.ok) {
-                    const statusData = await statusResponse.json();
-                    if (statusData) {
-                        updateSyncStatus(statusData);
+                    try {
+                        statusData = await statusResponse.json();
+                        if (statusData) {
+                            updateSyncStatus(statusData);
+                        }
+                    } catch (jsonError) {
+                        console.error('Failed to parse status response:', jsonError);
                     }
                 } else {
                     console.error('Failed to load status:', statusResponse.status);
                 }
 
-                // Load logs (with cache bypass)
+                // Load logs separately with its own response object
                 const logsResponse = await fetch(`/api/v1/monitoring/logs?t=${Date.now()}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -161,10 +175,15 @@
                     }
                 });
 
+                let logsData = null;
                 if (logsResponse.ok) {
-                    const logsData = await logsResponse.json();
-                    if (logsData && logsData.logs) {
-                        updateLogs(logsData.logs);
+                    try {
+                        logsData = await logsResponse.json();
+                        if (logsData && logsData.logs) {
+                            updateLogs(logsData.logs);
+                        }
+                    } catch (jsonError) {
+                        console.error('Failed to parse logs response:', jsonError);
                     }
                 } else {
                     console.error('Failed to load logs:', logsResponse.status);
@@ -172,6 +191,8 @@
             } catch (error) {
                 console.error('Error loading monitoring data:', error);
                 console.error('Error stack:', error.stack);
+            } finally {
+                isLoading = false;
             }
         }
 
