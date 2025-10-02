@@ -156,7 +156,7 @@ database.initialize()
     console.log('✅ Database initialized');
 
     // Test email configuration
-    if (config.SMTP_HOST && config.SMTP_HOST !== 'smtp.gmail.com') {
+    if (config.RESEND_API_KEY) {
       emailService.testConnection()
         .then(() => console.log('✅ Email service connected'))
         .catch(err => console.warn('⚠️ Email service not configured:', err.message));

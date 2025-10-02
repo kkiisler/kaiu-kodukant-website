@@ -1,62 +1,46 @@
-// Email Service using Nodemailer
-const nodemailer = require('nodemailer');
+// Email Service using Resend
+const { Resend } = require('resend');
 const config = require('../config');
 
-let transporter;
+let resend;
 
-// Initialize email transporter
+// Initialize Resend client
 const initialize = () => {
-  if (!config.SMTP_HOST || !config.SMTP_USER) {
-    console.warn('⚠️ Email service not configured - notifications will not be sent');
+  if (!config.RESEND_API_KEY) {
+    console.warn('⚠️ Email service not configured - RESEND_API_KEY not set');
     return null;
   }
 
-  transporter = nodemailer.createTransport({
-    host: config.SMTP_HOST,
-    port: config.SMTP_PORT,
-    secure: config.SMTP_SECURE,
-    auth: {
-      user: config.SMTP_USER,
-      pass: config.SMTP_PASS
-    },
-    tls: {
-      rejectUnauthorized: false // Allow self-signed certificates
-    }
-  });
-
-  return transporter;
+  resend = new Resend(config.RESEND_API_KEY);
+  console.log('✅ Resend email service initialized');
+  return resend;
 };
 
 // Test email connection
 const testConnection = async () => {
-  if (!transporter) {
+  if (!resend) {
     initialize();
   }
 
-  if (!transporter) {
+  if (!resend) {
     throw new Error('Email service not configured');
   }
 
-  try {
-    await transporter.verify();
-    console.log('✅ Email server connection verified');
-    return true;
-  } catch (error) {
-    console.error('❌ Email server connection failed:', error);
-    throw error;
-  }
+  // Resend doesn't have a verify method, so we'll just check if API key exists
+  console.log('✅ Email service configured with Resend');
+  return true;
 };
 
 // Send membership notification
 const sendMembershipNotification = async (data) => {
-  if (!transporter) {
+  if (!resend) {
     console.warn('Email service not configured - skipping notification');
     return { sent: false, reason: 'Not configured' };
   }
 
   const { name, email, recaptcha_score, submitted_at } = data;
 
-  const subject = 'Uus liikmestaotus MTÜ Kaiu Kodukant';
+  const subject = 'Uus liikmestaotlus MTÜ Kaiu Kodukant';
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -80,7 +64,7 @@ const sendMembershipNotification = async (data) => {
     <body>
       <div class="container">
         <div class="header">
-          <h2 style="margin: 0;">Uus liikmestaotus</h2>
+          <h2 style="margin: 0;">Uus liikmestaotlus</h2>
         </div>
         <div class="content">
           <div class="field">
@@ -115,7 +99,7 @@ const sendMembershipNotification = async (data) => {
   `;
 
   const textContent = `
-Uus liikmestaotus MTÜ Kaiu Kodukant
+Uus liikmestaotlus MTÜ Kaiu Kodukant
 
 Nimi: ${name}
 E-post: ${email}
@@ -126,16 +110,21 @@ Vaata kõiki taotlusi: ${config.API_DOMAIN}/admin
   `.trim();
 
   try {
-    const info = await transporter.sendMail({
-      from: `"MTÜ Kaiu Kodukant" <${config.SMTP_FROM}>`,
-      to: config.ADMIN_EMAIL,
+    const { data: result, error } = await resend.emails.send({
+      from: `MTÜ Kaiu Kodukant <${config.RESEND_FROM_EMAIL}>`,
+      to: [config.INFO_EMAIL],
       subject: subject,
       text: textContent,
       html: htmlContent
     });
 
-    console.log('Membership notification sent:', info.messageId);
-    return { sent: true, messageId: info.messageId };
+    if (error) {
+      console.error('Failed to send membership notification:', error);
+      return { sent: false, error: error.message };
+    }
+
+    console.log('Membership notification sent:', result.id);
+    return { sent: true, messageId: result.id };
   } catch (error) {
     console.error('Failed to send membership notification:', error);
     return { sent: false, error: error.message };
@@ -144,7 +133,7 @@ Vaata kõiki taotlusi: ${config.API_DOMAIN}/admin
 
 // Send contact form notification
 const sendContactNotification = async (data) => {
-  if (!transporter) {
+  if (!resend) {
     console.warn('Email service not configured - skipping notification');
     return { sent: false, reason: 'Not configured' };
   }
@@ -238,17 +227,22 @@ Vaata kõiki sõnumeid: ${config.API_DOMAIN}/admin
   `.trim();
 
   try {
-    const info = await transporter.sendMail({
-      from: `"MTÜ Kaiu Kodukant" <${config.SMTP_FROM}>`,
-      to: config.ADMIN_EMAIL,
+    const { data: result, error } = await resend.emails.send({
+      from: `MTÜ Kaiu Kodukant <${config.RESEND_FROM_EMAIL}>`,
+      to: [config.INFO_EMAIL],
       replyTo: email, // Allow direct reply to sender
       subject: emailSubject,
       text: textContent,
       html: htmlContent
     });
 
-    console.log('Contact notification sent:', info.messageId);
-    return { sent: true, messageId: info.messageId };
+    if (error) {
+      console.error('Failed to send contact notification:', error);
+      return { sent: false, error: error.message };
+    }
+
+    console.log('Contact notification sent:', result.id);
+    return { sent: true, messageId: result.id };
   } catch (error) {
     console.error('Failed to send contact notification:', error);
     return { sent: false, error: error.message };
@@ -257,18 +251,18 @@ Vaata kõiki sõnumeid: ${config.API_DOMAIN}/admin
 
 // Send test email
 const sendTestEmail = async () => {
-  if (!transporter) {
+  if (!resend) {
     initialize();
   }
 
-  if (!transporter) {
+  if (!resend) {
     throw new Error('Email service not configured');
   }
 
   try {
-    const info = await transporter.sendMail({
-      from: `"MTÜ Kaiu Kodukant Test" <${config.SMTP_FROM}>`,
-      to: config.ADMIN_EMAIL,
+    const { data: result, error } = await resend.emails.send({
+      from: `MTÜ Kaiu Kodukant Test <${config.RESEND_FROM_EMAIL}>`,
+      to: [config.INFO_EMAIL],
       subject: 'Test Email - MTÜ Kaiu Kodukant API',
       text: 'This is a test email from the MTÜ Kaiu Kodukant API backend.',
       html: `
@@ -284,8 +278,13 @@ const sendTestEmail = async () => {
       `
     });
 
-    console.log('Test email sent:', info.messageId);
-    return { sent: true, messageId: info.messageId };
+    if (error) {
+      console.error('Failed to send test email:', error);
+      throw error;
+    }
+
+    console.log('Test email sent:', result.id);
+    return { sent: true, messageId: result.id };
   } catch (error) {
     console.error('Failed to send test email:', error);
     throw error;

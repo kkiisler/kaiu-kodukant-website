@@ -1,4 +1,5 @@
 // Configuration module - centralizes all environment variables
+const path = require('path');
 
 module.exports = {
   // Server configuration
@@ -12,14 +13,10 @@ module.exports = {
   // Database
   DATABASE_PATH: process.env.DATABASE_PATH || path.join(__dirname, '../data/forms.db'),
 
-  // Email configuration
-  SMTP_HOST: process.env.SMTP_HOST || 'smtp.gmail.com',
-  SMTP_PORT: parseInt(process.env.SMTP_PORT) || 587,
-  SMTP_SECURE: process.env.SMTP_SECURE === 'true',
-  SMTP_USER: process.env.SMTP_USER || '',
-  SMTP_PASS: process.env.SMTP_PASS || '',
-  SMTP_FROM: process.env.SMTP_FROM || 'noreply@kaiukodukant.ee',
-  ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'kaur.kiisler@gmail.com',
+  // Email configuration (Resend)
+  RESEND_API_KEY: process.env.RESEND_API_KEY || '',
+  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'noreply@kaiukodukant.ee',
+  INFO_EMAIL: process.env.INFO_EMAIL || 'info@kaiukodukant.ee',
 
   // Authentication
   ADMIN_PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH || '',
@@ -52,5 +49,3 @@ module.exports = {
   // Data retention
   DATA_RETENTION_DAYS: parseInt(process.env.DATA_RETENTION_DAYS) || 0, // 0 = keep forever
 };
-
-const path = require('path');
