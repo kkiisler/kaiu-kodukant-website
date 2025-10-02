@@ -129,6 +129,28 @@ check_requirements() {
     print_success "Environment variables loaded"
 }
 
+handle_special_env_vars() {
+    print_step "Processing environment variables..."
+
+    # Handle ADMIN_PASSWORD_HASH specially because it contains $ signs that confuse Docker Compose
+    # Read the raw value from .env file without shell interpretation
+    if grep -q "^ADMIN_PASSWORD_HASH=" "$ENV_FILE"; then
+        # Extract the raw hash value, handling both quoted and unquoted formats
+        RAW_HASH=$(grep "^ADMIN_PASSWORD_HASH=" "$ENV_FILE" | cut -d'=' -f2- | sed 's/^"//;s/"$//')
+
+        # If the hash starts with $2 (bcrypt format), export it properly
+        if [[ "$RAW_HASH" == \$2* ]]; then
+            export ADMIN_PASSWORD_HASH="$RAW_HASH"
+            print_success "Admin password hash exported correctly"
+        fi
+    fi
+
+    # Export other critical variables to ensure they're available
+    export DOMAIN_NAME
+    export API_DOMAIN
+    export ALLOWED_DOMAIN
+}
+
 build_containers() {
     if [[ "$API_ONLY" == true ]]; then
         print_step "Building API container..."
@@ -304,6 +326,9 @@ main() {
 
     # Check requirements
     check_requirements
+
+    # Handle special environment variables (like password hashes with $ signs)
+    handle_special_env_vars
 
     # Build containers
     build_containers
