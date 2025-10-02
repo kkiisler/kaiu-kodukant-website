@@ -45,13 +45,9 @@ services:
       - DATABASE_PATH=/data/forms.db
       - ALLOWED_DOMAIN=https://${DOMAIN_NAME:-localhost}
       - API_DOMAIN=https://api.${DOMAIN_NAME:-localhost}
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_PORT=${SMTP_PORT}
-      - SMTP_SECURE=${SMTP_SECURE:-false}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
-      - SMTP_FROM=${SMTP_FROM}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-noreply@kaiukodukant.ee}
+      - INFO_EMAIL=${INFO_EMAIL}
       - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
       - S3_ENDPOINT=${S3_ENDPOINT:-https://s3.pilw.io}
