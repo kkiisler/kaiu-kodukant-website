@@ -136,31 +136,42 @@
 
         async function loadMonitoringData() {
             try {
-                // Load sync status
-                const statusResponse = await fetch('/api/v1/monitoring/status', {
+                // Load sync status (with cache bypass)
+                const statusResponse = await fetch(`/api/v1/monitoring/status?t=${Date.now()}`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`,
+                        'Cache-Control': 'no-cache'
                     }
                 });
 
                 if (statusResponse.ok) {
-                    const data = await statusResponse.json();
-                    updateSyncStatus(data);
+                    const statusData = await statusResponse.json();
+                    if (statusData) {
+                        updateSyncStatus(statusData);
+                    }
+                } else {
+                    console.error('Failed to load status:', statusResponse.status);
                 }
 
-                // Load logs
-                const logsResponse = await fetch('/api/v1/monitoring/logs', {
+                // Load logs (with cache bypass)
+                const logsResponse = await fetch(`/api/v1/monitoring/logs?t=${Date.now()}`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`,
+                        'Cache-Control': 'no-cache'
                     }
                 });
 
                 if (logsResponse.ok) {
-                    const data = await logsResponse.json();
-                    updateLogs(data.logs || []);
+                    const logsData = await logsResponse.json();
+                    if (logsData && logsData.logs) {
+                        updateLogs(logsData.logs);
+                    }
+                } else {
+                    console.error('Failed to load logs:', logsResponse.status);
                 }
             } catch (error) {
                 console.error('Error loading monitoring data:', error);
+                console.error('Error stack:', error.stack);
             }
         }
 
