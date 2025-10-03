@@ -4,153 +4,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sündmused - MTÜ Kaiu Kodukant</title>
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com/"></script>
-    
+
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <!-- FullCalendar JS -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
-    
+
     <!-- Tailwind Configuration -->
+    <script src="/js/tailwind-config.js"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        background: {
-                            primary: '#fdfdfc',
-                            secondary: '#ffffff',
-                            tertiary: '#f9f8f6',
-                        },
-                        text: {
-                            primary: '#3a3a3a',
-                            secondary: '#5a5a5a',
-                            tertiary: '#7a7a7a',
-                            subtle: '#9a9a9a',
-                        },
-                        brand: {
-                            primary: '#a68a64',
-                            primary_hover: '#917651',
-                            light: '#f3f0ec',
-                            border: '#e5e2de',
-                        },
-                        accent: {
-                            primary: '#d4b896',
-                            secondary: '#b8956a',
-                            tertiary: '#e67e22',
-                            quaternary: '#27ae60',
-                            quinary: '#3498db',
-                        }
-                    },
-                    spacing: {
-                        'block': '1.2rem',
-                    },
-                    maxWidth: {
-                       'content': '620px',
-                       'wide': '1280px',
-                    }
-                }
-            }
-        }
+        tailwind.config = window.tailwindConfig;
     </script>
 
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/css/styles.css">
-</head>
-<body class="bg-background-primary text-text-primary">
 
-    <!-- Header -->
-    <header class="bg-background-primary/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200">
-        <nav class="global-padding max-w-wide mx-auto flex items-center justify-between py-4">
-            <a href="/">
-                <img src="/media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
-            </a>
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="/" class="nav-link font-medium hover:underline">Esileht</a>
-                <a href="/events" class="nav-link font-medium hover:underline active">Sündmused</a>
-                <a href="/maitsete-karussell" class="nav-link font-medium hover:underline">Maitsete karussell</a>
-                <a href="/gallery" class="nav-link font-medium hover:underline">Galerii</a>
-                <a href="/about" class="nav-link font-medium hover:underline">Meist</a>
-                <a href="/contact" class="nav-link font-medium hover:underline">Kontakt</a>
-                <a href="/membership" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors">Saa liikmeks</a>
-            </div>
-            <!-- Mobile Menu Button -->
-            <button id="hamburger-menu" class="md:hidden">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-            </button>
-        </nav>
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden global-padding pb-4">
-            <a href="/" class="block py-2 mobile-nav-link">Esileht</a>
-            <a href="/events" class="block py-2 mobile-nav-link active">Sündmused</a>
-            <a href="/maitsete-karussell" class="block py-2 mobile-nav-link">Maitsete karussell</a>
-            <a href="/gallery" class="block py-2 mobile-nav-link">Galerii</a>
-            <a href="/about" class="block py-2 mobile-nav-link">Meist</a>
-            <a href="/contact" class="block py-2 mobile-nav-link">Kontakt</a>
-            <a href="/membership" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link">Saa liikmeks</a>
-        </div>
-    </header>
+    <style>
+        /* Custom FullCalendar styling with new colors */
+        .fc-event {
+            background-color: #E8A760 !important;
+            border-color: #D26911 !important;
+            color: #273E3E !important;
+        }
+        .fc-event:hover {
+            background-color: #D26911 !important;
+            color: #F3F0EA !important;
+        }
+        .fc .fc-button-primary {
+            background-color: #D26911 !important;
+            border-color: #D26911 !important;
+        }
+        .fc .fc-button-primary:hover {
+            background-color: #B85A0E !important;
+            border-color: #B85A0E !important;
+        }
+        .fc-today {
+            background-color: #FAE6D0 !important;
+        }
+    </style>
+</head>
+<body class="bg-silk text-cascades">
+
+    <!-- Header placeholder - loaded dynamically -->
+    <div id="header-placeholder"></div>
 
     <!-- Main Content -->
     <main>
-        <!-- Page Title -->
-        <div class="page-title-component">
-            <h1>Sündmused</h1>
-            <p class="lead max-w-2xl mx-auto">Siit leiad meie tulevased üritused ja kogukonna kokkusaamised. Löö kaasa ja tule meie üritustele!</p>
+        <!-- Hero Section with gradient -->
+        <div class="relative bg-gradient-to-br from-silk via-background-tertiary to-apricot/20 py-20 px-6 overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-10 right-10 w-72 h-72 bg-cinnamon rounded-full filter blur-3xl animate-float"></div>
+                <div class="absolute bottom-10 left-10 w-96 h-96 bg-apricot rounded-full filter blur-3xl animate-float" style="animation-delay: 1.5s;"></div>
+            </div>
+            <div class="relative text-center max-w-4xl mx-auto">
+                <h1 class="text-5xl md:text-6xl font-bold mb-6 text-kofta">Sündmused</h1>
+                <p class="text-xl md:text-2xl text-sirocco max-w-2xl mx-auto">Siit leiad meie tulevased üritused ja kogukonna kokkusaamised. Löö kaasa ja tule meie üritustele!</p>
+            </div>
         </div>
-        
-        <section class="global-padding">
+
+        <section class="px-6 md:px-12 py-12">
             <div class="max-w-wide mx-auto">
-                <div class="section-card">
+                <!-- Calendar Section -->
+                <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 hover-lift border border-brand-border">
                     <div id='calendar-container'>
                         <div id='calendar'></div>
                     </div>
                 </div>
-                
+
                 <!-- Upcoming events list -->
-                <div class="section-card mt-6">
-                    <h3 class="text-lg font-semibold mb-4">Järgmised sündmused</h3>
-                    <div id="upcoming-events" class="space-y-3">
-                        <p class="text-center text-text-secondary p-4">Sündmuste laadimine...</p>
+                <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 mt-8 hover-lift border border-brand-border">
+                    <h3 class="text-2xl font-bold mb-6 text-kofta">Järgmised sündmused</h3>
+                    <div id="upcoming-events" class="space-y-4">
+                        <div class="flex items-center justify-center p-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-cinnamon"></div>
+                            <p class="ml-4 text-sirocco">Sündmuste laadimine...</p>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Quick info cards -->
+
+                <!-- Info Cards Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                    <div class="bg-gradient-to-br from-silk to-background-tertiary rounded-xl p-6 hover-lift border border-brand-border">
                         <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex-shrink-0 w-12 h-12 bg-cinnamon rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-silk" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
                             </div>
                             <div class="ml-4">
-                                <h4 class="text-gray-900 font-semibold">Regulaarsed kokkusaamised</h4>
-                                <p class="text-gray-600 text-sm mt-1">Juhatus koguneb igal kuul, et planeerida kogukonna tegevusi</p>
+                                <h4 class="text-kofta font-semibold text-lg">Regulaarsed kokkusaamised</h4>
+                                <p class="text-sirocco text-sm mt-1">Juhatus koguneb igal kuul, et planeerida kogukonna tegevusi</p>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+
+                    <div class="bg-gradient-to-br from-silk to-background-tertiary rounded-xl p-6 hover-lift border border-brand-border">
                         <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex-shrink-0 w-12 h-12 bg-apricot rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-silk" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                 </svg>
                             </div>
                             <div class="ml-4">
-                                <h4 class="text-gray-900 font-semibold">Kogukonna üritused</h4>
-                                <p class="text-gray-600 text-sm mt-1">Suvefestivalid, korrastustööd ja muud kogunemised</p>
+                                <h4 class="text-kofta font-semibold text-lg">Kogukonna üritused</h4>
+                                <p class="text-sirocco text-sm mt-1">Suvefestivalid, korrastustööd ja muud kogunemised</p>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Call to Action -->
+                <div class="bg-gradient-to-r from-cascades to-sirocco rounded-2xl shadow-xl p-8 mt-12 text-center">
+                    <h3 class="text-2xl font-bold mb-4 text-silk">Soovid üritust korraldada?</h3>
+                    <p class="text-silk/90 mb-6 max-w-2xl mx-auto">Kui sul on idee kogukonna ürituse korraldamiseks või soovid kaasa lüüa olemasolevates tegevustes, võta meiega ühendust!</p>
+                    <a href="/contact" class="inline-block bg-white text-cinnamon px-8 py-4 rounded-full text-lg font-semibold hover:shadow-xl hover:scale-105 transition-all">
+                        Võta ühendust
+                    </a>
                 </div>
             </div>
         </section>
@@ -158,13 +133,13 @@
 
     <!-- Event Modal -->
     <div id="event-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 transition-opacity duration-300">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 relative">
-            <button id="modal-close" class="absolute top-3 right-3 text-gray-400 hover:text-black w-8 h-8 flex items-center justify-center text-2xl rounded-full hover:bg-gray-100">&times;</button>
-            <h2 id="modal-title" class="text-2xl md:text-3xl font-bold text-text-primary pr-8"></h2>
-            <p id="modal-time" class="text-text-secondary mt-2"></p>
-            <hr class="my-4">
-            <div id="modal-description" class="mt-4 text-text-secondary prose"></div>
-            <p id="modal-location" class="mt-4 text-sm text-text-secondary font-semibold"></p>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-8 relative">
+            <button id="modal-close" class="absolute top-4 right-4 text-sirocco hover:text-kofta w-10 h-10 flex items-center justify-center text-3xl rounded-full hover:bg-silk transition-colors">&times;</button>
+            <h2 id="modal-title" class="text-2xl md:text-3xl font-bold text-kofta pr-8"></h2>
+            <p id="modal-time" class="text-sirocco mt-2 font-medium"></p>
+            <hr class="my-4 border-brand-border">
+            <div id="modal-description" class="mt-4 text-sirocco prose prose-sirocco"></div>
+            <p id="modal-location" class="mt-4 text-sm text-cinnamon font-semibold"></p>
         </div>
     </div>
 
