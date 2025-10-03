@@ -17,6 +17,7 @@
 		path /gallery
 		path /membership
 		path /contact
+		path /maitsete-karussell
 	}
 	rewrite @pages /pages{path}.html
 
