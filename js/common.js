@@ -74,15 +74,29 @@ function loadHeader() {
         return;
     }
 
+    console.log('Loading header from /components/header.html');
+
     fetch('/components/header.html')
         .then(response => {
+            console.log('Header fetch response:', response.status);
             if (!response.ok) {
                 throw new Error(`Failed to load header: ${response.status}`);
             }
             return response.text();
         })
         .then(html => {
+            console.log('Header HTML loaded, length:', html.length);
             headerPlaceholder.innerHTML = html;
+
+            // Verify header was inserted
+            const header = headerPlaceholder.querySelector('header');
+            if (header) {
+                console.log('Header element found and inserted');
+                // Ensure header is visible
+                header.style.display = 'block';
+            } else {
+                console.error('Header element not found after insertion');
+            }
 
             // Set active page after header is loaded
             setActivePage();
@@ -93,10 +107,14 @@ function loadHeader() {
         .catch(error => {
             console.error('Error loading header component:', error);
             // Fallback: show a minimal header if the component fails to load
+            // Make sure fallback header is visible on mobile
             headerPlaceholder.innerHTML = `
-                <header class="bg-silk/95 backdrop-blur-md sticky top-0 z-50 border-b-2 border-brand-border shadow-sm">
-                    <nav class="px-6 md:px-12 max-w-wide mx-auto flex items-center justify-between py-4">
-                        <a href="/">MTÜ Kaiu Kodukant</a>
+                <header class="sticky top-0 z-50 border-b-2 shadow-sm" style="display: block; background-color: rgba(243, 240, 234, 0.95); border-color: #E8D5C4;">
+                    <nav class="px-6 md:px-12 mx-auto flex items-center justify-between py-4" style="max-width: 1280px;">
+                        <a href="/" style="color: #883322;">MTÜ Kaiu Kodukant</a>
+                        <button class="md:hidden" style="color: #883322;">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                        </button>
                     </nav>
                 </header>
             `;
