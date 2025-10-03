@@ -279,16 +279,80 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
+    /**
+     * Format event description to preserve formatting from Google Calendar
+     * - Converts newlines to HTML breaks
+     * - Makes URLs clickable
+     * - Escapes HTML to prevent XSS
+     *
+     * @param {string} description - Raw description text
+     * @returns {string} Formatted HTML-safe description
+     */
+    function formatEventDescription(description) {
+        if (!description) {
+            return '<p>Täpsem kirjeldus puudub.</p>';
+        }
+
+        // First, escape HTML to prevent XSS attacks
+        const escapeHtml = (text) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+
+        // Escape the description
+        let formatted = escapeHtml(description);
+
+        // Convert URLs to clickable links
+        // Matches http://, https://, and www. URLs
+        const urlRegex = /((https?:\/\/(www\.)?|www\.)[^\s<]+)/gi;
+        formatted = formatted.replace(urlRegex, (match) => {
+            let url = match;
+            // Add protocol if missing
+            if (!url.match(/^https?:\/\//)) {
+                url = 'https://' + url;
+            }
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${match}</a>`;
+        });
+
+        // Convert email addresses to mailto links
+        const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+        formatted = formatted.replace(emailRegex, '<a href="mailto:$1" class="text-blue-600 hover:text-blue-800 underline">$1</a>');
+
+        // Convert newlines to <br> tags for proper line breaks
+        formatted = formatted.replace(/\n/g, '<br>');
+
+        // Convert double line breaks to paragraphs for better spacing
+        formatted = formatted.replace(/(<br>){2,}/g, '</p><p class="mt-3">');
+
+        // Wrap in paragraph tags if not already
+        if (!formatted.startsWith('<p')) {
+            formatted = '<p>' + formatted + '</p>';
+        }
+
+        // Handle basic markdown-style formatting (optional but useful)
+        // Bold: **text** or __text__
+        formatted = formatted.replace(/\*\*(.+?)\*\*|__(.+?)__/g, '<strong>$1$2</strong>');
+
+        // Italic: *text* or _text_ (but not part of URLs)
+        formatted = formatted.replace(/(?<!https?:\/\/[^\s]*)\*([^\*]+)\*|(?<!https?:\/\/[^\s]*)_([^_]+)_/g, '<em>$1$2</em>');
+
+        // Lists: lines starting with - or *
+        formatted = formatted.replace(/<br>[\-\*]\s+(.+?)(?=<br>|<\/p>|$)/g, '<br>• $1');
+
+        return formatted;
+    }
+
     function showEventModal(event) {
         document.getElementById('modal-title').textContent = event.title;
         const start = event.start instanceof Date ? event.start : new Date(event.start);
         const end = event.end instanceof Date ? event.end : (event.end ? new Date(event.end) : null);
-        
+
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         const timeOptions = { hour: '2-digit', minute: '2-digit' };
-        
+
         let timeString = start.toLocaleDateString('et-EE', options);
-        
+
         if (!event.allDay) {
             timeString += ' kell ' + start.toLocaleTimeString('et-EE', timeOptions);
             if (end && start.toDateString() === end.toDateString()) {
@@ -297,16 +361,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 timeString += ' - ' + end.toLocaleDateString('et-EE', options) + ' kell ' + end.toLocaleTimeString('et-EE', timeOptions);
             }
         }
-        
+
         document.getElementById('modal-time').textContent = timeString;
-        document.getElementById('modal-description').innerHTML = event.extendedProps.description || '<p>Täpsem kirjeldus puudub.</p>';
-        
+
+        // Use the new formatting function for description
+        const formattedDescription = formatEventDescription(event.extendedProps.description);
+        document.getElementById('modal-description').innerHTML = formattedDescription;
+
         const locationEl = document.getElementById('modal-location');
         const location = event.extendedProps.location;
-        locationEl.innerHTML = location ? `📍&nbsp; ${location}` : '';
+        locationEl.innerHTML = location ? `📍&nbsp; ${escapeHtml(location)}` : '';
         locationEl.classList.toggle('hidden', !location);
-        
+
         eventModal.classList.remove('hidden');
         eventModal.classList.add('flex');
+    }
+
+    // Helper function to escape HTML (also used for location)
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 });
