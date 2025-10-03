@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maitsete Karussell - MTÜ Kaiu Kodukant</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com/"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        background: {
+                            primary: '#fdfdfc',
+                            secondary: '#ffffff',
+                            tertiary: '#f9f8f6',
+                        },
+                        text: {
+                            primary: '#3a3a3a',
+                            secondary: '#5a5a5a',
+                            tertiary: '#7a7a7a',
+                            subtle: '#9a9a9a',
+                        },
+                        brand: {
+                            primary: '#a68a64',
+                            primary_hover: '#917651',
+                            light: '#f3f0ec',
+                            border: '#e5e2de',
+                        },
+                        accent: {
+                            primary: '#d4b896',
+                            secondary: '#b8956a',
+                            tertiary: '#e67e22',
+                            quaternary: '#27ae60',
+                            quinary: '#3498db',
+                        }
+                    },
+                    spacing: {
+                        'block': '1.2rem',
+                    },
+                    maxWidth: {
+                       'content': '620px',
+                       'wide': '1280px',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background-primary text-text-primary">
+
+    <!-- Header -->
+    <header class="bg-background-primary/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200">
+        <nav class="global-padding max-w-wide mx-auto flex items-center justify-between py-4">
+            <a href="/">
+                <img src="/media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
+            </a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="/" class="nav-link font-medium hover:underline">Esileht</a>
+                <a href="/events" class="nav-link font-medium hover:underline">Sündmused</a>
+                <a href="/maitsete-karussell" class="nav-link font-medium hover:underline active">Maitsete karussell</a>
+                <a href="/gallery" class="nav-link font-medium hover:underline">Galerii</a>
+                <a href="/about" class="nav-link font-medium hover:underline">Meist</a>
+                <a href="/contact" class="nav-link font-medium hover:underline">Kontakt</a>
+                <a href="/membership" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors">Saa liikmeks</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button id="hamburger-menu" class="md:hidden">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden global-padding pb-4">
+            <a href="/" class="block py-2 mobile-nav-link">Esileht</a>
+            <a href="/events" class="block py-2 mobile-nav-link">Sündmused</a>
+            <a href="/maitsete-karussell" class="block py-2 mobile-nav-link active">Maitsete karussell</a>
+            <a href="/gallery" class="block py-2 mobile-nav-link">Galerii</a>
+            <a href="/about" class="block py-2 mobile-nav-link">Meist</a>
+            <a href="/contact" class="block py-2 mobile-nav-link">Kontakt</a>
+            <a href="/membership" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link">Saa liikmeks</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Page Title -->
+        <div class="page-title-component">
+            <h1>Kaiu Maitsete Karussell</h1>
+            <p class="lead max-w-2xl mx-auto italic">Avasta Kaiu kandi maitsed ja külalislahkus!</p>
+        </div>
+
+        <section class="global-padding">
+            <div class="max-w-content mx-auto">
+                <!-- Introduction -->
+                <div class="section-card mb-8">
+                    <p class="text-lg text-text-secondary leading-relaxed">
+                        Ootame Sind Kaiu Maitsete Karussellile – meie kogukonna iga-aastasele kodukohvikute päevale!
+                        See on päev täis imelisi maitseelamusi, sooje kohtumisi ja avastamisrõõmu otse Kaiu südames ja ümberkaudsetes külades.
+                    </p>
+                </div>
+
+                <!-- Event Tradition Section -->
+                <div class="section-card mb-8">
+                    <h2 class="text-2xl font-bold mb-6">Ürituse Traditsioon</h2>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-brand-light rounded-lg p-6">
+                            <h3 class="font-semibold text-lg mb-2">Millal?</h3>
+                            <p class="text-text-secondary">
+                                Maitsete Karussell toimub traditsiooniliselt iga aasta mai lõpus.
+                                Täpse kuupäeva avalikustame alati aegsasti oma sündmuste kalendris!
+                            </p>
+                        </div>
+
+                        <div class="bg-brand-light rounded-lg p-6">
+                            <h3 class="font-semibold text-lg mb-2">Kus?</h3>
+                            <p class="text-text-secondary">
+                                Kaiu alevikus ja ümberkaudsetes külades, Rapla vallas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Schedule Section -->
+                <div class="section-card mb-8">
+                    <h2 class="text-2xl font-bold mb-6">Milline näeb välja üks päev karussellil?</h2>
+
+                    <div class="space-y-6">
+                        <div class="border-l-4 border-brand-primary pl-6">
+                            <h3 class="font-semibold text-lg mb-2">Päeva pidulik avamine</h3>
+                            <p class="text-text-secondary">
+                                Päev algab tavaliselt lõuna paiku Kaiu Kooli sisehoovis, kus elav kultuuriprogramm
+                                ja kogukonna kogunemine annavad sündmusele hoogsa ja südamliku alguse.
+                            </p>
+                        </div>
+
+                        <div class="border-l-4 border-accent-primary pl-6">
+                            <h3 class="font-semibold text-lg mb-2">Kodukohvikute avastamine</h3>
+                            <p class="text-text-secondary">
+                                Pärastlõunal avavad oma uksed ja väravad kümned hubased kodukohvikud üle kogu Kaiu kandi.
+                                See on sinu võimalus jalutada või sõita külast külla, avastada uusi maitseid ja nautida
+                                kohalike elanike külalislahkust.
+                            </p>
+                        </div>
+
+                        <div class="border-l-4 border-accent-secondary pl-6">
+                            <h3 class="font-semibold text-lg mb-2">Õhtune simman ja pidu</h3>
+                            <p class="text-text-secondary">
+                                Päeva lõpetab meeleolukas õhtune simman, kus lavale astuvad tuntud Eesti artistid ja bändid.
+                                Lisaks heale muusikale pakutakse maitsvat tänavatoitu, käsitööjooke ja tegevusi kogu perele.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Why Participate Section -->
+                <div class="section-card mb-8">
+                    <h2 class="text-2xl font-bold mb-6">Miks osaleda?</h2>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="flex items-start space-x-3">
+                            <svg class="w-6 h-6 text-brand-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <h4 class="font-semibold mb-1">Avasta unikaalsed maitsed</h4>
+                                <p class="text-sm text-text-secondary">Iga kodukohvik pakub midagi erilist, mis on valmistatud hoole ja armastusega.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3">
+                            <svg class="w-6 h-6 text-brand-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <h4 class="font-semibold mb-1">Naudi kogukonnatunnet</h4>
+                                <p class="text-sm text-text-secondary">See on päev, kus kohalikud avavad oma südamed ja kodud, luues sooja ja sõbraliku õhkkonna.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3">
+                            <svg class="w-6 h-6 text-brand-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <h4 class="font-semibold mb-1">Lõbus päev kogu perele</h4>
+                                <p class="text-sm text-text-secondary">Lisaks maitsvale toidule ootab Sind kaasahaarav kultuuriprogramm ja tegevused igas vanuses külastajatele.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3">
+                            <svg class="w-6 h-6 text-brand-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <h4 class="font-semibold mb-1">Ole osa traditsioonist</h4>
+                                <p class="text-sm text-text-secondary">Toeta kohalikku algatust ja saa osa päevast, mis on täis rõõmu ja maitsvaid üllatusi!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supporters Section -->
+                <div class="section-card mb-8">
+                    <h2 class="text-2xl font-bold mb-4">Meie Toetajad</h2>
+                    <p class="text-text-secondary">
+                        Maitsete Karussell saab teoks tänu lahketele toetajatele. Kui soovid panustada kogukonna
+                        suurimasse sündmusesse, võta meiega ühendust!
+                    </p>
+                </div>
+
+                <!-- Organizer Section -->
+                <div class="section-card bg-brand-light">
+                    <h2 class="text-2xl font-bold mb-4">Korraldaja</h2>
+                    <p class="font-semibold text-lg mb-2">MTÜ Kaiu Kodukant</p>
+                    <p class="text-text-secondary">
+                        Küsimuste ja ettepanekutega võta ühendust:
+                        <a href="mailto:info@kaiukodukant.ee" class="text-brand-primary hover:underline">info@kaiukodukant.ee</a>
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer placeholder - loaded dynamically -->
+    <div id="footer-placeholder"></div>
+
+    <!-- JavaScript -->
+    <script src="/js/config.js"></script>
+    <script src="/js/common.js"></script>
+</body>
+</html>
