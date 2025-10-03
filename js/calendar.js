@@ -293,52 +293,83 @@ document.addEventListener('DOMContentLoaded', function() {
             return '<p>Täpsem kirjeldus puudub.</p>';
         }
 
-        // First, escape HTML to prevent XSS attacks
-        const escapeHtml = (text) => {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        };
+        // Check if description already contains HTML tags
+        const hasHtml = /<[^>]+>/.test(description);
 
-        // Escape the description
-        let formatted = escapeHtml(description);
+        let formatted = description;
 
-        // Convert URLs to clickable links
-        // Matches http://, https://, and www. URLs
-        const urlRegex = /((https?:\/\/(www\.)?|www\.)[^\s<]+)/gi;
-        formatted = formatted.replace(urlRegex, (match) => {
-            let url = match;
-            // Add protocol if missing
-            if (!url.match(/^https?:\/\//)) {
-                url = 'https://' + url;
+        if (hasHtml) {
+            // Description already has HTML, so we need to sanitize it carefully
+            // Create a temporary div to parse the HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = description;
+
+            // Remove any script tags or dangerous elements
+            const scripts = tempDiv.getElementsByTagName('script');
+            for (let i = scripts.length - 1; i >= 0; i--) {
+                scripts[i].remove();
             }
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${match}</a>`;
-        });
 
-        // Convert email addresses to mailto links
-        const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
-        formatted = formatted.replace(emailRegex, '<a href="mailto:$1" class="text-blue-600 hover:text-blue-800 underline">$1</a>');
+            // Remove event handlers
+            const allElements = tempDiv.getElementsByTagName('*');
+            for (let i = 0; i < allElements.length; i++) {
+                const attributes = allElements[i].attributes;
+                for (let j = attributes.length - 1; j >= 0; j--) {
+                    const attrName = attributes[j].name;
+                    if (attrName.startsWith('on')) {
+                        allElements[i].removeAttribute(attrName);
+                    }
+                }
+            }
 
-        // Convert newlines to <br> tags for proper line breaks
-        formatted = formatted.replace(/\n/g, '<br>');
+            formatted = tempDiv.innerHTML;
+        } else {
+            // No HTML detected, treat as plain text and format it
 
-        // Convert double line breaks to paragraphs for better spacing
-        formatted = formatted.replace(/(<br>){2,}/g, '</p><p class="mt-3">');
+            // Escape HTML to prevent XSS attacks
+            const escapeHtml = (text) => {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            };
 
-        // Wrap in paragraph tags if not already
-        if (!formatted.startsWith('<p')) {
-            formatted = '<p>' + formatted + '</p>';
+            formatted = escapeHtml(description);
+
+            // Convert URLs to clickable links
+            const urlRegex = /((https?:\/\/(www\.)?|www\.)[^\s<]+)/gi;
+            formatted = formatted.replace(urlRegex, (match) => {
+                let url = match;
+                if (!url.match(/^https?:\/\//)) {
+                    url = 'https://' + url;
+                }
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${match}</a>`;
+            });
+
+            // Convert email addresses to mailto links
+            const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+            formatted = formatted.replace(emailRegex, '<a href="mailto:$1" class="text-blue-600 hover:text-blue-800 underline">$1</a>');
+
+            // Convert newlines to <br> tags for proper line breaks
+            formatted = formatted.replace(/\n/g, '<br>');
+
+            // Convert double line breaks to paragraphs for better spacing
+            formatted = formatted.replace(/(<br>){2,}/g, '</p><p class="mt-3">');
+
+            // Wrap in paragraph tags if not already
+            if (!formatted.startsWith('<p')) {
+                formatted = '<p>' + formatted + '</p>';
+            }
+
+            // Handle basic markdown-style formatting
+            // Bold: **text** or __text__
+            formatted = formatted.replace(/\*\*(.+?)\*\*|__(.+?)__/g, '<strong>$1$2</strong>');
+
+            // Italic: *text* or _text_ (but not part of URLs)
+            formatted = formatted.replace(/(?<!https?:\/\/[^\s]*)\*([^\*]+)\*|(?<!https?:\/\/[^\s]*)_([^_]+)_/g, '<em>$1$2</em>');
+
+            // Lists: lines starting with - or *
+            formatted = formatted.replace(/<br>[\-\*]\s+(.+?)(?=<br>|<\/p>|$)/g, '<br>• $1');
         }
-
-        // Handle basic markdown-style formatting (optional but useful)
-        // Bold: **text** or __text__
-        formatted = formatted.replace(/\*\*(.+?)\*\*|__(.+?)__/g, '<strong>$1$2</strong>');
-
-        // Italic: *text* or _text_ (but not part of URLs)
-        formatted = formatted.replace(/(?<!https?:\/\/[^\s]*)\*([^\*]+)\*|(?<!https?:\/\/[^\s]*)_([^_]+)_/g, '<em>$1$2</em>');
-
-        // Lists: lines starting with - or *
-        formatted = formatted.replace(/<br>[\-\*]\s+(.+?)(?=<br>|<\/p>|$)/g, '<br>• $1');
 
         return formatted;
     }
