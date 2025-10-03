@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palette Test - Maitsete Karussell - MTÜ Kaiu Kodukant</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com/"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Configuration with New Color Palette -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        // New vibrant color palette based on the image
+                        'silk': '#F3F0EA',           // Silk Pillow - light cream background
+                        'apricot': '#E8A760',         // Apricot Sorbet - warm orange accent
+                        'cinnamon': '#D26911',        // Cinnamon - vibrant orange primary
+                        'kofta': '#883322',           // Kofta Brown - deep brown for text/contrast
+                        'sirocco': '#68766E',         // Sirocco - muted green-gray
+                        'cascades': '#273E3E',        // Sunken Cascades - dark teal
+
+                        // Mapped to semantic names
+                        background: {
+                            primary: '#F3F0EA',       // Silk Pillow
+                            secondary: '#FEFDFB',     // Even lighter silk
+                            tertiary: '#E8D5C4',      // Slightly darker silk
+                            dark: '#273E3E',          // Sunken Cascades for dark sections
+                        },
+                        text: {
+                            primary: '#273E3E',       // Sunken Cascades
+                            secondary: '#68766E',     // Sirocco
+                            tertiary: '#883322',      // Kofta Brown
+                            subtle: '#A08976',        // Muted brown
+                            light: '#F3F0EA',         // Silk for light text on dark bg
+                        },
+                        brand: {
+                            primary: '#D26911',       // Cinnamon
+                            primary_hover: '#B85A0E',  // Darker cinnamon
+                            secondary: '#E8A760',     // Apricot Sorbet
+                            light: '#FAE6D0',         // Light apricot
+                            border: '#E8D5C4',        // Warm border
+                        },
+                        accent: {
+                            primary: '#E8A760',       // Apricot Sorbet
+                            secondary: '#D26911',     // Cinnamon
+                            tertiary: '#883322',      // Kofta Brown
+                            quaternary: '#68766E',    // Sirocco
+                            quinary: '#273E3E',       // Sunken Cascades
+                        }
+                    },
+                    spacing: {
+                        'block': '1.2rem',
+                    },
+                    maxWidth: {
+                       'content': '620px',
+                       'wide': '1280px',
+                    },
+                    backgroundImage: {
+                        'gradient-warm': 'linear-gradient(135deg, #F3F0EA 0%, #E8A760 50%, #D26911 100%)',
+                        'gradient-subtle': 'linear-gradient(180deg, #F3F0EA 0%, #FAE6D0 100%)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom animations and gradients */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #D26911, #E8A760);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Custom nav styles with new colors */
+        .nav-link {
+            color: #68766E;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #D26911;
+        }
+
+        .nav-link.active {
+            color: #D26911;
+            font-weight: 600;
+        }
+
+        /* Custom card hover effects */
+        .hover-lift {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(136, 51, 34, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-silk text-cascades">
+
+    <!-- Color Palette Display Banner -->
+    <div class="bg-cascades text-silk py-2 px-4 text-center text-sm">
+        <span class="font-semibold">🎨 Color Palette Test Mode</span> - Testing vibrant warm colors
+    </div>
+
+    <!-- Header with gradient accent -->
+    <header class="bg-silk/95 backdrop-blur-md sticky top-0 z-50 border-b-2 border-brand-border shadow-sm">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cinnamon via-apricot to-sirocco"></div>
+        <nav class="px-6 md:px-12 max-w-wide mx-auto flex items-center justify-between py-4">
+            <a href="/" class="flex items-center space-x-2">
+                <div class="w-12 h-12 bg-gradient-to-br from-cinnamon to-apricot rounded-lg flex items-center justify-center">
+                    <span class="text-silk font-bold text-lg">KK</span>
+                </div>
+                <span class="text-kofta font-bold text-xl hidden sm:block">Kaiu Kodukant</span>
+            </a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="/" class="nav-link font-medium hover:scale-105 transition-transform">Esileht</a>
+                <a href="/events" class="nav-link font-medium hover:scale-105 transition-transform">Sündmused</a>
+                <a href="/maitsete-karussell" class="nav-link font-medium hover:scale-105 transition-transform active">Maitsete karussell</a>
+                <a href="/gallery" class="nav-link font-medium hover:scale-105 transition-transform">Galerii</a>
+                <a href="/about" class="nav-link font-medium hover:scale-105 transition-transform">Meist</a>
+                <a href="/contact" class="nav-link font-medium hover:scale-105 transition-transform">Kontakt</a>
+                <a href="/membership" class="bg-gradient-to-r from-cinnamon to-apricot text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:shadow-lg transition-all hover:scale-105">Saa liikmeks</a>
+            </div>
+            <!-- Mobile Menu Button -->
+            <button id="hamburger-menu" class="md:hidden text-kofta">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 bg-silk/95">
+            <a href="/" class="block py-2 text-sirocco hover:text-cinnamon transition-colors">Esileht</a>
+            <a href="/events" class="block py-2 text-sirocco hover:text-cinnamon transition-colors">Sündmused</a>
+            <a href="/maitsete-karussell" class="block py-2 text-cinnamon font-semibold">Maitsete karussell</a>
+            <a href="/gallery" class="block py-2 text-sirocco hover:text-cinnamon transition-colors">Galerii</a>
+            <a href="/about" class="block py-2 text-sirocco hover:text-cinnamon transition-colors">Meist</a>
+            <a href="/contact" class="block py-2 text-sirocco hover:text-cinnamon transition-colors">Kontakt</a>
+            <a href="/membership" class="block mt-4 text-center bg-gradient-to-r from-cinnamon to-apricot text-white px-4 py-2.5 rounded-full text-sm font-semibold">Saa liikmeks</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section with Gradient Background -->
+        <div class="relative bg-gradient-to-br from-silk via-background-tertiary to-apricot/20 py-20 px-6 overflow-hidden">
+            <div class="absolute inset-0 opacity-10">
+                <div class="absolute top-20 left-10 w-72 h-72 bg-cinnamon rounded-full filter blur-3xl animate-float"></div>
+                <div class="absolute bottom-20 right-10 w-96 h-96 bg-apricot rounded-full filter blur-3xl animate-float" style="animation-delay: 1.5s;"></div>
+            </div>
+            <div class="relative text-center max-w-4xl mx-auto">
+                <h1 class="text-5xl md:text-6xl font-bold mb-6">
+                    <span class="gradient-text">Kaiu Maitsete Karussell</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-sirocco italic">Avasta Kaiu kandi maitsed ja külalislahkus!</p>
+            </div>
+        </div>
+
+        <section class="px-6 md:px-12 py-12">
+            <div class="max-w-4xl mx-auto">
+                <!-- Introduction Card -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 hover-lift border border-brand-border">
+                    <p class="text-lg text-sirocco leading-relaxed">
+                        Ootame Sind Kaiu Maitsete Karussellile – meie kogukonna iga-aastasele kodukohvikute päevale!
+                        See on päev täis imelisi maitseelamusi, sooje kohtumisi ja avastamisrõõmu otse Kaiu südames ja ümberkaudsetes külades.
+                    </p>
+                </div>
+
+                <!-- Event Tradition Section -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-brand-border">
+                    <h2 class="text-3xl font-bold mb-8 text-kofta">Ürituse Traditsioon</h2>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-gradient-to-br from-brand-light to-silk rounded-xl p-6 hover-lift">
+                            <div class="w-12 h-12 bg-cinnamon rounded-lg flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-silk" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-semibold text-xl mb-3 text-kofta">Millal?</h3>
+                            <p class="text-sirocco">
+                                Maitsete Karussell toimub traditsiooniliselt iga aasta mai lõpus.
+                                Täpse kuupäeva avalikustame alati aegsasti oma sündmuste kalendris!
+                            </p>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-brand-light to-silk rounded-xl p-6 hover-lift">
+                            <div class="w-12 h-12 bg-apricot rounded-lg flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6 text-silk" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="font-semibold text-xl mb-3 text-kofta">Kus?</h3>
+                            <p class="text-sirocco">
+                                Kaiu alevikus ja ümberkaudsetes külades, Rapla vallas.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Daily Schedule Section -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-brand-border">
+                    <h2 class="text-3xl font-bold mb-8 text-kofta">Milline näeb välja üks päev karussellil?</h2>
+
+                    <div class="space-y-6">
+                        <div class="border-l-4 border-cinnamon pl-6 hover:pl-8 transition-all">
+                            <div class="flex items-center mb-3">
+                                <span class="w-8 h-8 bg-cinnamon rounded-full flex items-center justify-center text-silk font-bold mr-3">1</span>
+                                <h3 class="font-semibold text-xl text-kofta">Päeva pidulik avamine</h3>
+                            </div>
+                            <p class="text-sirocco">
+                                Päev algab tavaliselt lõuna paiku Kaiu Kooli sisehoovis, kus elav kultuuriprogramm
+                                ja kogukonna kogunemine annavad sündmusele hoogsa ja südamliku alguse.
+                            </p>
+                        </div>
+
+                        <div class="border-l-4 border-apricot pl-6 hover:pl-8 transition-all">
+                            <div class="flex items-center mb-3">
+                                <span class="w-8 h-8 bg-apricot rounded-full flex items-center justify-center text-silk font-bold mr-3">2</span>
+                                <h3 class="font-semibold text-xl text-kofta">Kodukohvikute avastamine</h3>
+                            </div>
+                            <p class="text-sirocco">
+                                Pärastlõunal avavad oma uksed ja väravad kümned hubased kodukohvikud üle kogu Kaiu kandi.
+                                See on sinu võimalus jalutada või sõita külast külla, avastada uusi maitseid ja nautida
+                                kohalike elanike külalislahkust.
+                            </p>
+                        </div>
+
+                        <div class="border-l-4 border-sirocco pl-6 hover:pl-8 transition-all">
+                            <div class="flex items-center mb-3">
+                                <span class="w-8 h-8 bg-sirocco rounded-full flex items-center justify-center text-silk font-bold mr-3">3</span>
+                                <h3 class="font-semibold text-xl text-kofta">Õhtune simman ja pidu</h3>
+                            </div>
+                            <p class="text-sirocco">
+                                Päeva lõpetab meeleolukas õhtune simman, kus lavale astuvad tuntud Eesti artistid ja bändid.
+                                Lisaks heale muusikale pakutakse maitsvat tänavatoitu, käsitööjooke ja tegevusi kogu perele.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Why Participate Section -->
+                <div class="bg-gradient-to-br from-cascades to-sirocco rounded-2xl shadow-xl p-8 mb-8 text-silk">
+                    <h2 class="text-3xl font-bold mb-8">Miks osaleda?</h2>
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="flex items-start space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-colors">
+                            <svg class="w-6 h-6 text-apricot flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <h4 class="font-semibold mb-1">Avasta unikaalsed maitsed</h4>
+                                <p class="text-sm text-silk/90">Iga kodukohvik pakub midagi erilist, mis on valmistatud hoole ja armastusega.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-colors">
+                            <svg class="w-6 h-6 text-apricot flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <h4 class="font-semibold mb-1">Naudi kogukonnatunnet</h4>
+                                <p class="text-sm text-silk/90">See on päev, kus kohalikud avavad oma südamed ja kodud, luues sooja ja sõbraliku õhkkonna.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-colors">
+                            <svg class="w-6 h-6 text-apricot flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <h4 class="font-semibold mb-1">Lõbus päev kogu perele</h4>
+                                <p class="text-sm text-silk/90">Lisaks maitsvale toidule ootab Sind kaasahaarav kultuuriprogramm ja tegevused igas vanuses külastajatele.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-3 bg-white/10 backdrop-blur-sm rounded-lg p-4 hover:bg-white/20 transition-colors">
+                            <svg class="w-6 h-6 text-apricot flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <h4 class="font-semibold mb-1">Ole osa traditsioonist</h4>
+                                <p class="text-sm text-silk/90">Toeta kohalikku algatust ja saa osa päevast, mis on täis rõõmu ja maitsvaid üllatusi!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supporters Section -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border-2 border-cinnamon">
+                    <h2 class="text-3xl font-bold mb-4 text-kofta">Meie Toetajad</h2>
+                    <p class="text-sirocco">
+                        Maitsete Karussell saab teoks tänu lahketele toetajatele. Kui soovid panustada kogukonna
+                        suurimasse sündmusesse, võta meiega ühendust!
+                    </p>
+                </div>
+
+                <!-- Organizer Section -->
+                <div class="bg-gradient-to-r from-cinnamon to-apricot rounded-2xl shadow-xl p-8 text-silk">
+                    <h2 class="text-3xl font-bold mb-4">Korraldaja</h2>
+                    <p class="font-semibold text-xl mb-3">MTÜ Kaiu Kodukant</p>
+                    <p>
+                        Küsimuste ja ettepanekutega võta ühendust:
+                        <a href="mailto:info@kaiukodukant.ee" class="underline hover:no-underline font-semibold">info@kaiukodukant.ee</a>
+                    </p>
+                </div>
+
+                <!-- Color Palette Reference -->
+                <div class="mt-12 p-6 bg-white rounded-2xl shadow-lg border border-brand-border">
+                    <h3 class="text-lg font-bold mb-4 text-kofta">Color Palette Reference:</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div class="text-center">
+                            <div class="w-full h-20 bg-silk rounded-lg shadow-md mb-2"></div>
+                            <p class="text-xs font-mono">#F3F0EA</p>
+                            <p class="text-xs">Silk Pillow</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-full h-20 bg-apricot rounded-lg shadow-md mb-2"></div>
+                            <p class="text-xs font-mono">#E8A760</p>
+                            <p class="text-xs">Apricot Sorbet</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-full h-20 bg-cinnamon rounded-lg shadow-md mb-2"></div>
+                            <p class="text-xs font-mono">#D26911</p>
+                            <p class="text-xs">Cinnamon</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-full h-20 bg-kofta rounded-lg shadow-md mb-2"></div>
+                            <p class="text-xs font-mono">#883322</p>
+                            <p class="text-xs">Kofta Brown</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-full h-20 bg-sirocco rounded-lg shadow-md mb-2"></div>
+                            <p class="text-xs font-mono">#68766E</p>
+                            <p class="text-xs">Sirocco</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-full h-20 bg-cascades rounded-lg shadow-md mb-2"></div>
+                            <p class="text-xs font-mono">#273E3E</p>
+                            <p class="text-xs">Sunken Cascades</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer with gradient -->
+    <footer class="bg-gradient-to-b from-cascades to-cascades/95 text-silk py-12 px-6 mt-12">
+        <div class="max-w-wide mx-auto text-center">
+            <p class="mb-4">© 2024 MTÜ Kaiu Kodukant. Kõik õigused kaitstud.</p>
+            <p class="text-silk/80">🎨 Color Palette Test Version</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript for mobile menu -->
+    <script>
+        document.getElementById('hamburger-menu').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
