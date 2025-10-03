@@ -5,9 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadHeader();
     loadFooter();
 
-    // Wait for header to load before setting up mobile menu
-    // Increased timeout to ensure header is fully rendered
-    setTimeout(setupMobileMenu, 500);
+    // Mobile menu will be set up after header loads in loadHeader()
 });
 
 function setupMobileMenu() {
