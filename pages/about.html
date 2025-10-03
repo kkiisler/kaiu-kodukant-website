@@ -14,146 +14,177 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Tailwind Configuration -->
+    <script src="/js/tailwind-config.js"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        background: {
-                            primary: '#fdfdfc',
-                            secondary: '#ffffff',
-                            tertiary: '#f9f8f6',
-                        },
-                        text: {
-                            primary: '#3a3a3a',
-                            secondary: '#5a5a5a',
-                            tertiary: '#7a7a7a',
-                            subtle: '#9a9a9a',
-                        },
-                        brand: {
-                            primary: '#a68a64',
-                            primary_hover: '#917651',
-                            light: '#f3f0ec',
-                            border: '#e5e2de',
-                        },
-                        accent: {
-                            primary: '#d4b896',
-                            secondary: '#b8956a',
-                            tertiary: '#e67e22',
-                            quaternary: '#27ae60',
-                            quinary: '#3498db',
-                        }
-                    },
-                    spacing: {
-                        'block': '1.2rem',
-                    },
-                    maxWidth: {
-                       'content': '620px',
-                       'wide': '1280px',
-                    }
-                }
-            }
-        }
+        tailwind.config = window.tailwindConfig;
     </script>
 
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="bg-background-primary text-text-primary">
+<body class="bg-silk text-cascades">
 
-    <!-- Header -->
-    <header class="bg-background-primary/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200">
-        <nav class="global-padding max-w-wide mx-auto flex items-center justify-between py-4">
-            <a href="/">
-                <img src="/media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
-            </a>
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="/" class="nav-link font-medium hover:underline">Esileht</a>
-                <a href="/events" class="nav-link font-medium hover:underline">Sündmused</a>
-                <a href="/maitsete-karussell" class="nav-link font-medium hover:underline">Maitsete karussell</a>
-                <a href="/gallery" class="nav-link font-medium hover:underline">Galerii</a>
-                <a href="/about" class="nav-link font-medium hover:underline active">Meist</a>
-                <a href="/contact" class="nav-link font-medium hover:underline">Kontakt</a>
-                <a href="/membership" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors">Saa liikmeks</a>
-            </div>
-            <!-- Mobile Menu Button -->
-            <button id="hamburger-menu" class="md:hidden">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-            </button>
-        </nav>
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden global-padding pb-4">
-            <a href="/" class="block py-2 mobile-nav-link">Esileht</a>
-            <a href="/events" class="block py-2 mobile-nav-link">Sündmused</a>
-            <a href="/maitsete-karussell" class="block py-2 mobile-nav-link">Maitsete karussell</a>
-            <a href="/gallery" class="block py-2 mobile-nav-link">Galerii</a>
-            <a href="/about" class="block py-2 mobile-nav-link active">Meist</a>
-            <a href="/contact" class="block py-2 mobile-nav-link">Kontakt</a>
-            <a href="/membership" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link">Saa liikmeks</a>
-        </div>
-    </header>
+    <!-- Header placeholder - loaded dynamically -->
+    <div id="header-placeholder"></div>
 
     <!-- Main Content -->
     <main>
-        <!-- Page Title -->
-        <div class="page-title-component">
-            <h1>Meist</h1>
-            <p class="lead max-w-3xl mx-auto">MTÜ Kaiu Kodukant on enamat kui lihtsalt ühing – see on meie kogukonna süda, mis on pühendunud kodukandi elu edendamisele, pärandi hoidmisele ja helgema tuleviku loomisele.</p>
-        </div>
-        
-        <section class="global-padding">
-            <div class="max-w-wide mx-auto">
-                <div class="grid lg:grid-cols-5 gap-12 lg:gap-16">
-                    <!-- Left Column: Who We Are -->
-                    <div class="lg:col-span-2">
-                        <div class="section-card">
-                            <h3 class="text-xl font-semibold text-text-primary mb-4">Kes me oleme?</h3>
-                            <ul class="mt-6 space-y-4 text-text-secondary">
-                                <li><strong>Ametlik nimi:</strong> MTÜ Kaiu Kodukant.</li>
-                                <li><strong>Asutatud:</strong> Ühingu põhikiri on kinnitatud 10. oktoobril 2022. a asutamiskoosolekul.</li>
-                                <li><strong>Asukoht:</strong> Meie juriidiline aadress on Kaare tn 7-7, Kaiu alevik, Rapla vald, Rapla maakond, 79301.</li>
-                                <li><strong>Tegutsemisvorm:</strong> Oleme tavaline mittetulundusühing, mis järgib oma tegevuses kodanikuühenduste eetilise tegevuse üldtunnustatud põhimõtteid.</li>
-                            </ul>
+        <!-- Hero Section with gradient -->
+        <section class="relative py-20 px-6 md:px-12 overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-cascades via-sirocco to-cascades opacity-95"></div>
+            <div class="absolute inset-0 overflow-hidden">
+                <div class="absolute top-0 right-0 w-96 h-96 bg-apricot rounded-full filter blur-3xl opacity-20 animate-float"></div>
+                <div class="absolute bottom-0 left-0 w-72 h-72 bg-cinnamon rounded-full filter blur-3xl opacity-20 animate-float" style="animation-delay: 1.5s;"></div>
+            </div>
+            <div class="relative max-w-4xl mx-auto text-center">
+                <h1 class="text-silk mb-6">Meist</h1>
+                <p class="text-xl md:text-2xl text-silk/90 leading-relaxed max-w-3xl mx-auto">MTÜ Kaiu Kodukant on enamat kui lihtsalt ühing – see on meie kogukonna süda, mis on pühendunud kodukandi elu edendamisele, pärandi hoidmisele ja helgema tuleviku loomisele.</p>
+            </div>
+        </section>
+
+        <!-- Main Content Section -->
+        <section class="px-6 md:px-12 py-16 bg-gradient-to-b from-silk to-background-tertiary">
+            <div class="max-w-4xl mx-auto">
+                <div class="grid lg:grid-cols-2 gap-8 mb-12">
+                    <!-- Who We Are Card -->
+                    <div class="bg-white rounded-2xl shadow-xl p-8 hover-lift border border-brand-border">
+                        <div class="flex items-center mb-6">
+                            <div class="w-12 h-12 bg-gradient-to-br from-cinnamon to-apricot rounded-lg flex items-center justify-center mr-4">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                            </div>
+                            <h2 class="text-2xl font-bold text-kofta">Kes me oleme?</h2>
+                        </div>
+                        <ul class="space-y-4 text-sirocco">
+                            <li class="flex items-start">
+                                <span class="w-2 h-2 bg-cinnamon rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                <div><strong class="text-kofta">Ametlik nimi:</strong> MTÜ Kaiu Kodukant.</div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="w-2 h-2 bg-cinnamon rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                <div><strong class="text-kofta">Asutatud:</strong> Ühingu põhikiri on kinnitatud 10. oktoobril 2022. a asutamiskoosolekul.</div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="w-2 h-2 bg-cinnamon rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                <div><strong class="text-kofta">Asukoht:</strong> Meie juriidiline aadress on Kaare tn 7-7, Kaiu alevik, Rapla vald, Rapla maakond, 79301.</div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="w-2 h-2 bg-cinnamon rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                <div><strong class="text-kofta">Tegutsemisvorm:</strong> Oleme tavaline mittetulundusühing, mis järgib oma tegevuses kodanikuühenduste eetilise tegevuse üldtunnustatud põhimõtteid.</div>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Stats Card -->
+                    <div class="bg-gradient-to-br from-cascades to-sirocco rounded-2xl shadow-xl p-8 hover-lift text-white">
+                        <h3 class="text-2xl font-bold mb-6 text-silk">Kiire ülevaade</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between pb-4 border-b border-white/20">
+                                <div>
+                                    <div class="text-3xl font-bold text-apricot">2022</div>
+                                    <div class="text-silk/80 text-sm">Asutamisaasta</div>
+                                </div>
+                                <div class="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between pb-4 border-b border-white/20">
+                                <div>
+                                    <div class="text-3xl font-bold text-apricot">200+</div>
+                                    <div class="text-silk/80 text-sm">Kogukonna liikmed</div>
+                                </div>
+                                <div class="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-3xl font-bold text-apricot">Kaiu</div>
+                                    <div class="text-silk/80 text-sm">Rapla Maakond</div>
+                                </div>
+                                <div class="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Right Column: Our Goals -->
-                    <div class="lg:col-span-3">
-                        <div class="section-card">
-                            <h2 class="mb-8 text-center lg:text-left">Meie eesmärgid</h2>
-                            <div class="space-y-8">
-                                <div class="border-l-4 border-brand-primary pl-6">
-                                    <h3 class="text-lg font-semibold text-text-primary mb-2">Kogukonna edendamine</h3>
-                                    <p class="text-text-secondary">Algatame ja toetame Kaiu kandi kogukonna tegevusi, et tõsta kohalikku heaolu ja parandada elukeskkonda.</p>
+                </div>
+
+                <!-- Goals Section -->
+                <div class="bg-white rounded-2xl shadow-xl p-8 md:p-12 hover-lift border border-brand-border">
+                    <h2 class="text-center mb-12 text-kofta">Meie eesmärgid</h2>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-gradient-to-br from-silk to-background-tertiary rounded-xl p-6 border-l-4 border-cinnamon">
+                            <div class="flex items-start mb-4">
+                                <div class="w-10 h-10 bg-cinnamon rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                    </svg>
                                 </div>
-                                
-                                <div class="border-l-4 border-brand-primary pl-6">
-                                    <h3 class="text-lg font-semibold text-text-primary mb-2">Väärtuste propageerimine</h3>
-                                    <p class="text-text-secondary">Toetame ettevõtmisi, mis väärtustavad eetilisi tõekspidamisi ja hüvede tasakaalustatumat jaotust ühiskonnas.</p>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-kofta mb-2">Kogukonna edendamine</h3>
+                                    <p class="text-sirocco">Algatame ja toetame Kaiu kandi kogukonna tegevusi, et tõsta kohalikku heaolu ja parandada elukeskkonda.</p>
                                 </div>
-                                
-                                <div class="border-l-4 border-brand-primary pl-6">
-                                    <h3 class="text-lg font-semibold text-text-primary mb-2">Tervis ja keskkond</h3>
-                                    <p class="text-text-secondary">Toetame kogukonna tervise arengut ning propageerime keskkonnasäästlikku eluviisi, pakkudes koolitusi ja kursuseid.</p>
-                                </div>
-                                
-                                <div class="border-l-4 border-brand-primary pl-6">
-                                    <h3 class="text-lg font-semibold text-text-primary mb-2">Pärandi hoidmine</h3>
-                                    <p class="text-text-secondary">Algatame ja viime ellu projekte, mis hoiavad, kaitsevad ja taastavad looduskeskkonda ning kultuuri- ja ajalooväärtusi.</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Call to action -->
-                            <div class="mt-12 pt-8 border-t border-brand-border text-center">
-                                <p class="text-text-secondary mb-4">Kas soovid panustada oma kogukonna arengusse?</p>
-                                <a href="contact.html#liikmeks" class="inline-flex items-center bg-brand-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-primary_hover transition-all duration-200">
-                                    Liitu meiega
-                                </a>
                             </div>
                         </div>
+
+                        <div class="bg-gradient-to-br from-silk to-background-tertiary rounded-xl p-6 border-l-4 border-apricot">
+                            <div class="flex items-start mb-4">
+                                <div class="w-10 h-10 bg-apricot rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-kofta mb-2">Väärtuste propageerimine</h3>
+                                    <p class="text-sirocco">Toetame ettevõtmisi, mis väärtustavad eetilisi tõekspidamisi ja hüvede tasakaalustatumat jaotust ühiskonnas.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-silk to-background-tertiary rounded-xl p-6 border-l-4 border-sirocco">
+                            <div class="flex items-start mb-4">
+                                <div class="w-10 h-10 bg-sirocco rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-kofta mb-2">Tervis ja keskkond</h3>
+                                    <p class="text-sirocco">Toetame kogukonna tervise arengut ning propageerime keskkonnasäästlikku eluviisi, pakkudes koolitusi ja kursuseid.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-br from-silk to-background-tertiary rounded-xl p-6 border-l-4 border-kofta">
+                            <div class="flex items-start mb-4">
+                                <div class="w-10 h-10 bg-kofta rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-kofta mb-2">Pärandi hoidmine</h3>
+                                    <p class="text-sirocco">Algatame ja viime ellu projekte, mis hoiavad, kaitsevad ja taastavad looduskeskkonda ning kultuuri- ja ajalooväärtusi.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Call to action -->
+                    <div class="mt-12 pt-8 border-t border-brand-border text-center">
+                        <p class="text-sirocco text-lg mb-6">Kas soovid panustada oma kogukonna arengusse?</p>
+                        <a href="/membership" class="inline-block bg-gradient-to-r from-cinnamon to-apricot text-white px-8 py-4 rounded-full text-lg font-semibold hover:shadow-2xl hover:scale-105 transition-all">
+                            Liitu meiega
+                        </a>
                     </div>
                 </div>
             </div>

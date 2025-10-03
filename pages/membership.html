@@ -29,132 +29,77 @@
     </script>
     
     <!-- Tailwind Configuration -->
+    <script src="/js/tailwind-config.js"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        background: {
-                            primary: '#fdfdfc',
-                            secondary: '#ffffff',
-                            tertiary: '#f9f8f6',
-                        },
-                        text: {
-                            primary: '#3a3a3a',
-                            secondary: '#5a5a5a',
-                            tertiary: '#7a7a7a',
-                            subtle: '#9a9a9a',
-                        },
-                        brand: {
-                            primary: '#a68a64',
-                            primary_hover: '#917651',
-                            light: '#f3f0ec',
-                            border: '#e5e2de',
-                        },
-                        accent: {
-                            primary: '#d4b896',
-                            secondary: '#b8956a',
-                            tertiary: '#e67e22',
-                            quaternary: '#27ae60',
-                            quinary: '#3498db',
-                        }
-                    },
-                    spacing: {
-                        'block': '1.2rem',
-                    },
-                    maxWidth: {
-                       'content': '620px',
-                       'wide': '1280px',
-                    }
-                }
-            }
-        }
+        tailwind.config = window.tailwindConfig;
     </script>
 
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="bg-background-primary text-text-primary">
+<body class="bg-silk text-cascades">
 
-    <!-- Header -->
-    <header class="bg-background-primary/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200">
-        <nav class="global-padding max-w-wide mx-auto flex items-center justify-between py-4">
-            <a href="/">
-                <img src="/media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
-            </a>
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="/" class="nav-link font-medium hover:underline">Esileht</a>
-                <a href="/events" class="nav-link font-medium hover:underline">Sündmused</a>
-                <a href="/maitsete-karussell" class="nav-link font-medium hover:underline">Maitsete karussell</a>
-                <a href="/gallery" class="nav-link font-medium hover:underline">Galerii</a>
-                <a href="/about" class="nav-link font-medium hover:underline">Meist</a>
-                <a href="/contact" class="nav-link font-medium hover:underline">Kontakt</a>
-                <a href="/membership" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors active">Saa liikmeks</a>
-            </div>
-            <!-- Mobile Menu Button -->
-            <button id="hamburger-menu" class="md:hidden">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-            </button>
-        </nav>
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden global-padding pb-4">
-            <a href="/" class="block py-2 mobile-nav-link">Esileht</a>
-            <a href="/events" class="block py-2 mobile-nav-link">Sündmused</a>
-            <a href="/maitsete-karussell" class="block py-2 mobile-nav-link">Maitsete karussell</a>
-            <a href="/gallery" class="block py-2 mobile-nav-link">Galerii</a>
-            <a href="/about" class="block py-2 mobile-nav-link">Meist</a>
-            <a href="/contact" class="block py-2 mobile-nav-link">Kontakt</a>
-            <a href="/membership" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link active">Saa liikmeks</a>
-        </div>
-    </header>
+    <!-- Header placeholder - loaded dynamically -->
+    <div id="header-placeholder"></div>
 
     <!-- Main Content -->
     <main>
-        <!-- Membership Section -->
-        <div class="page-title-component">
-            <h1>Saa liikmeks</h1>
-            <p class="text-xl max-w-3xl mx-auto text-gray-700">Meil on siiralt hea meel, et soovid panustada Kaiu kandi arengusse! Täites alloleva vormi, esitad omapoolse avalduse astuda MTÜ Kaiu Kodukant liikmeks.</p>
-            <p class="mt-4 text-gray-600">Juhatus vaatab sinu soovi esimesel võimalusel üle ja kinnitab liikmeks astumise e-posti teel.</p>
-        </div>
-        
-        <section class="global-padding bg-gray-50">
+        <!-- Hero Section with gradient -->
+        <section class="relative py-20 px-6 md:px-12 overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-cinnamon via-apricot to-cinnamon opacity-90"></div>
+            <div class="absolute inset-0 overflow-hidden">
+                <div class="absolute top-0 right-0 w-96 h-96 bg-silk rounded-full filter blur-3xl opacity-30 animate-float"></div>
+                <div class="absolute bottom-0 left-0 w-72 h-72 bg-kofta rounded-full filter blur-3xl opacity-20 animate-float" style="animation-delay: 1.5s;"></div>
+            </div>
+            <div class="relative max-w-4xl mx-auto text-center">
+                <div class="flex items-center justify-center mb-6">
+                    <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-white mb-6">Saa liikmeks</h1>
+                <p class="text-xl md:text-2xl text-white/90 leading-relaxed max-w-3xl mx-auto mb-4">Meil on siiralt hea meel, et soovid panustada Kaiu kandi arengusse! Täites alloleva vormi, esitad omapoolse avalduse astuda MTÜ Kaiu Kodukant liikmeks.</p>
+                <p class="text-lg text-white/80 max-w-2xl mx-auto">Juhatus vaatab sinu soovi esimesel võimalusel üle ja kinnitab liikmeks astumise e-posti teel.</p>
+            </div>
+        </section>
+
+        <section class="px-6 md:px-12 py-16 bg-gradient-to-b from-silk to-background-tertiary">
             <div class="max-w-4xl mx-auto">
                 <!-- Benefits Section -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                    <div class="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
-                        <div class="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-white rounded-2xl p-8 text-center hover-lift border border-brand-border shadow-lg">
+                        <div class="w-14 h-14 bg-gradient-to-br from-cinnamon to-apricot rounded-xl flex items-center justify-center mb-4 mx-auto">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
                             </svg>
                         </div>
-                        <h4 class="text-gray-900 font-semibold mb-2">Kogukonna hääl</h4>
-                        <p class="text-gray-600 text-sm">Osale otsuste langetamises ja mõjuta oma kodukandi tulevikku</p>
+                        <h3 class="text-kofta font-bold mb-2 text-lg">Kogukonna hääl</h3>
+                        <p class="text-sirocco text-sm">Osale otsuste langetamises ja mõjuta oma kodukandi tulevikku</p>
                     </div>
-                    <div class="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
-                        <div class="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-white rounded-2xl p-8 text-center hover-lift border border-brand-border shadow-lg">
+                        <div class="w-14 h-14 bg-gradient-to-br from-apricot to-cinnamon rounded-xl flex items-center justify-center mb-4 mx-auto">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
                         </div>
-                        <h4 class="text-gray-900 font-semibold mb-2">Üritused</h4>
-                        <p class="text-gray-600 text-sm">Ligipääs kõigile MTÜ üritustele ja tegevustele</p>
+                        <h3 class="text-kofta font-bold mb-2 text-lg">Üritused</h3>
+                        <p class="text-sirocco text-sm">Ligipääs kõigile MTÜ üritustele ja tegevustele</p>
                     </div>
-                    <div class="bg-white rounded-xl p-6 text-center border border-gray-200 shadow-sm">
-                        <div class="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center mb-4 mx-auto">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-white rounded-2xl p-8 text-center hover-lift border border-brand-border shadow-lg">
+                        <div class="w-14 h-14 bg-gradient-to-br from-sirocco to-cascades rounded-xl flex items-center justify-center mb-4 mx-auto">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                             </svg>
                         </div>
-                        <h4 class="text-gray-900 font-semibold mb-2">Mõju</h4>
-                        <p class="text-gray-600 text-sm">Aita kaasa positiivsete muudatuste elluviimisele</p>
+                        <h3 class="text-kofta font-bold mb-2 text-lg">Mõju</h3>
+                        <p class="text-sirocco text-sm">Aita kaasa positiivsete muudatuste elluviimisele</p>
                     </div>
                 </div>
-                
+
                 <!-- Membership Form -->
-                <div class="section-card">
+                <div class="bg-white rounded-2xl shadow-xl p-8 md:p-12 hover-lift border border-brand-border">
                     <div class="form-container">
                         <form id="membership-form">
                             <div class="form-field">
@@ -162,19 +107,30 @@
                                 <input type="text" id="member-name" name="name" required class="form-input">
                                 <div class="form-error">Palun sisesta oma nimi.</div>
                             </div>
-                            
+
                             <div class="form-field">
                                 <label for="member-email" class="form-label">E-posti aadress *</label>
                                 <input type="email" id="member-email" name="email" required class="form-input">
                                 <div class="form-error">Palun sisesta kehtiv e-posti aadress.</div>
                             </div>
-                            
-                            <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 my-8 text-center">
-                                <p class="text-gray-700 mb-2">Edasine info MTÜ tegemiste kohta saabub Sulle e-posti teel.</p>
-                                <div class="text-2xl font-bold text-gray-900 mb-2">Liikmemaks</div>
-                                <p class="text-gray-800"><span class="text-3xl font-bold text-gray-900">20€</span> aastas</p>
-                                <p class="text-gray-600 text-sm mt-1">Pensionäridel 10€</p>
-                                <p class="mt-4 font-semibold text-gray-800">Aitäh, et oled meiega! 😊</p>
+
+                            <div class="bg-gradient-to-br from-silk to-background-tertiary border-2 border-brand-border rounded-2xl p-8 my-8 text-center">
+                                <p class="text-sirocco mb-3 text-lg">Edasine info MTÜ tegemiste kohta saabub Sulle e-posti teel.</p>
+                                <div class="text-2xl font-bold text-kofta mb-3">Liikmemaks</div>
+                                <div class="flex items-center justify-center gap-8 mb-4">
+                                    <div>
+                                        <p class="text-kofta"><span class="text-4xl font-bold text-cinnamon">20€</span></p>
+                                        <p class="text-sirocco text-sm">aastas</p>
+                                    </div>
+                                    <div class="h-12 w-px bg-brand-border"></div>
+                                    <div>
+                                        <p class="text-kofta"><span class="text-4xl font-bold text-apricot">10€</span></p>
+                                        <p class="text-sirocco text-sm">pensionäridel</p>
+                                    </div>
+                                </div>
+                                <div class="pt-4 border-t border-brand-border">
+                                    <p class="font-semibold text-kofta text-lg">Aitäh, et oled meiega!</p>
+                                </div>
                             </div>
 
                             <div id="membership-message" class="form-message" style="display: none;"></div>

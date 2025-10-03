@@ -29,175 +29,130 @@
     </script>
     
     <!-- Tailwind Configuration -->
+    <script src="/js/tailwind-config.js"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        background: {
-                            primary: '#fdfdfc',
-                            secondary: '#ffffff',
-                            tertiary: '#f9f8f6',
-                        },
-                        text: {
-                            primary: '#3a3a3a',
-                            secondary: '#5a5a5a',
-                            tertiary: '#7a7a7a',
-                            subtle: '#9a9a9a',
-                        },
-                        brand: {
-                            primary: '#a68a64',
-                            primary_hover: '#917651',
-                            light: '#f3f0ec',
-                            border: '#e5e2de',
-                        },
-                        accent: {
-                            primary: '#d4b896',
-                            secondary: '#b8956a',
-                            tertiary: '#e67e22',
-                            quaternary: '#27ae60',
-                            quinary: '#3498db',
-                        }
-                    },
-                    spacing: {
-                        'block': '1.2rem',
-                    },
-                    maxWidth: {
-                       'content': '620px',
-                       'wide': '1280px',
-                    }
-                }
-            }
-        }
+        tailwind.config = window.tailwindConfig;
     </script>
 
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="bg-background-primary text-text-primary">
+<body class="bg-silk text-cascades">
 
-    <!-- Header -->
-    <header class="bg-background-primary/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-200">
-        <nav class="global-padding max-w-wide mx-auto flex items-center justify-between py-4">
-            <a href="/">
-                <img src="/media/TAUSTATA_MTYKaiuKodukant2.png" alt="MTÜ Kaiu Kodukant Logo" style="width: 140px; height: 53px;" class="h-auto">
-            </a>
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="/" class="nav-link font-medium hover:underline">Esileht</a>
-                <a href="/events" class="nav-link font-medium hover:underline">Sündmused</a>
-                <a href="/maitsete-karussell" class="nav-link font-medium hover:underline">Maitsete karussell</a>
-                <a href="/gallery" class="nav-link font-medium hover:underline">Galerii</a>
-                <a href="/about" class="nav-link font-medium hover:underline">Meist</a>
-                <a href="/contact" class="nav-link font-medium hover:underline active">Kontakt</a>
-                <a href="/membership" class="bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors">Saa liikmeks</a>
-            </div>
-            <!-- Mobile Menu Button -->
-            <button id="hamburger-menu" class="md:hidden">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-            </button>
-        </nav>
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden global-padding pb-4">
-            <a href="/" class="block py-2 mobile-nav-link">Esileht</a>
-            <a href="/events" class="block py-2 mobile-nav-link">Sündmused</a>
-            <a href="/maitsete-karussell" class="block py-2 mobile-nav-link">Maitsete karussell</a>
-            <a href="/gallery" class="block py-2 mobile-nav-link">Galerii</a>
-            <a href="/about" class="block py-2 mobile-nav-link">Meist</a>
-            <a href="/contact" class="block py-2 mobile-nav-link active">Kontakt</a>
-            <a href="/membership" class="block mt-4 text-center bg-brand-primary text-white px-4 py-2.5 rounded-md text-sm font-medium hover:bg-brand-primary_hover transition-colors mobile-nav-link">Saa liikmeks</a>
-        </div>
-    </header>
+    <!-- Header placeholder - loaded dynamically -->
+    <div id="header-placeholder"></div>
 
     <!-- Main Content -->
     <main>
-            <div class="page-title-component">
-                <h1>Kontakt</h1>
-                <p class="text-xl max-w-2xl mx-auto text-gray-600">Kas sul on küsimusi või soovid rohkem teada saada? Võta julgelt ühendust!</p>
+        <!-- Hero Section with gradient -->
+        <section class="relative py-20 px-6 md:px-12 overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-sirocco via-cascades to-sirocco opacity-95"></div>
+            <div class="absolute inset-0 overflow-hidden">
+                <div class="absolute top-0 right-0 w-96 h-96 bg-apricot rounded-full filter blur-3xl opacity-20 animate-float"></div>
+                <div class="absolute bottom-0 left-0 w-72 h-72 bg-cinnamon rounded-full filter blur-3xl opacity-20 animate-float" style="animation-delay: 1.5s;"></div>
             </div>
-            
-            <section class="global-padding">
-                <div class="max-w-6xl mx-auto">
-                    <div class="grid lg:grid-cols-2 gap-12">
-                        <div class="space-y-8">
-                            <div class="section-card">
-                                <h3 class="mb-6">Kontaktandmed</h3>
-                                <div class="space-y-4">
-                                    <div class="flex items-start">
-                                        <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
-                                            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                        </div>
-                                        <div>
-                                            <p class="font-semibold text-gray-900">Aadress</p>
-                                            <p class="text-gray-600">Kaiu alevik<br/>Rapla vald, Rapla maakond, 79301</p>
-                                        </div>
+            <div class="relative max-w-4xl mx-auto text-center">
+                <div class="flex items-center justify-center mb-6">
+                    <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-silk mb-6">Kontakt</h1>
+                <p class="text-xl md:text-2xl text-silk/90 leading-relaxed max-w-2xl mx-auto">Kas sul on küsimusi või soovid rohkem teada saada? Võta julgelt ühendust!</p>
+            </div>
+        </section>
+
+        <section class="px-6 md:px-12 py-16 bg-gradient-to-b from-silk to-background-tertiary">
+            <div class="max-w-6xl mx-auto">
+                <div class="grid lg:grid-cols-2 gap-8">
+                    <div class="space-y-8">
+                        <!-- Contact Info Card -->
+                        <div class="bg-white rounded-2xl shadow-xl p-8 hover-lift border border-brand-border">
+                            <h2 class="text-2xl font-bold mb-6 text-kofta">Kontaktandmed</h2>
+                            <div class="space-y-6">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-cinnamon to-apricot rounded-lg flex items-center justify-center mr-4">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
                                     </div>
-                                    <div class="flex items-start">
-                                        <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
-                                            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                        </div>
-                                        <div>
-                                            <p class="font-semibold text-gray-900">E-post</p>
-                                            <a href="mailto:info@kaiukodukant.ee" class="text-gray-800 hover:text-gray-900 hover:underline">info@kaiukodukant.ee</a>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-start">
-                                        <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
-                                            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        </div>
-                                        <div>
-                                            <p class="font-semibold text-gray-900">Vastame</p>
-                                            <p class="text-gray-600">2-3 päeva jooksul</p>
-                                        </div>
+                                    <div>
+                                        <p class="font-semibold text-kofta mb-1">Aadress</p>
+                                        <p class="text-sirocco">Kaiu alevik<br/>Rapla vald, Rapla maakond, 79301</p>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div class="section-card">
-                                <h3 class="mb-6">Saada meile sõnum</h3>
-                                <div class="form-container max-w-none">
-                                    <form id="contact-form">
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div class="form-field">
-                                                <label for="contact-name" class="form-label">Nimi *</label>
-                                                <input type="text" id="contact-name" name="name" required class="form-input">
-                                                <div class="form-error">Palun sisesta oma nimi.</div>
-                                            </div>
-                                            <div class="form-field">
-                                                <label for="contact-email" class="form-label">E-post *</label>
-                                                <input type="email" id="contact-email" name="email" required class="form-input">
-                                                <div class="form-error">Palun sisesta kehtiv e-posti aadress.</div>
-                                            </div>
-                                        </div>
-                                        <div class="form-field">
-                                            <label for="contact-subject" class="form-label">Teema</label>
-                                            <input type="text" id="contact-subject" name="subject" class="form-input" placeholder="Milles saame aidata?">
-                                        </div>
-                                        <div class="form-field">
-                                            <label for="contact-msg" class="form-label">Sõnum *</label>
-                                            <textarea id="contact-msg" name="message" required class="form-input form-textarea" placeholder="Kirjuta oma sõnum siia..."></textarea>
-                                            <div class="form-error">Palun sisesta oma sõnum.</div>
-                                        </div>
-                                        <div id="contact-message" class="form-message" style="display: none;"></div>
-                                        <button type="submit" id="contact-submit-btn" class="form-button">
-                                            <span>Saada sõnum</span>
-                                        </button>
-                                    </form>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-apricot to-cinnamon rounded-lg flex items-center justify-center mr-4">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-kofta mb-1">E-post</p>
+                                        <a href="mailto:info@kaiukodukant.ee" class="text-cinnamon hover:text-apricot transition-colors font-medium">info@kaiukodukant.ee</a>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-sirocco to-cascades rounded-lg flex items-center justify-center mr-4">
+                                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-kofta mb-1">Vastame</p>
+                                        <p class="text-sirocco">2-3 päeva jooksul</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Map -->
-                        <div class="h-[500px] lg:h-full">
-                            <div class="section-card h-full p-0 overflow-hidden">
-                                <iframe src="https://www.google.com/maps/embed?pb=!1m18!m12!1m3!1d8213.91181816041!2d25.0359868460144!3d59.03058883582109!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46931b9d42555555%3A0x2f7c0d0e0a0b0c0d!2sKaiu%2C%2079301%20Rapla%20maakond!5e0!3m2!1set!2see!4v1695132869445!5m2!1set!2see" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+                        <!-- Contact Form Card -->
+                        <div class="bg-white rounded-2xl shadow-xl p-8 hover-lift border border-brand-border">
+                            <h2 class="text-2xl font-bold mb-6 text-kofta">Saada meile sõnum</h2>
+                            <div class="form-container max-w-none">
+                                <form id="contact-form">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div class="form-field">
+                                            <label for="contact-name" class="form-label">Nimi *</label>
+                                            <input type="text" id="contact-name" name="name" required class="form-input">
+                                            <div class="form-error">Palun sisesta oma nimi.</div>
+                                        </div>
+                                        <div class="form-field">
+                                            <label for="contact-email" class="form-label">E-post *</label>
+                                            <input type="email" id="contact-email" name="email" required class="form-input">
+                                            <div class="form-error">Palun sisesta kehtiv e-posti aadress.</div>
+                                        </div>
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="contact-subject" class="form-label">Teema</label>
+                                        <input type="text" id="contact-subject" name="subject" class="form-input" placeholder="Milles saame aidata?">
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="contact-msg" class="form-label">Sõnum *</label>
+                                        <textarea id="contact-msg" name="message" required class="form-input form-textarea" placeholder="Kirjuta oma sõnum siia..."></textarea>
+                                        <div class="form-error">Palun sisesta oma sõnum.</div>
+                                    </div>
+                                    <div id="contact-message" class="form-message" style="display: none;"></div>
+                                    <button type="submit" id="contact-submit-btn" class="form-button">
+                                        <span>Saada sõnum</span>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Map -->
+                    <div class="h-[500px] lg:h-full min-h-[600px]">
+                        <div class="bg-white rounded-2xl shadow-xl h-full p-0 overflow-hidden hover-lift border border-brand-border">
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!m12!1m3!1d8213.91181816041!2d25.0359868460144!3d59.03058883582109!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46931b9d42555555%3A0x2f7c0d0e0a0b0c0d!2sKaiu%2C%2079301%20Rapla%20maakond!5e0!3m2!1set!2see!4v1695132869445!5m2!1set!2see" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        </div>
+                    </div>
                 </div>
-            </section>
+            </div>
+        </section>
     </main>
 
     <!-- Footer placeholder - loaded dynamically -->
