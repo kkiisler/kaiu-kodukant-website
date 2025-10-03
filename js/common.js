@@ -5,8 +5,9 @@ document.addEventListener('DOMContentLoaded', function() {
     loadHeader();
     loadFooter();
 
-    // Wait a bit for header to load before setting up mobile menu
-    setTimeout(setupMobileMenu, 100);
+    // Wait for header to load before setting up mobile menu
+    // Increased timeout to ensure header is fully rendered
+    setTimeout(setupMobileMenu, 500);
 });
 
 function setupMobileMenu() {
@@ -16,23 +17,37 @@ function setupMobileMenu() {
     const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
 
     if (hamburger && mobileMenu) {
-        hamburger.addEventListener('click', () => {
+        // Remove any existing event listeners to prevent duplicates
+        const newHamburger = hamburger.cloneNode(true);
+        hamburger.parentNode.replaceChild(newHamburger, hamburger);
+
+        // Add click event to hamburger button
+        newHamburger.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent event from bubbling up
+            console.log('Hamburger clicked, toggling menu');
             mobileMenu.classList.toggle('hidden');
         });
 
         // Close mobile menu when clicking outside
         document.addEventListener('click', (event) => {
-            if (!hamburger.contains(event.target) && !mobileMenu.contains(event.target)) {
-                mobileMenu.classList.add('hidden');
+            // Only close if the menu is open (not hidden)
+            if (!mobileMenu.classList.contains('hidden')) {
+                if (!newHamburger.contains(event.target) && !mobileMenu.contains(event.target)) {
+                    console.log('Clicking outside, closing menu');
+                    mobileMenu.classList.add('hidden');
+                }
             }
         });
 
         // Close mobile menu when clicking a link
         mobileNavLinks.forEach(link => {
             link.addEventListener('click', () => {
+                console.log('Nav link clicked, closing menu');
                 mobileMenu.classList.add('hidden');
             });
         });
+    } else {
+        console.warn('Mobile menu elements not found:', { hamburger: !!hamburger, mobileMenu: !!mobileMenu });
     }
 
     // Smooth scroll for anchor links within the same page
