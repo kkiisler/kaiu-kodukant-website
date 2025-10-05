@@ -61,8 +61,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeCalendar() {
         if (calendarInitialized) return;
         
-        // Show loading message
-        calendarEl.innerHTML = '<p class="text-center text-text-secondary p-8">Kalendri laadimine...</p>';
+        // Clear any existing content without showing loading message
+        calendarEl.innerHTML = '';
 
         calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
