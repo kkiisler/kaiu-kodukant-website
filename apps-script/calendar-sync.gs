@@ -165,14 +165,29 @@ function formatEventsForFullCalendar(events) {
  */
 function updateVersionFile(component) {
   try {
-    // Try to fetch existing version file
+    // Try to fetch existing version file first
     let versionData = {
-      calendar: 1,
-      gallery: 1,
+      calendar: Date.now(),
+      gallery: Date.now(),
       lastUpdated: new Date().toISOString()
     };
 
-    // Increment version for this component
+    // Try to load existing version data
+    try {
+      const versionUrl = `${S3_CONFIG.endpoint}/${S3_CONFIG.bucket}/metadata/version.json`;
+      const response = UrlFetchApp.fetch(versionUrl, { muteHttpExceptions: true });
+
+      if (response.getResponseCode() === 200) {
+        const existingData = JSON.parse(response.getContentText());
+        // Preserve existing timestamps
+        versionData.calendar = existingData.calendar || Date.now();
+        versionData.gallery = existingData.gallery || Date.now();
+      }
+    } catch (e) {
+      Logger.log('Version file does not exist yet, creating new one');
+    }
+
+    // Update timestamp for the specified component
     if (component === 'calendar') {
       versionData.calendar = Date.now();
     } else if (component === 'gallery') {
