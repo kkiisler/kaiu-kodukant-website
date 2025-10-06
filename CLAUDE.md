@@ -96,6 +96,49 @@ Key configuration values:
 - **Caching**: Reduces API calls and improves performance
 - **Secure forms**: reCAPTCHA v3 protection
 
+## Google Apps Script Development
+
+**IMPORTANT**: All Google Apps Script code is maintained in the `apps-script/` folder for version control.
+
+- **Location**: `/apps-script/*.gs`
+- **Deployment**: Copy files to Google Apps Script editor after updating
+- **Key files**:
+  - `calendar-sync.gs` - Calendar synchronization to S3
+  - `gallery-sync-incremental.gs` - Gallery synchronization with incremental updates
+  - `drive-change-trigger.gs` - Change detection for gallery updates
+  - `s3-utils.gs` - S3 upload utilities with AWS Signature v4
+  - `config.gs` - Configuration and credentials
+  - `triggers-setup.gs` - Automated trigger management
+
+**When working with Apps Script**:
+1. Always update the local `apps-script/*.gs` files in the repository
+2. Test changes thoroughly before deployment
+3. Provide the complete updated file content for copying to Google Apps Script editor
+4. Remember these scripts run on Google's infrastructure with scheduled triggers
+
+## Deployment and Testing
+
+**Production Environment**:
+- The production website runs on a VM, not locally
+- SSH access: `ssh kkiisler@kaiukodukant.ee`
+- Deployment location: `/home/kkiisler/kaiu-kodukant-website`
+- Services run in Docker containers (web and api)
+
+**Development Workflow**:
+1. Make changes locally in this repository
+2. Test functionality thoroughly
+3. Verify the implementation meets requirements
+4. Write comprehensive commit messages describing all changes
+5. Push to GitHub: `git push origin main`
+6. Deploy to production via SSH when ready
+
+**Testing Protocol**:
+- After implementing planned features, always test the results
+- Verify both functionality and visual appearance
+- Check monitoring dashboards for sync status
+- Ensure no regressions in existing features
+- Only commit and push after confirming everything works as expected
+
 ## File Structure
 
 ```
@@ -113,6 +156,18 @@ Key configuration values:
 │   ├── calendar.js      # FullCalendar integration
 │   ├── gallery.js       # Gallery and lightbox
 │   └── forms.js         # Form validation and handling
+├── apps-script/         # Google Apps Script source files
+│   ├── calendar-sync.gs
+│   ├── gallery-sync-incremental.gs
+│   ├── drive-change-trigger.gs
+│   └── ...
+├── api/                 # Backend API (Node.js)
+│   ├── routes/
+│   ├── services/
+│   └── server.js
+├── docker/              # Docker configuration
+│   ├── docker-compose.yml
+│   └── deploy.sh
 ├── test-calendar.html   # Calendar testing page
 ├── test-gallery.html    # Gallery testing page
 └── index_original.html  # Backup of original single-page file
