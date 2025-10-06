@@ -77,8 +77,15 @@ function checkForGalleryChanges() {
     // Trigger incremental sync
     Logger.log('Triggering gallery sync due to detected changes...');
     syncGalleryIncrementalWithChanges(changes);
+
+    // Update version timestamp after successful sync
+    updateVersionFile('gallery');
   } else {
     Logger.log('No changes detected in gallery folder');
+
+    // Still update the version timestamp to show gallery check is running
+    // This prevents monitoring from showing gallery as "failed" when there are no changes
+    updateVersionFile('gallery');
   }
 }
 

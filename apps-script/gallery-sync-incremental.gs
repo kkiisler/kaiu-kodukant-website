@@ -435,6 +435,9 @@ function uploadGalleryManifest(albums) {
   uploadToS3('gallery/albums.json', manifestJson, 'application/json', true);
 
   Logger.log(`✓ Uploaded gallery manifest with ${manifest.totalAlbums} albums, ${manifest.totalPhotos} photos`);
+
+  // Update version.json with gallery timestamp (fixes monitoring showing gallery as "never synced")
+  updateVersionFile('gallery');
 }
 
 /**
