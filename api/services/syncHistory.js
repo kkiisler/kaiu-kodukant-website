@@ -4,7 +4,9 @@ const axios = require('axios');
 const config = require('../config');
 
 // Store sync history in a local file for persistence
-const HISTORY_FILE = path.join(process.cwd(), 'data', 'sync-history.json');
+// In Docker, /data is the mounted volume, in development use local data dir
+const DATA_DIR = process.env.DATABASE_PATH ? path.dirname(process.env.DATABASE_PATH) : path.join(process.cwd(), 'data');
+const HISTORY_FILE = path.join(DATA_DIR, 'sync-history.json');
 const MAX_HISTORY_ENTRIES = 500; // Keep last 500 sync attempts
 const HISTORY_RETENTION_DAYS = 7; // Keep 7 days of history
 
@@ -14,8 +16,7 @@ const HISTORY_RETENTION_DAYS = 7; // Keep 7 days of history
 async function initSyncHistory() {
   try {
     // Ensure data directory exists
-    const dataDir = path.dirname(HISTORY_FILE);
-    await fs.mkdir(dataDir, { recursive: true });
+    await fs.mkdir(DATA_DIR, { recursive: true });
 
     // Load existing history or create new
     try {
