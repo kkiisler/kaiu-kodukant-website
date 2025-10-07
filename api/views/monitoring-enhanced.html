@@ -27,7 +27,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <h1 class="text-xl font-semibold text-gray-800">S3 Sync Monitooring</h1>
+                    <h1 class="text-xl font-semibold text-gray-800">Süsteemi Monitooring</h1>
                 </div>
                 <div class="flex items-center space-x-4">
                     <a href="/admin" class="text-gray-600 hover:text-gray-900">Tagasi</a>
@@ -167,6 +167,95 @@
                 </div>
             </div>
         </div>
+
+        <!-- Weather Blurbs Section -->
+        <div class="mt-8">
+            <h2 class="text-xl font-semibold mb-4">🌤️ Ilmateated</h2>
+
+            <!-- Weather Status Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Current Weather -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Praegune ilmateade</h3>
+                    <div id="currentWeatherBlurb" class="mb-4 p-4 bg-blue-50 rounded-lg">
+                        <p class="text-gray-700">Laadimine...</p>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Temperatuur:</span>
+                            <span id="weatherTemp">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Tingimused:</span>
+                            <span id="weatherConditions">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Tuul:</span>
+                            <span id="weatherWind">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Loodud:</span>
+                            <span id="weatherCreated">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather Stats -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Statistika</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Teateid kokku:</span>
+                            <span id="weatherTotalBlurbs">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Viimase 24h:</span>
+                            <span id="weatherRecentBlurbs">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Keskmine temp (7p):</span>
+                            <span id="weatherAvgTemp">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Järgmine uuendus:</span>
+                            <span id="weatherNextUpdate">-</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">OpenAI mudel:</span>
+                            <span id="weatherModel" class="text-xs">-</span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="generateWeatherBlurb()" class="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                            Genereeri uus teade
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weather History -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">20 viimast ilmateadet</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Aeg</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Teade</th>
+                                <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Temp</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ilm</th>
+                            </tr>
+                        </thead>
+                        <tbody id="weatherHistoryTable" class="bg-white divide-y divide-gray-200">
+                            <!-- Weather history will be loaded here -->
+                        </tbody>
+                    </table>
+                    <div id="noWeatherHistory" class="hidden text-center py-4 text-gray-500">
+                        Ilmateateid ei leitud
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -194,6 +283,9 @@
 
                 // Load detailed history
                 await loadHistory();
+
+                // Load weather data
+                await loadWeatherData();
             } catch (error) {
                 console.error('Error loading monitoring data:', error);
             } finally {
@@ -380,6 +472,133 @@
 
         function refreshAll() {
             loadMonitoringData();
+        }
+
+        // Weather monitoring functions
+        async function loadWeatherData() {
+            try {
+                const response = await fetch(`/api/v1/monitoring/weather?t=${Date.now()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data) {
+                        updateWeatherDisplay(data.data);
+                    }
+                } else {
+                    console.error('Failed to load weather data:', response.status);
+                }
+            } catch (error) {
+                console.error('Error loading weather data:', error);
+            }
+        }
+
+        function updateWeatherDisplay(data) {
+            // Update latest blurb
+            if (data.latestBlurb) {
+                document.getElementById('currentWeatherBlurb').innerHTML = `
+                    <p class="text-gray-700 leading-relaxed">
+                        <span class="text-2xl mr-2">${data.latestBlurb.icon}</span>
+                        ${data.latestBlurb.text}
+                    </p>
+                `;
+                document.getElementById('weatherTemp').textContent = data.latestBlurb.temperature ? `${data.latestBlurb.temperature}°C` : '-';
+                document.getElementById('weatherConditions').textContent = data.latestBlurb.conditions || '-';
+                document.getElementById('weatherWind').textContent =
+                    data.latestBlurb.windSpeed ? `${data.latestBlurb.windSpeed} m/s ${data.latestBlurb.windDirection || ''}` : '-';
+                document.getElementById('weatherCreated').textContent =
+                    data.latestBlurb.createdAt ? formatTime(data.latestBlurb.createdAt) : '-';
+            } else {
+                document.getElementById('currentWeatherBlurb').innerHTML = `
+                    <p class="text-gray-500">Ilmateadet pole veel genereeritud</p>
+                `;
+            }
+
+            // Update statistics
+            if (data.statistics) {
+                document.getElementById('weatherTotalBlurbs').textContent = data.statistics.totalBlurbs || 0;
+                document.getElementById('weatherRecentBlurbs').textContent = data.statistics.recentBlurbs || 0;
+                document.getElementById('weatherAvgTemp').textContent =
+                    data.statistics.avgTemperature ? `${data.statistics.avgTemperature.toFixed(1)}°C` : '-';
+            }
+
+            // Update next update time
+            if (data.nextUpdate) {
+                document.getElementById('weatherNextUpdate').textContent = data.nextUpdate.display || '-';
+            }
+
+            // Update config
+            if (data.config) {
+                document.getElementById('weatherModel').textContent =
+                    data.config.openAiConfigured ? data.config.model : 'Pole konfigureeritud';
+            }
+
+            // Update history table
+            if (data.blurbHistory && data.blurbHistory.length > 0) {
+                const tbody = document.getElementById('weatherHistoryTable');
+                const noHistory = document.getElementById('noWeatherHistory');
+
+                noHistory.classList.add('hidden');
+                tbody.innerHTML = data.blurbHistory.map(blurb => `
+                    <tr>
+                        <td class="px-4 py-2 text-sm whitespace-nowrap">
+                            ${formatTime(blurb.createdAt)}
+                        </td>
+                        <td class="px-4 py-2 text-sm">
+                            <span class="mr-1">${blurb.icon}</span>
+                            ${blurb.text.length > 100 ? blurb.text.substring(0, 100) + '...' : blurb.text}
+                        </td>
+                        <td class="px-4 py-2 text-sm text-center">
+                            ${blurb.temperature ? `${blurb.temperature}°C` : '-'}
+                        </td>
+                        <td class="px-4 py-2 text-sm">
+                            ${blurb.conditions || '-'}
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                document.getElementById('weatherHistoryTable').innerHTML = '';
+                document.getElementById('noWeatherHistory').classList.remove('hidden');
+            }
+        }
+
+        async function generateWeatherBlurb() {
+            if (!confirm('Kas soovid genereerida uue ilmateate?')) {
+                return;
+            }
+
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = 'Genereerimine...';
+
+            try {
+                const response = await fetch('/api/v1/weather/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert('Uus ilmateade genereeritud!');
+                    await loadWeatherData();
+                } else {
+                    alert('Viga: ' + (data.error || 'Teate genereerimine ebaõnnestus'));
+                }
+            } catch (error) {
+                console.error('Error generating weather blurb:', error);
+                alert('Viga teate genereerimisel');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Genereeri uus teade';
+            }
         }
 
         function logout() {
