@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
+const cron = require('node-cron');
 require('dotenv').config();
 
 // Import configuration
@@ -14,11 +15,14 @@ const config = require('./config');
 // Import services
 const database = require('./services/database');
 const emailService = require('./services/email');
+const weatherService = require('./services/weather');
+const aiBlurbGenerator = require('./services/ai-blurb');
 
 // Import routes
 const formsRouter = require('./routes/forms');
 const adminRouter = require('./routes/admin');
 const monitoringRouter = require('./routes/monitoring');
+const weatherRouter = require('./routes/weather');
 
 // Import middleware
 const { authenticateAdmin } = require('./middleware/auth');
@@ -98,6 +102,7 @@ app.get('/health', (req, res) => {
 app.use('/api/v1/submit', rateLimiter.formLimiter, formsRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/monitoring', authenticateAdmin, monitoringRouter);
+app.use('/api/v1/weather', weatherRouter);
 
 // Admin dashboard HTML pages (protected)
 app.get('/admin/login', (req, res) => {
@@ -160,6 +165,38 @@ database.initialize()
       emailService.testConnection()
         .then(() => console.log('✅ Email service connected'))
         .catch(err => console.warn('⚠️ Email service not configured:', err.message));
+    }
+
+    // Set up weather blurb generation cron job
+    if (process.env.OPENAI_API_KEY) {
+      // Run every 4 hours: 0:00, 4:00, 8:00, 12:00, 16:00, 20:00
+      cron.schedule('0 */4 * * *', async () => {
+        console.log('🌤️ Running scheduled weather blurb generation...');
+        try {
+          // Fetch weather data
+          const forecastData = await weatherService.getForecast();
+          if (forecastData) {
+            const parsedData = weatherService.parseForecast(forecastData);
+            const formattedData = weatherService.formatForBlurbContext(parsedData);
+
+            // Cache the weather data
+            database.setWeatherCache('Kaiu, Raplamaa', forecastData, 1);
+
+            // Generate and save blurb
+            const newBlurb = await aiBlurbGenerator.generateAndSaveBlurb(formattedData);
+            console.log('✅ Weather blurb generated successfully:', newBlurb.id);
+          } else {
+            console.error('❌ Failed to fetch weather data');
+          }
+        } catch (error) {
+          console.error('❌ Error generating weather blurb:', error);
+        }
+      }, {
+        timezone: 'Europe/Tallinn'
+      });
+      console.log('✅ Weather cron job scheduled (every 4 hours)');
+    } else {
+      console.warn('⚠️ OpenAI API key not configured - weather blurbs disabled');
     }
 
     // Start server

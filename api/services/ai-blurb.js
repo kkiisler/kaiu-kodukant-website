@@ -1,0 +1,237 @@
+// AI Blurb Generator Service
+// Generates Estonian weather blurbs using OpenAI GPT-4o-mini
+
+const OpenAI = require('openai');
+const database = require('./database');
+
+class AIBlurbGenerator {
+  constructor() {
+    // Initialize OpenAI client if API key is available
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (apiKey) {
+      this.openai = new OpenAI({
+        apiKey: apiKey
+      });
+      this.model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+      this.temperature = parseFloat(process.env.OPENAI_TEMPERATURE || '0.7');
+      this.maxTokens = parseInt(process.env.OPENAI_MAX_TOKENS || '200');
+    } else {
+      console.warn('OpenAI API key not configured - weather blurbs will not be generated');
+      this.openai = null;
+    }
+  }
+
+  /**
+   * Generate a weather blurb based on forecast data
+   * @param {Object} weatherData - Parsed weather data from weather service
+   * @returns {Object} Generated blurb with metadata
+   */
+  async generateBlurb(weatherData) {
+    if (!this.openai) {
+      throw new Error('OpenAI API not configured');
+    }
+
+    try {
+      // Get previous blurbs for context
+      const previousBlurbs = await this.getPreviousBlurbs();
+
+      // Prepare the prompt
+      const userPrompt = this.buildUserPrompt(weatherData, previousBlurbs);
+
+      // Call OpenAI API
+      const completion = await this.openai.chat.completions.create({
+        model: this.model,
+        messages: [
+          {
+            role: 'system',
+            content: this.getSystemPrompt()
+          },
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ],
+        temperature: this.temperature,
+        max_tokens: this.maxTokens
+      });
+
+      const blurbText = completion.choices[0].message.content.trim();
+      const usage = completion.usage;
+
+      return {
+        blurb_text: blurbText,
+        generation_model: this.model,
+        generation_tokens: usage ? usage.total_tokens : null,
+        weather_data: weatherData,
+        temperature: weatherData.current?.temperature || null,
+        conditions: weatherData.current?.phenomenon || null,
+        wind_speed: weatherData.current?.windSpeed || null,
+        wind_direction: weatherData.current?.windDirection || null,
+        precipitation: weatherData.current?.precipitation || null
+      };
+    } catch (error) {
+      console.error('Error generating blurb:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get system prompt for Estonian weather blurb generation
+   * @returns {string} System prompt
+   */
+  getSystemPrompt() {
+    return `Sa oled Kaiu Ilmajutu Kirjutaja—assistent, kes kirjutab lühikesi, sõbralikke ilmateateid Kaiu kogukonna veebilehele.
+
+PUBLIK: Kaiu elanikud
+VÄRSKENDUSE SAGEDUS: iga 4 tunni tagant
+STIIL: lõbus, soe, vestlev; mitte ametlik/tehniline; mitte kaootilline
+KEEL: AINULT eesti keel
+PIKKUS: ~60–120 sõna, 1–3 lühikest lõiku, MITTE täppnimekirju
+
+EMOJID: valikulised, max 1–2 kui sobivad loomulikult (☀️🌧️💨)
+
+KAASA LOOMULIKULT: temperatuurivahemik, sademete võimalus/maht, tuule suund ja kiirus, taeva iseloom (päike/pilved/vihm/udu), sobiv ajaviide või väike tähelepanek
+
+KOHALIK VIBE: väljendid nagu "kampsuniilm", "vihmapaus", "päike piilub" on head
+
+AJAVÖÖND: tõlgenda ajatempleid kui Europe/Tallinn
+
+MITTE HALLUTSINEERIDA: kasuta ainult antud andmeid; kui midagi puudub, jäta mainimata
+
+KORDUSTE KONTROLL: varieerida sõnastust; vältida fraaside kopeerimist hiljutistest kirjutistest
+
+VÄLJUND: tagasta ÜKS AINUKE ilmakirjutis (lihttekst), valmis kuvamiseks; MITTE pealkirju, mitte metaandmeid`;
+  }
+
+  /**
+   * Build user prompt with weather data and previous blurbs
+   * @param {Object} weatherData - Current weather data
+   * @param {Array} previousBlurbs - Previous blurb texts
+   * @returns {string} User prompt
+   */
+  buildUserPrompt(weatherData, previousBlurbs) {
+    const context = {
+      location: 'Kaiu, Raplamaa',
+      forecast_json: weatherData,
+      previous_blurbs: previousBlurbs,
+      now_iso: new Date().toISOString()
+    };
+
+    let prompt = `Kirjuta ilmateade järgmiste andmete põhjal:\n\n`;
+    prompt += `ASUKOHT: ${context.location}\n`;
+    prompt += `PRAEGUNE AEG: ${context.now_iso}\n\n`;
+
+    if (weatherData.current) {
+      prompt += `HETKE ILM:\n`;
+      prompt += `- Temperatuur: ${weatherData.current.temperature}°C\n`;
+      prompt += `- Tingimused: ${weatherData.current.phenomenon}\n`;
+      prompt += `- Tuul: ${weatherData.current.windSpeed} m/s ${weatherData.current.windDirection || ''}\n`;
+      prompt += `- Sademed: ${weatherData.current.precipitation} mm\n\n`;
+    }
+
+    if (weatherData.periods) {
+      prompt += `JÄRGMISED 24 TUNDI:\n`;
+      Object.values(weatherData.periods).forEach(period => {
+        if (period.data) {
+          prompt += `- ${period.period}: ${period.tempRange}, ${period.conditions}, sademed ${period.precipitation} mm\n`;
+        }
+      });
+      prompt += '\n';
+    }
+
+    if (weatherData.summary) {
+      prompt += `KOKKUVÕTE:\n`;
+      prompt += `- Temperatuurivahemik: ${weatherData.summary.tempRange}\n`;
+      prompt += `- Sademeid kokku 24h: ${weatherData.summary.totalPrecipitation} mm\n`;
+      prompt += `- Üldised tingimused: ${weatherData.summary.dominantConditions}\n\n`;
+    }
+
+    if (previousBlurbs.length > 0) {
+      prompt += `EELMISED KIRJUTISED (väldi kordamist):\n`;
+      previousBlurbs.slice(0, 4).forEach((blurb, i) => {
+        prompt += `${i + 1}. "${blurb}"\n`;
+      });
+      prompt += '\n';
+    }
+
+    prompt += `Palun kirjuta soe ja sõbralik ilmateade Kaiu elanikele, mis lõpeb lühikese tervitusega (nt "Naudi ilma, Kaiu!" või "Ilusat päeva, Kaiu rahvas!").`;
+
+    return prompt;
+  }
+
+  /**
+   * Get previous blurbs from database for context
+   * @returns {Array} Array of previous blurb texts
+   */
+  async getPreviousBlurbs() {
+    try {
+      const history = database.getWeatherBlurbHistory(20);
+      return history.map(b => b.blurb_text);
+    } catch (error) {
+      console.error('Error fetching previous blurbs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Generate and save a new weather blurb
+   * @param {Object} weatherData - Weather data from weather service
+   * @returns {Object} Saved blurb data
+   */
+  async generateAndSaveBlurb(weatherData) {
+    try {
+      // Generate the blurb
+      const blurbData = await this.generateBlurb(weatherData);
+
+      // Save to database
+      const id = database.addWeatherBlurb(blurbData);
+
+      // Clean up old data (keep only 20 latest blurbs)
+      database.cleanupOldWeatherData(20);
+
+      return {
+        id,
+        ...blurbData,
+        created_at: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error generating and saving blurb:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate a fallback blurb when API is unavailable
+   * @param {Object} weatherData - Weather data
+   * @returns {Object} Fallback blurb
+   */
+  generateFallbackBlurb(weatherData) {
+    const temp = weatherData.current?.temperature || 'N/A';
+    const conditions = weatherData.current?.phenomenon || 'N/A';
+    const wind = weatherData.current?.windSpeed || 'N/A';
+
+    const blurbText = `Tänane ilm Kaius: ${temp}°C, ${conditions}. Tuul ${wind} m/s. Naudi päeva, Kaiu!`;
+
+    return {
+      blurb_text: blurbText,
+      generation_model: 'fallback',
+      generation_tokens: 0,
+      weather_data: weatherData,
+      temperature: weatherData.current?.temperature || null,
+      conditions: weatherData.current?.phenomenon || null,
+      wind_speed: weatherData.current?.windSpeed || null,
+      wind_direction: weatherData.current?.windDirection || null,
+      precipitation: weatherData.current?.precipitation || null
+    };
+  }
+
+  /**
+   * Check if OpenAI API is configured
+   * @returns {boolean} True if configured
+   */
+  isConfigured() {
+    return this.openai !== null;
+  }
+}
+
+module.exports = new AIBlurbGenerator();

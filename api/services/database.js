@@ -88,6 +88,34 @@ const createTables = () => {
       submission_count INTEGER DEFAULT 1
     )
   `);
+
+  // Weather blurbs table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS weather_blurbs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      blurb_text TEXT NOT NULL,
+      weather_data JSON,
+      temperature REAL,
+      conditions TEXT,
+      wind_speed REAL,
+      wind_direction TEXT,
+      precipitation REAL,
+      generation_model TEXT,
+      generation_tokens INTEGER
+    )
+  `);
+
+  // Weather cache table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS weather_cache (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cached_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      location TEXT,
+      forecast_json JSON,
+      expires_at DATETIME
+    )
+  `);
 };
 
 const createIndexes = () => {
@@ -99,6 +127,9 @@ const createIndexes = () => {
     CREATE INDEX IF NOT EXISTS idx_contact_submitted ON contact_submissions(submitted_at);
     CREATE INDEX IF NOT EXISTS idx_rate_limits_reset ON rate_limits(reset_at);
     CREATE INDEX IF NOT EXISTS idx_sessions_expires ON admin_sessions(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_blurbs_created ON weather_blurbs(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_cache_expires ON weather_cache(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_cache_location ON weather_cache(location);
   `);
 };
 
@@ -310,6 +341,137 @@ const close = () => {
   }
 };
 
+// Weather-related functions
+const addWeatherBlurb = (data) => {
+  const stmt = db.prepare(`
+    INSERT INTO weather_blurbs (
+      blurb_text, weather_data, temperature, conditions,
+      wind_speed, wind_direction, precipitation,
+      generation_model, generation_tokens
+    )
+    VALUES (
+      @blurb_text, @weather_data, @temperature, @conditions,
+      @wind_speed, @wind_direction, @precipitation,
+      @generation_model, @generation_tokens
+    )
+  `);
+
+  const result = stmt.run({
+    ...data,
+    weather_data: JSON.stringify(data.weather_data || {})
+  });
+  return result.lastInsertRowid;
+};
+
+const getLatestWeatherBlurb = () => {
+  const stmt = db.prepare(`
+    SELECT * FROM weather_blurbs
+    ORDER BY created_at DESC
+    LIMIT 1
+  `);
+
+  const result = stmt.get();
+  if (result && result.weather_data) {
+    result.weather_data = JSON.parse(result.weather_data);
+  }
+  return result;
+};
+
+const getWeatherBlurbHistory = (limit = 20) => {
+  const stmt = db.prepare(`
+    SELECT * FROM weather_blurbs
+    ORDER BY created_at DESC
+    LIMIT ?
+  `);
+
+  const results = stmt.all(limit);
+  return results.map(row => {
+    if (row.weather_data) {
+      row.weather_data = JSON.parse(row.weather_data);
+    }
+    return row;
+  });
+};
+
+const getWeatherCache = (location) => {
+  const stmt = db.prepare(`
+    SELECT * FROM weather_cache
+    WHERE location = ?
+    AND datetime(expires_at) > datetime('now')
+    ORDER BY cached_at DESC
+    LIMIT 1
+  `);
+
+  const result = stmt.get(location);
+  if (result && result.forecast_json) {
+    result.forecast_json = JSON.parse(result.forecast_json);
+  }
+  return result;
+};
+
+const setWeatherCache = (location, forecastJson, expirationHours = 1) => {
+  const stmt = db.prepare(`
+    INSERT INTO weather_cache (location, forecast_json, expires_at)
+    VALUES (?, ?, datetime('now', '+' || ? || ' hours'))
+  `);
+
+  stmt.run(location, JSON.stringify(forecastJson), expirationHours);
+};
+
+const cleanupOldWeatherData = (keepBlurbsCount = 20) => {
+  // Keep only the latest N blurbs
+  const deleteBlurbsStmt = db.prepare(`
+    DELETE FROM weather_blurbs
+    WHERE id NOT IN (
+      SELECT id FROM weather_blurbs
+      ORDER BY created_at DESC
+      LIMIT ?
+    )
+  `);
+
+  const deletedBlurbs = deleteBlurbsStmt.run(keepBlurbsCount).changes;
+
+  // Delete expired cache entries
+  const deleteCacheStmt = db.prepare(`
+    DELETE FROM weather_cache
+    WHERE datetime(expires_at) < datetime('now')
+  `);
+
+  const deletedCache = deleteCacheStmt.run().changes;
+
+  return {
+    deletedBlurbs,
+    deletedCache
+  };
+};
+
+const getWeatherStatistics = () => {
+  const totalBlurbs = db.prepare('SELECT COUNT(*) as count FROM weather_blurbs').get();
+
+  const recentBlurbs = db.prepare(`
+    SELECT COUNT(*) as count FROM weather_blurbs
+    WHERE datetime(created_at) > datetime('now', '-24 hours')
+  `).get();
+
+  const avgTemperature = db.prepare(`
+    SELECT AVG(temperature) as avg_temp FROM weather_blurbs
+    WHERE datetime(created_at) > datetime('now', '-7 days')
+    AND temperature IS NOT NULL
+  `).get();
+
+  const cacheHitRate = db.prepare(`
+    SELECT COUNT(*) as cache_entries FROM weather_cache
+    WHERE datetime(expires_at) > datetime('now')
+  `).get();
+
+  return {
+    totalBlurbs: totalBlurbs.count,
+    recentBlurbs: recentBlurbs.count,
+    avgTemperature: avgTemperature.avg_temp,
+    activeCacheEntries: cacheHitRate.cache_entries
+  };
+};
+
 // Run periodic cleanup (call this from a scheduler)
 const runMaintenance = () => {
   try {
@@ -375,5 +537,13 @@ module.exports = {
   markAsSynced,
   getUnsyncedSubmissions,
   runMaintenance,
-  close
+  close,
+  // Weather functions
+  addWeatherBlurb,
+  getLatestWeatherBlurb,
+  getWeatherBlurbHistory,
+  getWeatherCache,
+  setWeatherCache,
+  cleanupOldWeatherData,
+  getWeatherStatistics
 };

@@ -4,6 +4,8 @@ const router = express.Router();
 const axios = require('axios');
 const config = require('../config');
 const syncHistory = require('../services/syncHistory');
+const database = require('../services/database');
+const weatherService = require('../services/weather');
 
 // Get S3 sync status with history
 router.get('/status', async (req, res) => {
@@ -262,6 +264,148 @@ router.get('/storage', async (req, res) => {
     console.error('Error fetching storage info:', error);
     res.status(500).json({
       error: 'Failed to fetch storage info',
+      message: error.message
+    });
+  }
+});
+
+// Weather monitoring endpoints
+router.get('/weather', async (req, res) => {
+  try {
+    // Get weather statistics
+    const stats = database.getWeatherStatistics();
+
+    // Get latest blurb
+    const latestBlurb = database.getLatestWeatherBlurb();
+
+    // Get last 20 blurbs for history
+    const blurbs = database.getWeatherBlurbHistory(20);
+
+    // Check cache status
+    const cacheStatus = database.getWeatherCache('Kaiu, Raplamaa');
+
+    // Calculate next update time
+    const now = new Date();
+    const hours = now.getHours();
+    const nextHour = Math.ceil((hours + 1) / 4) * 4;
+    const nextUpdate = new Date(now);
+
+    if (nextHour >= 24) {
+      nextUpdate.setDate(nextUpdate.getDate() + 1);
+      nextUpdate.setHours(0, 0, 0, 0);
+    } else {
+      nextUpdate.setHours(nextHour, 0, 0, 0);
+    }
+
+    const timeUntilUpdate = nextUpdate - now;
+    const hoursUntil = Math.floor(timeUntilUpdate / (1000 * 60 * 60));
+    const minutesUntil = Math.floor((timeUntilUpdate % (1000 * 60 * 60)) / (1000 * 60));
+
+    res.json({
+      success: true,
+      data: {
+        statistics: {
+          ...stats,
+          lastGenerated: latestBlurb ? latestBlurb.created_at : null
+        },
+        latestBlurb: latestBlurb ? {
+          id: latestBlurb.id,
+          text: latestBlurb.blurb_text,
+          temperature: latestBlurb.temperature,
+          conditions: latestBlurb.conditions,
+          icon: weatherService.getWeatherIcon(latestBlurb.conditions),
+          windSpeed: latestBlurb.wind_speed,
+          windDirection: latestBlurb.wind_direction,
+          precipitation: latestBlurb.precipitation,
+          createdAt: latestBlurb.created_at,
+          model: latestBlurb.generation_model,
+          tokens: latestBlurb.generation_tokens
+        } : null,
+        blurbHistory: blurbs.map(b => ({
+          id: b.id,
+          text: b.blurb_text,
+          temperature: b.temperature,
+          conditions: b.conditions,
+          icon: weatherService.getWeatherIcon(b.conditions),
+          createdAt: b.created_at
+        })),
+        cache: {
+          hasValidCache: !!cacheStatus,
+          expiresAt: cacheStatus?.expires_at || null,
+          cachedAt: cacheStatus?.cached_at || null
+        },
+        nextUpdate: {
+          time: nextUpdate.toISOString(),
+          hoursUntil,
+          minutesUntil,
+          display: `${hoursUntil}h ${minutesUntil}m`
+        },
+        config: {
+          openAiConfigured: !!process.env.OPENAI_API_KEY,
+          model: process.env.OPENAI_MODEL || 'not configured',
+          location: process.env.WEATHER_LOCATION_NAME || 'Kaiu, Raplamaa',
+          updateInterval: process.env.WEATHER_UPDATE_INTERVAL || '14400'
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching weather monitoring data:', error);
+    res.status(500).json({
+      error: 'Failed to fetch weather data',
+      message: error.message
+    });
+  }
+});
+
+// Get weather API health check
+router.get('/weather/health', async (req, res) => {
+  try {
+    const checks = {
+      database: false,
+      weatherApi: false,
+      openAi: false,
+      cache: false
+    };
+
+    // Check database
+    try {
+      const stats = database.getWeatherStatistics();
+      checks.database = stats !== null;
+    } catch (e) {
+      console.error('Database check failed:', e);
+    }
+
+    // Check weather API
+    try {
+      const forecast = await weatherService.getForecast();
+      checks.weatherApi = forecast !== null;
+    } catch (e) {
+      console.error('Weather API check failed:', e);
+    }
+
+    // Check OpenAI configuration
+    checks.openAi = !!process.env.OPENAI_API_KEY;
+
+    // Check cache
+    try {
+      const cache = database.getWeatherCache('Kaiu, Raplamaa');
+      checks.cache = true; // Cache check successful even if empty
+    } catch (e) {
+      console.error('Cache check failed:', e);
+    }
+
+    const allHealthy = Object.values(checks).every(v => v === true);
+
+    res.json({
+      success: true,
+      healthy: allHealthy,
+      checks,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error checking weather health:', error);
+    res.status(500).json({
+      error: 'Failed to check weather health',
       message: error.message
     });
   }
