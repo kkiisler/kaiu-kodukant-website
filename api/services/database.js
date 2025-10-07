@@ -364,6 +364,11 @@ const addWeatherBlurb = (data) => {
 };
 
 const getLatestWeatherBlurb = () => {
+  if (!db) {
+    console.error('Database not initialized');
+    return null;
+  }
+
   const stmt = db.prepare(`
     SELECT * FROM weather_blurbs
     ORDER BY created_at DESC
@@ -378,6 +383,11 @@ const getLatestWeatherBlurb = () => {
 };
 
 const getWeatherBlurbHistory = (limit = 20) => {
+  if (!db) {
+    console.error('Database not initialized');
+    return [];
+  }
+
   const stmt = db.prepare(`
     SELECT * FROM weather_blurbs
     ORDER BY created_at DESC
@@ -394,6 +404,11 @@ const getWeatherBlurbHistory = (limit = 20) => {
 };
 
 const getWeatherCache = (location) => {
+  if (!db) {
+    console.error('Database not initialized');
+    return null;
+  }
+
   const stmt = db.prepare(`
     SELECT * FROM weather_cache
     WHERE location = ?
@@ -446,6 +461,16 @@ const cleanupOldWeatherData = (keepBlurbsCount = 20) => {
 };
 
 const getWeatherStatistics = () => {
+  if (!db) {
+    console.error('Database not initialized');
+    return {
+      totalBlurbs: 0,
+      recentBlurbs: 0,
+      avgTemperature: null,
+      activeCacheEntries: 0
+    };
+  }
+
   const totalBlurbs = db.prepare('SELECT COUNT(*) as count FROM weather_blurbs').get();
 
   const recentBlurbs = db.prepare(`
