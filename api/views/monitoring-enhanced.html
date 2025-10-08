@@ -453,7 +453,9 @@
         }
 
         function formatTime(timestamp) {
-            const date = new Date(timestamp);
+            // Parse timestamp as UTC by appending 'Z' if not present
+            const utcTimestamp = timestamp.includes('Z') ? timestamp : timestamp + 'Z';
+            const date = new Date(utcTimestamp);
             const now = new Date();
             const diff = now - date;
 
