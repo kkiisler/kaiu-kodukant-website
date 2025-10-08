@@ -519,6 +519,37 @@ class WeatherPopup {
             }
         }
     }
+
+    // Update all weather trigger icons (header, footer, mobile)
+    async updateAllTriggerIcons() {
+        const iconIds = [
+            'weather-trigger-icon',
+            'weather-trigger-icon-header',
+            'weather-trigger-icon-mobile'
+        ];
+
+        // Fetch latest weather if needed
+        if (!this.weatherData || Date.now() - this.lastFetch > 300000) {
+            await this.fetchWeatherData();
+        }
+
+        if (this.weatherData) {
+            iconIds.forEach(iconId => {
+                const icon = document.getElementById(iconId);
+                if (icon) {
+                    // If icon is already an emoji, use it directly
+                    if (this.weatherData.icon && (this.weatherData.icon.includes('️') ||
+                        this.weatherData.icon.includes('☀') || this.weatherData.icon.includes('☁') ||
+                        this.weatherData.icon.includes('🌧') || this.weatherData.icon.includes('❄') ||
+                        this.weatherData.icon.includes('⛅'))) {
+                        icon.textContent = this.weatherData.icon;
+                    } else {
+                        icon.textContent = this.getWeatherEmoji(this.weatherData.icon || this.weatherData.conditions);
+                    }
+                }
+            });
+        }
+    }
 }
 
 // Export for use in other modules

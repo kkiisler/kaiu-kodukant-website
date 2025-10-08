@@ -75,6 +75,14 @@ function loadHeader() {
 
             // Re-setup mobile menu after header is loaded
             setupMobileMenu();
+
+            // Initialize weather popup triggers in header if available
+            if (window.weatherPopup) {
+                setupWeatherTrigger();
+            } else {
+                // Try to initialize after weather popup loads
+                initializeWeatherPopup();
+            }
         })
         .catch(error => {
             console.error('Error loading header component:', error);
@@ -171,20 +179,26 @@ function initializeWeatherPopup() {
 }
 
 /**
- * Setup click handler for the weather trigger in footer
+ * Setup click handlers for all weather triggers (header, footer, mobile)
  */
 function setupWeatherTrigger() {
-    const trigger = document.getElementById('weather-trigger');
-    if (trigger && window.weatherPopup) {
-        trigger.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            window.weatherPopup.toggle();
-        });
+    // List of all weather trigger IDs
+    const triggerIds = ['weather-trigger', 'weather-trigger-header', 'weather-trigger-mobile'];
 
-        // Update the trigger icon based on current weather
-        if (window.weatherPopup.updateFooterTriggerIcon) {
-            window.weatherPopup.updateFooterTriggerIcon();
+    // Add click listeners to all triggers
+    triggerIds.forEach(triggerId => {
+        const trigger = document.getElementById(triggerId);
+        if (trigger && window.weatherPopup) {
+            trigger.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.weatherPopup.toggle();
+            });
         }
+    });
+
+    // Update all trigger icons based on current weather
+    if (window.weatherPopup && window.weatherPopup.updateAllTriggerIcons) {
+        window.weatherPopup.updateAllTriggerIcons();
     }
 }
