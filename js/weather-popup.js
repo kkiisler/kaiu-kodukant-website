@@ -268,18 +268,13 @@ class WeatherPopup {
 
     async fetchWeatherData() {
         try {
-            console.log('[WeatherPopup] Fetching weather data from:', `${this.apiUrl}/current`);
             const response = await fetch(`${this.apiUrl}/current`);
-
-            console.log('[WeatherPopup] Response status:', response.status);
             if (!response.ok) throw new Error(`Failed to fetch weather data: ${response.status}`);
 
             const result = await response.json();
-            console.log('[WeatherPopup] Raw API response:', result);
 
             // Extract data from the nested response structure
             const data = result.success && result.data ? result.data : result;
-            console.log('[WeatherPopup] Extracted data:', data);
 
             this.weatherData = data;
             this.lastFetch = Date.now();
@@ -290,10 +285,7 @@ class WeatherPopup {
 
             return data;
         } catch (error) {
-            console.error('[WeatherPopup] Fetch error:', error.message);
-            console.error('[WeatherPopup] API URL was:', `${this.apiUrl}/current`);
-            console.error('[WeatherPopup] Current location:', window.location.href);
-            console.error('[WeatherPopup] Error details:', error, error.stack);
+            console.error('Weather fetch error:', error);
 
             // Try to load from local storage
             const cachedData = this.loadFromLocalStorage('weatherData');
