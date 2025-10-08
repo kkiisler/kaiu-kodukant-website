@@ -3,8 +3,8 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
-# Install build dependencies (for better-sqlite3)
-RUN apk add --no-cache python3 make g++
+# Install build dependencies (for better-sqlite3) and timezone data
+RUN apk add --no-cache python3 make g++ tzdata
 
 # Copy package files
 COPY api/package.json ./
@@ -12,7 +12,7 @@ COPY api/package.json ./
 # Install dependencies (using npm install since we don't have package-lock.json)
 RUN npm install --omit=dev
 
-# Remove build dependencies to reduce image size
+# Remove build dependencies to reduce image size (keep tzdata)
 RUN apk del python3 make g++
 
 # Copy application code
