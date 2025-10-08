@@ -40,6 +40,7 @@ services:
     container_name: kaiumtu-api
     restart: unless-stopped
     environment:
+      - TZ=Europe/Tallinn
       - NODE_ENV=production
       - PORT=3000
       - DATABASE_PATH=/data/forms.db
@@ -61,6 +62,13 @@ services:
       - CONTACT_SPREADSHEET_ID=${CONTACT_SPREADSHEET_ID}
       - GOOGLE_SERVICE_ACCOUNT=${GOOGLE_SERVICE_ACCOUNT}
       - DATA_RETENTION_DAYS=${DATA_RETENTION_DAYS:-0}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - OPENAI_TEMPERATURE=${OPENAI_TEMPERATURE:-0.7}
+      - OPENAI_MAX_TOKENS=${OPENAI_MAX_TOKENS:-200}
+      - WEATHER_UPDATE_INTERVAL=${WEATHER_UPDATE_INTERVAL:-14400}
+      - WEATHER_LOCATION_COORDS=${WEATHER_LOCATION_COORDS:-59.0106;25.0597}
+      - WEATHER_LOCATION_NAME=${WEATHER_LOCATION_NAME:-Kaiu, Raplamaa}
     volumes:
       - api_data:/data
     networks:
