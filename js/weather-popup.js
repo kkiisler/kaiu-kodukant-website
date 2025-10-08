@@ -398,7 +398,7 @@ class WeatherPopup {
             document.getElementById('weather-blurb').innerHTML = `
                 <div class="weather-loading">
                     <div class="spinner"></div>
-                    <span>Laadin ilmateateid...</span>
+                    <span>Laen ilmateate...</span>
                 </div>
             `;
 
