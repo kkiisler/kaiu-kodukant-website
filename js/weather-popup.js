@@ -267,7 +267,11 @@ class WeatherPopup {
             const response = await fetch(`${this.apiUrl}/current`);
             if (!response.ok) throw new Error('Failed to fetch weather data');
 
-            const data = await response.json();
+            const result = await response.json();
+
+            // Extract data from the nested response structure
+            const data = result.success && result.data ? result.data : result;
+
             this.weatherData = data;
             this.lastFetch = Date.now();
 
@@ -306,7 +310,13 @@ class WeatherPopup {
         // Update weather icon
         const iconElement = document.getElementById('weather-icon');
         if (iconElement) {
-            iconElement.textContent = this.getWeatherEmoji(data.icon || data.conditions);
+            // If icon is already an emoji, use it directly
+            if (data.icon && (data.icon.includes('️') || data.icon.includes('☀') || data.icon.includes('☁') ||
+                data.icon.includes('🌧') || data.icon.includes('❄') || data.icon.includes('⛅'))) {
+                iconElement.textContent = data.icon;
+            } else {
+                iconElement.textContent = this.getWeatherEmoji(data.icon || data.conditions);
+            }
         }
 
         // Update blurb text
@@ -495,7 +505,14 @@ class WeatherPopup {
         }
 
         if (this.weatherData) {
-            icon.textContent = this.getWeatherEmoji(this.weatherData.icon || this.weatherData.conditions);
+            // If icon is already an emoji, use it directly
+            if (this.weatherData.icon && (this.weatherData.icon.includes('️') || this.weatherData.icon.includes('☀') ||
+                this.weatherData.icon.includes('☁') || this.weatherData.icon.includes('🌧') ||
+                this.weatherData.icon.includes('❄') || this.weatherData.icon.includes('⛅'))) {
+                icon.textContent = this.weatherData.icon;
+            } else {
+                icon.textContent = this.getWeatherEmoji(this.weatherData.icon || this.weatherData.conditions);
+            }
         }
     }
 }
