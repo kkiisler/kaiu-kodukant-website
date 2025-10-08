@@ -105,6 +105,9 @@ class AIBlurbGenerator {
       // All retries failed
       console.error('Failed to generate blurb after all retries:', lastError);
       throw lastError;
+    } catch (error) {
+      console.error('Error in generateBlurb:', error);
+      throw error;
     }
   }
 
