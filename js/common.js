@@ -133,6 +133,9 @@ function loadFooter() {
         })
         .then(html => {
             footerPlaceholder.innerHTML = html;
+
+            // Initialize weather popup if available
+            initializeWeatherPopup();
         })
         .catch(error => {
             console.error('Error loading footer component:', error);
@@ -145,4 +148,43 @@ function loadFooter() {
                 </footer>
             `;
         });
+}
+
+/**
+ * Initialize the weather popup functionality
+ */
+function initializeWeatherPopup() {
+    // Load weather popup script if not already loaded
+    if (!window.WeatherPopup && !document.getElementById('weather-popup-script')) {
+        const script = document.createElement('script');
+        script.id = 'weather-popup-script';
+        script.src = '/js/weather-popup.js';
+        script.onload = function() {
+            // Setup click handler for weather trigger after script loads
+            setupWeatherTrigger();
+        };
+        document.head.appendChild(script);
+    } else {
+        // Script already loaded, just setup the trigger
+        setupWeatherTrigger();
+    }
+}
+
+/**
+ * Setup click handler for the weather trigger in footer
+ */
+function setupWeatherTrigger() {
+    const trigger = document.getElementById('weather-trigger');
+    if (trigger && window.weatherPopup) {
+        trigger.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.weatherPopup.toggle();
+        });
+
+        // Update the trigger icon based on current weather
+        if (window.weatherPopup.updateFooterTriggerIcon) {
+            window.weatherPopup.updateFooterTriggerIcon();
+        }
+    }
 }
