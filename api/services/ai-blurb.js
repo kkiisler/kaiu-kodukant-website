@@ -38,40 +38,73 @@ class AIBlurbGenerator {
       // Prepare the prompt
       const userPrompt = this.buildUserPrompt(weatherData, previousBlurbs);
 
-      // Call OpenAI API
-      const completion = await this.openai.chat.completions.create({
-        model: this.model,
-        messages: [
-          {
-            role: 'system',
-            content: this.getSystemPrompt()
-          },
-          {
-            role: 'user',
-            content: userPrompt
+      // Call OpenAI API with retry logic
+      let lastError = null;
+      const maxRetries = 3;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const completion = await this.openai.chat.completions.create({
+            model: this.model,
+            messages: [
+              {
+                role: 'system',
+                content: this.getSystemPrompt()
+              },
+              {
+                role: 'user',
+                content: userPrompt
+              }
+            ],
+            temperature: this.temperature,
+            max_tokens: this.maxTokens
+          });
+
+          const blurbText = completion.choices[0].message.content.trim();
+          const usage = completion.usage;
+
+          return {
+            blurb_text: blurbText,
+            generation_model: this.model,
+            generation_tokens: usage ? usage.total_tokens : null,
+            weather_data: weatherData,
+            temperature: weatherData.current?.temperature || null,
+            conditions: weatherData.current?.phenomenon || null,
+            wind_speed: weatherData.current?.windSpeed || null,
+            wind_direction: weatherData.current?.windDirection || null,
+            precipitation: weatherData.current?.precipitation || null
+          };
+        } catch (error) {
+          lastError = error;
+
+          // Check for rate limit error (429)
+          if (error.status === 429 || error.response?.status === 429) {
+            const delay = (attempt + 1) * 10000; // 10s, 20s, 30s
+            console.warn(`OpenAI rate limited, waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
           }
-        ],
-        temperature: this.temperature,
-        max_tokens: this.maxTokens
-      });
 
-      const blurbText = completion.choices[0].message.content.trim();
-      const usage = completion.usage;
+          // Check if error is retryable
+          const isRetryable = error.status >= 500 || // Server error
+                            error.code === 'ECONNABORTED' || // Timeout
+                            error.code === 'ENOTFOUND' || // DNS error
+                            error.code === 'ECONNREFUSED'; // Connection refused
 
-      return {
-        blurb_text: blurbText,
-        generation_model: this.model,
-        generation_tokens: usage ? usage.total_tokens : null,
-        weather_data: weatherData,
-        temperature: weatherData.current?.temperature || null,
-        conditions: weatherData.current?.phenomenon || null,
-        wind_speed: weatherData.current?.windSpeed || null,
-        wind_direction: weatherData.current?.windDirection || null,
-        precipitation: weatherData.current?.precipitation || null
-      };
-    } catch (error) {
-      console.error('Error generating blurb:', error);
-      throw error;
+          if (isRetryable && attempt < maxRetries - 1) {
+            const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+            console.warn(`OpenAI API attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          } else {
+            // Non-retryable error or last attempt
+            console.error(`OpenAI API error on attempt ${attempt + 1}:`, error.message || error);
+          }
+        }
+      }
+
+      // All retries failed
+      console.error('Failed to generate blurb after all retries:', lastError);
+      throw lastError;
     }
   }
 

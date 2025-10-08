@@ -11,11 +11,12 @@ class WeatherService {
   }
 
   /**
-   * Get weather forecast for Kaiu
+   * Get weather forecast for Kaiu with retry logic
    * @param {string} lang - Language code (et, en, ru) - default: et
+   * @param {number} retries - Number of retries (default: 3)
    * @returns {Object} Weather forecast data or null if error
    */
-  async getForecast(lang = 'et') {
+  async getForecast(lang = 'et', retries = 3) {
     const url = `${this.BASE_URL}/wp-content/themes/ilm2020/meteogram.php`;
 
     const params = {
@@ -23,29 +24,66 @@ class WeatherService {
       lang: lang
     };
 
-    try {
-      const response = await axios.get(url, {
-        params,
-        timeout: 10000,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; KaiuKodukant/1.0)',
-          'Accept': 'application/json, text/javascript, */*; q=0.01',
-          'Accept-Language': 'et,en;q=0.9'
+    let lastError = null;
+
+    // Retry with exponential backoff
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const response = await axios.get(url, {
+          params,
+          timeout: 10000 + (attempt * 5000), // Increase timeout on retries
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; KaiuKodukant/1.0)',
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+            'Accept-Language': 'et,en;q=0.9'
+          }
+        });
+
+        // Success - return data
+        return response.data;
+      } catch (error) {
+        lastError = error;
+
+        // Check if it's a rate limit error (429)
+        if (error.response && error.response.status === 429) {
+          console.warn(`Rate limited on attempt ${attempt + 1}, waiting longer...`);
+          await this.sleep((attempt + 1) * 10000); // Wait 10, 20, 30 seconds
+          continue;
         }
-      });
 
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching forecast:', error.message);
+        // Check if it's a temporary error worth retrying
+        const isRetryable = !error.response || // Network error
+                          error.response.status >= 500 || // Server error
+                          error.code === 'ECONNABORTED' || // Timeout
+                          error.code === 'ENOTFOUND' || // DNS error
+                          error.code === 'ECONNREFUSED'; // Connection refused
 
-      // Log more details for debugging
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
+        if (isRetryable && attempt < retries - 1) {
+          const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+          console.warn(`Weather API attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
+          await this.sleep(delay);
+        } else {
+          // Non-retryable error or last attempt
+          console.error(`Weather API error on attempt ${attempt + 1}:`, error.message);
+          if (error.response) {
+            console.error('Response status:', error.response.status);
+            console.error('Response data:', error.response.data);
+          }
+        }
       }
-
-      return null;
     }
+
+    // All retries failed
+    console.error(`Failed to fetch weather after ${retries} attempts`);
+    return null;
+  }
+
+  /**
+   * Sleep helper for retry delays
+   * @param {number} ms - Milliseconds to sleep
+   */
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
