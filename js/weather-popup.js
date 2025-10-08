@@ -5,7 +5,11 @@
 
 class WeatherPopup {
     constructor() {
-        this.apiUrl = 'https://api.kaiukodukant.ee/api/v1/weather';
+        // Use the API URL from config if available, otherwise use direct URL
+        // This ensures consistency with other API calls and proper CORS handling
+        this.apiUrl = window.API_BASE_URL ?
+            `${window.API_BASE_URL}/api/v1/weather` :
+            'https://api.kaiukodukant.ee/api/v1/weather';
         this.popup = null;
         this.isVisible = false;
         this.lastFetch = null;
@@ -264,13 +268,18 @@ class WeatherPopup {
 
     async fetchWeatherData() {
         try {
+            console.log('[WeatherPopup] Fetching weather data from:', `${this.apiUrl}/current`);
             const response = await fetch(`${this.apiUrl}/current`);
-            if (!response.ok) throw new Error('Failed to fetch weather data');
+
+            console.log('[WeatherPopup] Response status:', response.status);
+            if (!response.ok) throw new Error(`Failed to fetch weather data: ${response.status}`);
 
             const result = await response.json();
+            console.log('[WeatherPopup] Raw API response:', result);
 
             // Extract data from the nested response structure
             const data = result.success && result.data ? result.data : result;
+            console.log('[WeatherPopup] Extracted data:', data);
 
             this.weatherData = data;
             this.lastFetch = Date.now();
@@ -281,7 +290,10 @@ class WeatherPopup {
 
             return data;
         } catch (error) {
-            console.error('Weather fetch error:', error);
+            console.error('[WeatherPopup] Fetch error:', error.message);
+            console.error('[WeatherPopup] API URL was:', `${this.apiUrl}/current`);
+            console.error('[WeatherPopup] Current location:', window.location.href);
+            console.error('[WeatherPopup] Error details:', error, error.stack);
 
             // Try to load from local storage
             const cachedData = this.loadFromLocalStorage('weatherData');
