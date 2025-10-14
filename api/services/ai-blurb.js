@@ -146,16 +146,28 @@ VÄLJUND: tagasta ÜKS AINUKE ilmakirjutis (lihttekst), valmis kuvamiseks; MITTE
    * @returns {string} User prompt
    */
   buildUserPrompt(weatherData, previousBlurbs) {
+    // Get current time in Estonian timezone
+    const now = new Date();
+    const estonianTime = now.toLocaleString('et-EE', {
+      timeZone: 'Europe/Tallinn',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+
     const context = {
       location: 'Kaiu, Raplamaa',
       forecast_json: weatherData,
       previous_blurbs: previousBlurbs,
-      now_iso: new Date().toISOString()
+      now_estonian: estonianTime
     };
 
     let prompt = `Kirjuta ilmateade järgmiste andmete põhjal:\n\n`;
     prompt += `ASUKOHT: ${context.location}\n`;
-    prompt += `PRAEGUNE AEG: ${context.now_iso}\n\n`;
+    prompt += `PRAEGUNE AEG (Eesti aeg): ${context.now_estonian}\n\n`;
 
     if (weatherData.current) {
       prompt += `HETKE ILM:\n`;
