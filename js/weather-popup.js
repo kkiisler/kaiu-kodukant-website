@@ -370,7 +370,9 @@ class WeatherPopup {
     }
 
     formatTimestamp(timestamp) {
-        const date = new Date(timestamp);
+        // Parse timestamp as UTC by ensuring it has 'Z' suffix
+        const utcTimestamp = timestamp.includes('Z') ? timestamp : timestamp + 'Z';
+        const date = new Date(utcTimestamp);
         const now = new Date();
         const diffMs = now - date;
         const diffMins = Math.floor(diffMs / 60000);
