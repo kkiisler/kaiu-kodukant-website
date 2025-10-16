@@ -354,6 +354,34 @@ class GallerySyncService {
       const albumsMetadata = this.generateAlbumsMetadata(albumsData);
       await s3Upload.uploadJSON('gallery/albums.json', albumsMetadata);
 
+      // Upload individual album JSON files with full photo data
+      for (const album of albumsData) {
+        const albumData = {
+          id: album.id,
+          name: album.name,
+          createdTime: album.createdTime,
+          modifiedTime: album.modifiedTime,
+          photoCount: album.photos.length,
+          photos: album.photos.map(photo => ({
+            id: photo.id,
+            name: photo.name,
+            // S3 image URLs
+            thumbnailUrl: `https://s3.pilw.io/kaiugalerii/images/${photo.id}-thumbnail.jpg`,
+            mediumUrl: `https://s3.pilw.io/kaiugalerii/images/${photo.id}-medium.jpg`,
+            largeUrl: `https://s3.pilw.io/kaiugalerii/images/${photo.id}-large.jpg`,
+            createdTime: photo.createdTime,
+            modifiedTime: photo.modifiedTime
+          })),
+          metadata: {
+            lastSync: new Date().toISOString(),
+            source: 'google-drive-api',
+            version: '1.0.0'
+          }
+        };
+        await s3Upload.uploadJSON(`gallery/albums/${album.id}.json`, albumData);
+        console.log(`✓ Uploaded album data for: ${album.name}`);
+      }
+
       // Update version file
       await s3Upload.updateVersionFile('gallery');
 
