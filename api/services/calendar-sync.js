@@ -88,7 +88,7 @@ class CalendarSyncService {
       // Format for FullCalendar
       const formattedEvent = {
         id: event.id,
-        title: event.htmlLink ? `<a href="${event.htmlLink}" target="_blank">${event.summary}</a>` : event.summary,
+        title: event.summary || 'Unnamed Event',
         start: startStr,
         end: endStr,
         allDay: isAllDay,
