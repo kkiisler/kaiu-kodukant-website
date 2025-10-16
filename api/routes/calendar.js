@@ -4,14 +4,14 @@
 const express = require('express');
 const router = express.Router();
 const calendarSync = require('../services/calendar-sync');
-const { authenticate } = require('../middleware/auth');
+const { authenticateAdmin } = require('../middleware/auth');
 
 /**
- * GET /api/calendar/sync
+ * POST /api/calendar/sync
  * Trigger manual calendar sync
  * Requires authentication
  */
-router.post('/sync', authenticate, async (req, res) => {
+router.post('/sync', authenticateAdmin, async (req, res) => {
   try {
     console.log('📅 Manual calendar sync requested');
 
