@@ -354,7 +354,7 @@
 
             document.getElementById('calendarLastSync').textContent =
                 data.lastSync ? formatTime(data.lastSync) : 'Teadmata';
-            document.getElementById('calendarEvents').textContent = data.eventsCount || 0;
+            document.getElementById('calendarEvents').textContent = data.eventCount || 0;
 
             // Calculate next sync time
             if (data.lastSync) {
@@ -376,21 +376,23 @@
         function updateGalleryStatus(data) {
             if (!data) return;
 
+            // Map idle status to ok for display
+            const displayStatus = data.status === 'idle' ? 'ok' : data.status;
             const badge = document.getElementById('galleryStatusBadge');
-            badge.textContent = data.status === 'ok' ? '✅ OK' :
-                               data.status === 'syncing' ? '🔄 Sünkroonimine' :
-                               data.status === 'error' ? '❌ Viga' : '❓ Teadmata';
+            badge.textContent = displayStatus === 'ok' ? '✅ OK' :
+                               displayStatus === 'syncing' ? '🔄 Sünkroonimine' :
+                               displayStatus === 'error' ? '❌ Viga' : '❓ Teadmata';
             badge.className = `px-2 py-1 text-xs font-medium rounded-full ${
-                data.status === 'ok' ? 'bg-green-100 text-green-800' :
-                data.status === 'syncing' ? 'bg-blue-100 text-blue-800' :
-                data.status === 'error' ? 'bg-red-100 text-red-800' :
+                displayStatus === 'ok' ? 'bg-green-100 text-green-800' :
+                displayStatus === 'syncing' ? 'bg-blue-100 text-blue-800' :
+                displayStatus === 'error' ? 'bg-red-100 text-red-800' :
                 'bg-gray-100 text-gray-800'
             }`;
 
             document.getElementById('galleryLastSync').textContent =
                 data.lastSync ? formatTime(data.lastSync) : 'Teadmata';
-            document.getElementById('galleryAlbums').textContent = data.albumsCount || 0;
-            document.getElementById('galleryPhotos').textContent = data.photosCount || 0;
+            document.getElementById('galleryAlbums').textContent = data.totalAlbums || 0;
+            document.getElementById('galleryPhotos').textContent = data.totalPhotos || 0;
 
             // Calculate next sync time
             if (data.lastSync) {
