@@ -452,8 +452,8 @@ class GallerySyncService {
     const photoCountStmt = db.prepare('SELECT COUNT(*) as count FROM gallery_photos');
     const photoCount = photoCountStmt.get().count;
 
-    // Get actual number of albums (unique album count)
-    const albumCountStmt = db.prepare('SELECT COUNT(DISTINCT album_id) as count FROM gallery_albums');
+    // Get actual number of albums (unique album count from photos table)
+    const albumCountStmt = db.prepare('SELECT COUNT(DISTINCT album_id) as count FROM gallery_photos');
     const albumCount = albumCountStmt.get().count;
 
     return {

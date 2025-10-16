@@ -130,7 +130,16 @@ Key configuration values:
 3. Verify the implementation meets requirements
 4. Write comprehensive commit messages describing all changes
 5. Push to GitHub: `git push origin main`
-6. Deploy to production via SSH when ready
+6. Deploy to production: **ALWAYS use the deployment script**:
+   ```bash
+   ssh kkiisler@kaiukodukant.ee "cd /home/kkiisler/kaiu-kodukant-website && git pull && ./docker/deploy.sh"
+   ```
+
+**⚠️ IMPORTANT DEPLOYMENT RULE**:
+- **NEVER** use `docker compose restart` or similar manual commands for deployment
+- **ALWAYS** use the `./docker/deploy.sh` script for all deployments
+- The deploy script handles proper container rebuilding, environment variables, and cleanup
+- This ensures consistent deployments and prevents configuration issues
 
 **Testing Protocol**:
 - After implementing planned features, always test the results
