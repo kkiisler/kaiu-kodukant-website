@@ -18,6 +18,7 @@ const emailService = require('./services/email');
 const weatherService = require('./services/weather');
 const aiBlurbGenerator = require('./services/ai-blurb');
 const calendarSync = require('./services/calendar-sync');
+const gallerySync = require('./services/gallery-sync');
 
 // Import routes
 const formsRouter = require('./routes/forms');
@@ -25,6 +26,7 @@ const adminRouter = require('./routes/admin');
 const monitoringRouter = require('./routes/monitoring');
 const weatherRouter = require('./routes/weather');
 const calendarRouter = require('./routes/calendar');
+const galleryRouter = require('./routes/gallery');
 
 // Import middleware
 const { authenticateAdmin } = require('./middleware/auth');
@@ -106,6 +108,7 @@ app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/monitoring', authenticateAdmin, monitoringRouter);
 app.use('/api/v1/weather', weatherRouter);
 app.use('/api/v1/calendar', calendarRouter);
+app.use('/api/v1/gallery', galleryRouter);
 
 // Admin dashboard HTML pages (protected)
 app.get('/admin/login', (req, res) => {
@@ -225,6 +228,43 @@ database.initialize()
         .catch(error => console.error('❌ Initial calendar sync failed:', error.message));
     } else {
       console.warn('⚠️ Google API not configured - calendar sync disabled');
+    }
+
+    // Set up gallery sync cron job
+    if (config.GOOGLE_API_KEY && config.GOOGLE_DRIVE_FOLDER_ID) {
+      // Run every 15 minutes to sync gallery photos
+      cron.schedule('*/15 * * * *', async () => {
+        console.log('🖼️  Running scheduled gallery sync...');
+        try {
+          const result = await gallerySync.syncGallery();
+          if (result.skipped) {
+            console.log('⏭️  Gallery sync skipped:', result.reason);
+          } else {
+            console.log('✅ Gallery sync completed:', result.photosProcessed, 'photos processed');
+          }
+        } catch (error) {
+          console.error('❌ Gallery sync failed:', error.message);
+        }
+      }, {
+        timezone: 'Europe/Tallinn'
+      });
+      console.log('✅ Gallery sync cron job scheduled (every 15 minutes)');
+
+      // Run initial sync on startup (in background to not block server start)
+      setTimeout(() => {
+        console.log('🖼️  Running initial gallery sync...');
+        gallerySync.syncGallery()
+          .then(result => {
+            if (result.skipped) {
+              console.log('⏭️  Initial gallery sync skipped:', result.reason);
+            } else {
+              console.log('✅ Initial gallery sync completed:', result.photosProcessed, 'photos processed');
+            }
+          })
+          .catch(error => console.error('❌ Initial gallery sync failed:', error.message));
+      }, 10000); // Wait 10 seconds after server start
+    } else {
+      console.warn('⚠️ Google Drive not configured - gallery sync disabled');
     }
 
     // Start server

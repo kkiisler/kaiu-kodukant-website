@@ -116,6 +116,37 @@ const createTables = () => {
       expires_at DATETIME
     )
   `);
+
+  // Gallery sync state table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS gallery_sync_state (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      last_sync_at DATETIME,
+      last_page_token TEXT,
+      total_photos_processed INTEGER DEFAULT 0,
+      total_albums_processed INTEGER DEFAULT 0,
+      sync_status TEXT DEFAULT 'idle',
+      error_message TEXT,
+      started_at DATETIME,
+      completed_at DATETIME
+    )
+  `);
+
+  // Gallery photos table (tracks processed photos)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS gallery_photos (
+      file_id TEXT PRIMARY KEY,
+      file_name TEXT NOT NULL,
+      album_id TEXT,
+      album_name TEXT,
+      processed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      thumbnail_uploaded BOOLEAN DEFAULT 0,
+      medium_uploaded BOOLEAN DEFAULT 0,
+      large_uploaded BOOLEAN DEFAULT 0,
+      original_size INTEGER,
+      modified_time DATETIME
+    )
+  `);
 };
 
 const createIndexes = () => {
@@ -130,6 +161,9 @@ const createIndexes = () => {
     CREATE INDEX IF NOT EXISTS idx_blurbs_created ON weather_blurbs(created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_cache_expires ON weather_cache(expires_at);
     CREATE INDEX IF NOT EXISTS idx_cache_location ON weather_cache(location);
+    CREATE INDEX IF NOT EXISTS idx_gallery_photos_album ON gallery_photos(album_id);
+    CREATE INDEX IF NOT EXISTS idx_gallery_photos_processed ON gallery_photos(processed_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_gallery_sync_status ON gallery_sync_state(sync_status);
   `);
 };
 
@@ -542,8 +576,17 @@ const runMaintenance = () => {
   }
 };
 
+// Get database instance (for advanced operations)
+const getDb = () => {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  return db;
+};
+
 module.exports = {
   initialize,
+  getDb,
   addMembershipSubmission,
   addContactSubmission,
   getMembershipSubmissions,
