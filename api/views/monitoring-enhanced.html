@@ -59,6 +59,17 @@
                         <span class="text-gray-600">Sündmusi:</span>
                         <span id="calendarEvents">-</span>
                     </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Järgmine sync:</span>
+                        <span id="calendarNextSync" class="font-mono text-sm">-</span>
+                    </div>
+                </div>
+
+                <!-- Manual Sync Button -->
+                <div class="mt-4">
+                    <button onclick="triggerCalendarSync()" id="calendarSyncBtn" class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                        🔄 Käivita käsitsi sync
+                    </button>
                 </div>
 
                 <!-- Stats -->
@@ -105,6 +116,17 @@
                         <span class="text-gray-600">Fotosid:</span>
                         <span id="galleryPhotos">-</span>
                     </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Järgmine sync:</span>
+                        <span id="galleryNextSync" class="font-mono text-sm">-</span>
+                    </div>
+                </div>
+
+                <!-- Manual Sync Button -->
+                <div class="mt-4">
+                    <button onclick="triggerGallerySync()" id="gallerySyncBtn" class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                        🔄 Käivita käsitsi sync
+                    </button>
                 </div>
 
                 <!-- Stats -->
@@ -267,16 +289,38 @@
             isLoading = true;
 
             try {
-                const response = await fetch(`/api/v1/monitoring/status?t=${Date.now()}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Cache-Control': 'no-cache'
-                    }
-                });
+                // Load calendar and gallery status from new endpoints
+                const [calendarResponse, galleryResponse, monitoringResponse] = await Promise.all([
+                    fetch(`/api/calendar/status?t=${Date.now()}`, {
+                        headers: {
+                            'Cache-Control': 'no-cache'
+                        }
+                    }),
+                    fetch(`/api/gallery/status?t=${Date.now()}`, {
+                        headers: {
+                            'Cache-Control': 'no-cache'
+                        }
+                    }),
+                    fetch(`/api/v1/monitoring/status?t=${Date.now()}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Cache-Control': 'no-cache'
+                        }
+                    })
+                ]);
 
-                if (response.ok) {
-                    const data = await response.json();
-                    updateStatus(data);
+                if (calendarResponse.ok) {
+                    const calendarData = await calendarResponse.json();
+                    updateCalendarStatus(calendarData.data);
+                }
+
+                if (galleryResponse.ok) {
+                    const galleryData = await galleryResponse.json();
+                    updateGalleryStatus(galleryData.data);
+                }
+
+                if (monitoringResponse.ok) {
+                    const data = await monitoringResponse.json();
                     updateStats(data.stats);
                     updateTimelines(data.history);
                 }
@@ -293,44 +337,143 @@
             }
         }
 
-        function updateStatus(data) {
-            // Calendar status
-            if (data.calendar) {
-                const status = data.calendar.status;
-                const badge = document.getElementById('calendarStatusBadge');
-                badge.textContent = status === 'ok' ? '✅ OK' :
-                                   status === 'warning' ? '⚠️ Hoiatus' :
-                                   status === 'error' ? '❌ Viga' : '❓ Teadmata';
-                badge.className = `px-2 py-1 text-xs font-medium rounded-full ${
-                    status === 'ok' ? 'bg-green-100 text-green-800' :
-                    status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                    status === 'error' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                }`;
+        function updateCalendarStatus(data) {
+            if (!data) return;
 
-                document.getElementById('calendarLastSync').textContent =
-                    data.calendar.lastSync ? formatTime(data.calendar.lastSync) : 'Teadmata';
-                document.getElementById('calendarEvents').textContent = data.calendar.eventsCount || 0;
+            const status = data.isStale ? 'error' : (data.synced ? 'ok' : 'warning');
+            const badge = document.getElementById('calendarStatusBadge');
+            badge.textContent = status === 'ok' ? '✅ OK' :
+                               status === 'warning' ? '⚠️ Hoiatus' :
+                               status === 'error' ? '❌ Viga' : '❓ Teadmata';
+            badge.className = `px-2 py-1 text-xs font-medium rounded-full ${
+                status === 'ok' ? 'bg-green-100 text-green-800' :
+                status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                status === 'error' ? 'bg-red-100 text-red-800' :
+                'bg-gray-100 text-gray-800'
+            }`;
+
+            document.getElementById('calendarLastSync').textContent =
+                data.lastSync ? formatTime(data.lastSync) : 'Teadmata';
+            document.getElementById('calendarEvents').textContent = data.eventsCount || 0;
+
+            // Calculate next sync time
+            if (data.lastSync) {
+                const lastSyncTime = new Date(data.lastSync);
+                const nextSyncTime = new Date(lastSyncTime.getTime() + 15 * 60 * 1000); // 15 minutes interval
+                const now = new Date();
+                if (nextSyncTime > now) {
+                    const diff = nextSyncTime - now;
+                    const minutes = Math.floor(diff / 60000);
+                    document.getElementById('calendarNextSync').textContent = `${minutes} min pärast`;
+                } else {
+                    document.getElementById('calendarNextSync').textContent = 'Kohe';
+                }
+            } else {
+                document.getElementById('calendarNextSync').textContent = '-';
             }
+        }
 
-            // Gallery status
-            if (data.gallery) {
-                const status = data.gallery.status;
-                const badge = document.getElementById('galleryStatusBadge');
-                badge.textContent = status === 'ok' ? '✅ OK' :
-                                   status === 'warning' ? '⚠️ Hoiatus' :
-                                   status === 'error' ? '❌ Viga' : '❓ Teadmata';
-                badge.className = `px-2 py-1 text-xs font-medium rounded-full ${
-                    status === 'ok' ? 'bg-green-100 text-green-800' :
-                    status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                    status === 'error' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                }`;
+        function updateGalleryStatus(data) {
+            if (!data) return;
 
-                document.getElementById('galleryLastSync').textContent =
-                    data.gallery.lastSync ? formatTime(data.gallery.lastSync) : 'Teadmata';
-                document.getElementById('galleryAlbums').textContent = data.gallery.albumsCount || 0;
-                document.getElementById('galleryPhotos').textContent = data.gallery.photosCount || 0;
+            const badge = document.getElementById('galleryStatusBadge');
+            badge.textContent = data.status === 'ok' ? '✅ OK' :
+                               data.status === 'syncing' ? '🔄 Sünkroonimine' :
+                               data.status === 'error' ? '❌ Viga' : '❓ Teadmata';
+            badge.className = `px-2 py-1 text-xs font-medium rounded-full ${
+                data.status === 'ok' ? 'bg-green-100 text-green-800' :
+                data.status === 'syncing' ? 'bg-blue-100 text-blue-800' :
+                data.status === 'error' ? 'bg-red-100 text-red-800' :
+                'bg-gray-100 text-gray-800'
+            }`;
+
+            document.getElementById('galleryLastSync').textContent =
+                data.lastSync ? formatTime(data.lastSync) : 'Teadmata';
+            document.getElementById('galleryAlbums').textContent = data.albumsCount || 0;
+            document.getElementById('galleryPhotos').textContent = data.photosCount || 0;
+
+            // Calculate next sync time
+            if (data.lastSync) {
+                const lastSyncTime = new Date(data.lastSync);
+                const nextSyncTime = new Date(lastSyncTime.getTime() + 60 * 60 * 1000); // 1 hour interval
+                const now = new Date();
+                if (nextSyncTime > now) {
+                    const diff = nextSyncTime - now;
+                    const minutes = Math.floor(diff / 60000);
+                    const hours = Math.floor(minutes / 60);
+                    const remainingMinutes = minutes % 60;
+                    if (hours > 0) {
+                        document.getElementById('galleryNextSync').textContent = `${hours}h ${remainingMinutes}m pärast`;
+                    } else {
+                        document.getElementById('galleryNextSync').textContent = `${remainingMinutes} min pärast`;
+                    }
+                } else {
+                    document.getElementById('galleryNextSync').textContent = 'Kohe';
+                }
+            } else {
+                document.getElementById('galleryNextSync').textContent = '-';
+            }
+        }
+
+        async function triggerCalendarSync() {
+            const button = document.getElementById('calendarSyncBtn');
+            button.disabled = true;
+            button.textContent = '⏳ Sünkroonimine...';
+
+            try {
+                const response = await fetch('/api/calendar/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert('Kalendri sync õnnestus!');
+                    await loadMonitoringData();
+                } else {
+                    alert('Viga: ' + (data.error || 'Sync ebaõnnestus'));
+                }
+            } catch (error) {
+                console.error('Error triggering calendar sync:', error);
+                alert('Viga kalendri sünkroonimisel');
+            } finally {
+                button.disabled = false;
+                button.textContent = '🔄 Käivita käsitsi sync';
+            }
+        }
+
+        async function triggerGallerySync() {
+            const button = document.getElementById('gallerySyncBtn');
+            button.disabled = true;
+            button.textContent = '⏳ Sünkroonimine...';
+
+            try {
+                const response = await fetch('/api/gallery/sync', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    alert('Galerii sync õnnestus!');
+                    await loadMonitoringData();
+                } else {
+                    alert('Viga: ' + (data.error || 'Sync ebaõnnestus'));
+                }
+            } catch (error) {
+                console.error('Error triggering gallery sync:', error);
+                alert('Viga galerii sünkroonimisel');
+            } finally {
+                button.disabled = false;
+                button.textContent = '🔄 Käivita käsitsi sync';
             }
         }
 
