@@ -48,4 +48,13 @@ module.exports = {
 
   // Data retention
   DATA_RETENTION_DAYS: parseInt(process.env.DATA_RETENTION_DAYS) || 0, // 0 = keep forever
+
+  // Google API Configuration (replaces Apps Script)
+  GOOGLE_API_KEY: process.env.GOOGLE_API_KEY || '',
+  GOOGLE_CALENDAR_ID: process.env.GOOGLE_CALENDAR_ID || '',
+  GOOGLE_DRIVE_FOLDER_ID: process.env.GOOGLE_DRIVE_FOLDER_ID || '',
+  CALENDAR_MONTHS_BACK: parseInt(process.env.CALENDAR_MONTHS_BACK) || 1,
+  CALENDAR_MONTHS_FORWARD: parseInt(process.env.CALENDAR_MONTHS_FORWARD) || 6,
+  GALLERY_BATCH_SIZE: parseInt(process.env.GALLERY_BATCH_SIZE) || 10,
+  GALLERY_MAX_RUNTIME: parseInt(process.env.GALLERY_MAX_RUNTIME) || 300, // seconds
 };

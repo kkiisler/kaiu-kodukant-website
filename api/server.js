@@ -17,12 +17,14 @@ const database = require('./services/database');
 const emailService = require('./services/email');
 const weatherService = require('./services/weather');
 const aiBlurbGenerator = require('./services/ai-blurb');
+const calendarSync = require('./services/calendar-sync');
 
 // Import routes
 const formsRouter = require('./routes/forms');
 const adminRouter = require('./routes/admin');
 const monitoringRouter = require('./routes/monitoring');
 const weatherRouter = require('./routes/weather');
+const calendarRouter = require('./routes/calendar');
 
 // Import middleware
 const { authenticateAdmin } = require('./middleware/auth');
@@ -103,6 +105,7 @@ app.use('/api/v1/submit', rateLimiter.formLimiter, formsRouter);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/monitoring', authenticateAdmin, monitoringRouter);
 app.use('/api/v1/weather', weatherRouter);
+app.use('/api/v1/calendar', calendarRouter);
 
 // Admin dashboard HTML pages (protected)
 app.get('/admin/login', (req, res) => {
@@ -197,6 +200,31 @@ database.initialize()
       console.log('✅ Weather cron job scheduled (every 4 hours)');
     } else {
       console.warn('⚠️ OpenAI API key not configured - weather blurbs disabled');
+    }
+
+    // Set up calendar sync cron job
+    if (config.GOOGLE_API_KEY && config.GOOGLE_CALENDAR_ID) {
+      // Run every 5 minutes to keep calendar data fresh
+      cron.schedule('*/5 * * * *', async () => {
+        console.log('📅 Running scheduled calendar sync...');
+        try {
+          const result = await calendarSync.syncCalendar();
+          console.log('✅ Calendar sync completed:', result.eventCount, 'events');
+        } catch (error) {
+          console.error('❌ Calendar sync failed:', error.message);
+        }
+      }, {
+        timezone: 'Europe/Tallinn'
+      });
+      console.log('✅ Calendar sync cron job scheduled (every 5 minutes)');
+
+      // Run initial sync on startup
+      console.log('📅 Running initial calendar sync...');
+      calendarSync.syncCalendar()
+        .then(result => console.log('✅ Initial calendar sync completed:', result.eventCount, 'events'))
+        .catch(error => console.error('❌ Initial calendar sync failed:', error.message));
+    } else {
+      console.warn('⚠️ Google API not configured - calendar sync disabled');
     }
 
     // Start server
