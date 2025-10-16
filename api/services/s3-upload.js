@@ -96,8 +96,18 @@ class S3UploadService {
     const url = `${this.endpoint}/${this.bucket}/${key}`;
     const path = `/${this.bucket}/${key}`;
 
-    // Convert data to string if it's an object
-    const payload = typeof data === 'string' ? data : JSON.stringify(data);
+    // Handle different data types
+    let payload;
+    if (Buffer.isBuffer(data)) {
+      // Keep binary data as-is
+      payload = data;
+    } else if (typeof data === 'string') {
+      // Keep string data as-is
+      payload = data;
+    } else {
+      // Convert objects to JSON
+      payload = JSON.stringify(data);
+    }
 
     const headers = {
       'Content-Type': contentType,
