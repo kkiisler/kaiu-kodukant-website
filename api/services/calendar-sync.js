@@ -5,6 +5,7 @@
 const { google } = require('googleapis');
 const config = require('../config');
 const s3Upload = require('./s3-upload');
+const syncHistory = require('./syncHistory');
 
 class CalendarSyncService {
   constructor() {
@@ -160,6 +161,13 @@ class CalendarSyncService {
 
       console.log(`✓ Calendar sync completed in ${duration}ms`);
 
+      // Record successful sync to history
+      await syncHistory.recordSyncEvent('calendar', {
+        status: 'success',
+        eventsCount: formattedEvents.length,
+        source: 'api-sync'
+      });
+
       return {
         success: true,
         eventCount: formattedEvents.length,
@@ -169,6 +177,13 @@ class CalendarSyncService {
     } catch (error) {
       const duration = Date.now() - startTime;
       console.error('✗ Calendar sync failed:', error.message);
+
+      // Record failed sync to history
+      await syncHistory.recordSyncEvent('calendar', {
+        status: 'error',
+        error: error.message,
+        source: 'api-sync'
+      });
 
       // Upload error log
       try {

@@ -8,6 +8,7 @@ const axios = require('axios');
 const config = require('../config');
 const s3Upload = require('./s3-upload');
 const database = require('./database');
+const syncHistory = require('./syncHistory');
 
 class GallerySyncService {
   constructor() {
@@ -406,6 +407,14 @@ class GallerySyncService {
 
       console.log(`✓ Gallery sync completed in ${duration}ms`);
 
+      // Record successful sync to history
+      await syncHistory.recordSyncEvent('gallery', {
+        status: 'success',
+        albumsCount: albums.length,
+        photosCount: totalProcessed,
+        source: 'api-sync'
+      });
+
       return {
         success: true,
         albumCount: albums.length,
@@ -417,6 +426,13 @@ class GallerySyncService {
     } catch (error) {
       const duration = Date.now() - startTime;
       console.error('✗ Gallery sync failed:', error.message);
+
+      // Record failed sync to history
+      await syncHistory.recordSyncEvent('gallery', {
+        status: 'error',
+        error: error.message,
+        source: 'api-sync'
+      });
 
       // Update state with error
       this.updateSyncState({

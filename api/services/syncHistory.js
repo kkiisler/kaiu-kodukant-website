@@ -140,7 +140,8 @@ async function checkAndRecordStatus() {
         }
 
         await recordSyncEvent('calendar', {
-          status: staleness < 30 ? 'success' : staleness < 60 ? 'warning' : 'error',
+          // Calendar syncs every 15 minutes, so use appropriate thresholds
+          status: staleness < 20 ? 'success' : staleness < 30 ? 'warning' : 'error',
           eventsCount,
           source: 'monitor'
         });
@@ -171,7 +172,8 @@ async function checkAndRecordStatus() {
         }
 
         await recordSyncEvent('gallery', {
-          status: staleness < 30 ? 'success' : staleness < 60 ? 'warning' : 'error',
+          // Gallery syncs every 60 minutes, so use appropriate thresholds
+          status: staleness < 75 ? 'success' : staleness < 90 ? 'warning' : 'error',
           albumsCount,
           photosCount,
           source: 'monitor'
