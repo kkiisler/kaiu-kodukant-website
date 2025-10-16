@@ -312,9 +312,9 @@ class GallerySyncService {
         const photos = await this.fetchPhotosFromAlbum(album.id);
         console.log(`  Found ${photos.length} photos`);
 
-        // Process photos in batches
+        // Process all photos in the album
         const processedPhotos = [];
-        for (let i = 0; i < photos.length && i < this.batchSize; i++) {
+        for (let i = 0; i < photos.length; i++) {
           const photo = photos[i];
           const result = await this.processPhoto(photo, album.id, album.name);
 
