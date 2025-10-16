@@ -291,12 +291,12 @@
             try {
                 // Load calendar and gallery status from new endpoints
                 const [calendarResponse, galleryResponse, monitoringResponse] = await Promise.all([
-                    fetch(`/api/calendar/status?t=${Date.now()}`, {
+                    fetch(`/api/v1/calendar/status?t=${Date.now()}`, {
                         headers: {
                             'Cache-Control': 'no-cache'
                         }
                     }),
-                    fetch(`/api/gallery/status?t=${Date.now()}`, {
+                    fetch(`/api/v1/gallery/status?t=${Date.now()}`, {
                         headers: {
                             'Cache-Control': 'no-cache'
                         }
@@ -421,7 +421,7 @@
             button.textContent = '⏳ Sünkroonimine...';
 
             try {
-                const response = await fetch('/api/calendar/sync', {
+                const response = await fetch('/api/v1/calendar/sync', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -452,7 +452,7 @@
             button.textContent = '⏳ Sünkroonimine...';
 
             try {
-                const response = await fetch('/api/gallery/sync', {
+                const response = await fetch('/api/v1/gallery/sync', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
