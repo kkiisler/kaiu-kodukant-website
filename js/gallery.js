@@ -95,18 +95,58 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadGalleryAlbums() {
-        // Build URL for Apps Script endpoint
-        const url = `${GOOGLE_APPS_SCRIPT_URL}?action=gallery`;
-        
+        // Try S3 first (new backend), fallback to Apps Script
+        const s3Url = 'https://s3.pilw.io/kaiugalerii/gallery/albums.json';
+
         // Show loading state
         albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galerii laadimine...</p>';
-        
-        console.log('Fetching gallery from:', url);
-        
+
+        console.log('Fetching gallery from S3:', s3Url);
+
+        // Use fetch API for S3
+        fetch(s3Url)
+            .then(response => {
+                if (!response.ok) throw new Error('S3 fetch failed');
+                return response.json();
+            })
+            .then(data => {
+                console.log('Gallery response from S3:', data);
+
+                if (data.albums && data.albums.length > 0) {
+                    console.log(`Loaded ${data.albums.length} albums from S3`);
+                    // Transform S3 format to frontend format
+                    const transformedAlbums = data.albums.map(album => ({
+                        id: album.id,
+                        title: album.name,
+                        date: new Date(album.createdTime).getFullYear().toString(),
+                        description: '',
+                        // Use S3 images instead of Google Drive
+                        coverImageUrl: album.coverPhoto ? `https://s3.pilw.io/kaiugalerii/images/${album.coverPhoto}-thumbnail.jpg` : '',
+                        coverPhotoId: album.coverPhoto,
+                        imageCount: album.photoCount,
+                        useS3: true  // Flag to indicate we should use S3 for photos too
+                    }));
+                    displayAlbums(transformedAlbums);
+                } else {
+                    albumGrid.innerHTML = '<p class="text-center text-text-secondary col-span-full">Galerii on hetkel tühi.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading from S3, trying Apps Script:', error);
+                loadGalleryFromAppsScript();
+            });
+    }
+
+    function loadGalleryFromAppsScript() {
+        // Fallback to Apps Script endpoint
+        const url = `${GOOGLE_APPS_SCRIPT_URL}?action=gallery`;
+
+        console.log('Fetching gallery from Apps Script:', url);
+
         // Use JSONP to avoid CORS issues
         jsonp(url, function(data) {
             console.log('Gallery response:', data);
-            
+
             if (data.status === 'success' && data.albums) {
                 console.log(`Loaded ${data.albums.length} albums${data.cached ? ' (cached)' : ''}`);
                 displayAlbums(data.albums);
@@ -176,29 +216,39 @@ document.addEventListener('DOMContentLoaded', function() {
             coverWrap.className = 'overflow-hidden aspect-square bg-gray-200';
             
             if (album.coverImageUrl) {
-                const fileId = (album.coverImageUrl.match(/id=([^&]+)/) || [])[1];
-                const coverThumb = fileId
-                    ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`
-                    : album.coverImageUrl;
-                const coverAlt = fileId
-                    ? `https://drive.google.com/uc?id=${fileId}&sz=w400`
-                    : '';
-
                 const img = document.createElement('img');
-                img.src = coverThumb;
+                img.src = album.coverImageUrl;
                 img.alt = album.title;
                 img.loading = 'lazy';
                 img.className = 'object-cover w-full h-full group-hover:scale-105 transition-transform duration-500';
-                img.dataset.alt = coverAlt;
-                img.addEventListener('error', function () {
-                    if (this.dataset.alt && this.dataset.triedAlt !== '1') {
-                        this.dataset.triedAlt = '1';
-                        this.src = this.dataset.alt;      // fallback to uc
-                    } else {
-                        this.style.display = 'none';
-                        this.parentElement.classList.add('bg-gradient-to-br','from-gray-200','to-gray-300');
-                    }
-                });
+
+                // For S3 images, try Google Drive as fallback
+                if (album.useS3 && album.coverPhotoId) {
+                    img.dataset.alt = `https://drive.google.com/thumbnail?id=${album.coverPhotoId}&sz=w400`;
+                    img.addEventListener('error', function () {
+                        if (this.dataset.alt && this.dataset.triedAlt !== '1') {
+                            this.dataset.triedAlt = '1';
+                            this.src = this.dataset.alt;  // fallback to Google Drive
+                        } else {
+                            this.style.display = 'none';
+                            this.parentElement.classList.add('bg-gradient-to-br','from-gray-200','to-gray-300');
+                        }
+                    });
+                } else {
+                    // Old Google Drive logic
+                    const fileId = (album.coverImageUrl.match(/id=([^&]+)/) || [])[1];
+                    const coverAlt = fileId ? `https://drive.google.com/uc?id=${fileId}&sz=w400` : '';
+                    img.dataset.alt = coverAlt;
+                    img.addEventListener('error', function () {
+                        if (this.dataset.alt && this.dataset.triedAlt !== '1') {
+                            this.dataset.triedAlt = '1';
+                            this.src = this.dataset.alt;      // fallback to uc
+                        } else {
+                            this.style.display = 'none';
+                            this.parentElement.classList.add('bg-gradient-to-br','from-gray-200','to-gray-300');
+                        }
+                    });
+                }
                 coverWrap.appendChild(img);
             } else {
                 coverWrap.innerHTML = `<div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
