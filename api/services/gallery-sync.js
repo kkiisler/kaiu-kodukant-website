@@ -469,6 +469,45 @@ class GallerySyncService {
     console.log('🔄 Manual gallery sync triggered');
     return this.syncGallery();
   }
+
+  /**
+   * Reset gallery database to force complete re-sync
+   * @returns {Object} Reset result
+   */
+  resetGallery() {
+    const db = database.getDb();
+
+    try {
+      // Delete all gallery photos to force re-upload
+      const deleteStmt = db.prepare('DELETE FROM gallery_photos');
+      const deleteResult = deleteStmt.run();
+
+      // Reset sync state
+      const resetStmt = db.prepare(`
+        UPDATE gallery_sync_state
+        SET total_photos_processed = 0,
+            total_albums_processed = 0,
+            last_sync_at = NULL,
+            sync_status = 'idle',
+            error_message = NULL
+      `);
+      resetStmt.run();
+
+      console.log(`✓ Gallery reset: ${deleteResult.changes} photos removed`);
+
+      return {
+        success: true,
+        photosDeleted: deleteResult.changes,
+        message: 'Gallery database reset. Next sync will re-process all photos.'
+      };
+    } catch (error) {
+      console.error('✗ Gallery reset failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 }
 
 // Export singleton instance

@@ -78,4 +78,36 @@ router.get('/health', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/gallery/reset
+ * Reset gallery database and force complete re-sync
+ * Requires admin authentication
+ */
+router.post('/reset', authenticateAdmin, async (req, res) => {
+  try {
+    // First reset the database
+    const resetResult = gallerySync.resetGallery();
+
+    if (!resetResult.success) {
+      return res.status(500).json(resetResult);
+    }
+
+    // Then trigger a new sync
+    const syncResult = await gallerySync.forceSync();
+
+    res.json({
+      success: true,
+      reset: resetResult,
+      sync: syncResult
+    });
+  } catch (error) {
+    console.error('Failed to reset gallery:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reset gallery',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
