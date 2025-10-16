@@ -449,14 +449,18 @@ class GallerySyncService {
     const db = database.getDb();
 
     // Get total photos count
-    const countStmt = db.prepare('SELECT COUNT(*) as count FROM gallery_photos');
-    const photoCount = countStmt.get().count;
+    const photoCountStmt = db.prepare('SELECT COUNT(*) as count FROM gallery_photos');
+    const photoCount = photoCountStmt.get().count;
+
+    // Get actual number of albums (unique album count)
+    const albumCountStmt = db.prepare('SELECT COUNT(DISTINCT album_id) as count FROM gallery_albums');
+    const albumCount = albumCountStmt.get().count;
 
     return {
       status: state.sync_status,
       lastSync: state.last_sync_at,
       totalPhotos: photoCount,
-      totalAlbums: state.total_albums_processed,
+      totalAlbums: albumCount,
       errorMessage: state.error_message
     };
   }

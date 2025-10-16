@@ -321,8 +321,9 @@
 
                 if (monitoringResponse.ok) {
                     const data = await monitoringResponse.json();
-                    updateStats(data.stats);
-                    updateTimelines(data.history);
+                    // Only update stats and timelines if they exist
+                    if (data.stats) updateStats(data.stats);
+                    if (data.history) updateTimelines(data.history);
                 }
 
                 // Load detailed history
