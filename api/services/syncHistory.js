@@ -245,10 +245,12 @@ async function calculateStats(type, hours = 24) {
 // Initialize on module load
 initSyncHistory().catch(console.error);
 
-// Check status every 5 minutes
-setInterval(() => {
-  checkAndRecordStatus().catch(console.error);
-}, 5 * 60 * 1000);
+// Monitoring check disabled - syncs record their own status
+// The actual sync services (calendar and gallery) record their status when they run
+// This prevents duplicate entries and incorrect frequency calculations
+// setInterval(() => {
+//   checkAndRecordStatus().catch(console.error);
+// }, 5 * 60 * 1000);
 
 module.exports = {
   recordSyncEvent,

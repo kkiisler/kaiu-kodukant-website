@@ -207,8 +207,8 @@ database.initialize()
 
     // Set up calendar sync cron job
     if (config.GOOGLE_API_KEY && config.GOOGLE_CALENDAR_ID) {
-      // Run every 5 minutes to keep calendar data fresh
-      cron.schedule('*/5 * * * *', async () => {
+      // Run every 15 minutes to keep calendar data fresh
+      cron.schedule('*/15 * * * *', async () => {
         console.log('📅 Running scheduled calendar sync...');
         try {
           const result = await calendarSync.syncCalendar();
@@ -219,7 +219,7 @@ database.initialize()
       }, {
         timezone: 'Europe/Tallinn'
       });
-      console.log('✅ Calendar sync cron job scheduled (every 5 minutes)');
+      console.log('✅ Calendar sync cron job scheduled (every 15 minutes)');
 
       // Run initial sync on startup
       console.log('📅 Running initial calendar sync...');
@@ -232,8 +232,8 @@ database.initialize()
 
     // Set up gallery sync cron job
     if (config.GOOGLE_API_KEY && config.GOOGLE_DRIVE_FOLDER_ID) {
-      // Run every 15 minutes to sync gallery photos
-      cron.schedule('*/15 * * * *', async () => {
+      // Run every hour to sync gallery photos
+      cron.schedule('0 * * * *', async () => {
         console.log('🖼️  Running scheduled gallery sync...');
         try {
           const result = await gallerySync.syncGallery();
@@ -248,7 +248,7 @@ database.initialize()
       }, {
         timezone: 'Europe/Tallinn'
       });
-      console.log('✅ Gallery sync cron job scheduled (every 15 minutes)');
+      console.log('✅ Gallery sync cron job scheduled (every hour)');
 
       // Run initial sync on startup (in background to not block server start)
       setTimeout(() => {
