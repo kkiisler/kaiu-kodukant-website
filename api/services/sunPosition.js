@@ -196,28 +196,65 @@ class SunPositionService {
     const times = this.getSunTimes(date);
     const now = date.getTime();
 
-    // Check for different periods of the day
+    // Check for different periods of the day (in chronological order)
+
+    // Night time (before dawn)
     if (times.night && now < times.night.getTime()) {
       return 'öö'; // Night
-    } else if (times.nauticalDawn && now < times.nauticalDawn.getTime()) {
+    }
+
+    // Nautical dawn
+    if (times.nauticalDawn && now < times.nauticalDawn.getTime()) {
       return 'öö'; // Still night
-    } else if (times.dawn && now < times.dawn.getTime()) {
+    }
+
+    // Dawn (civil twilight begins)
+    if (times.dawn && now < times.dawn.getTime()) {
       return 'koidik'; // Nautical twilight
-    } else if (times.sunrise && now < times.sunrise.getTime()) {
+    }
+
+    // Sunrise
+    if (times.sunrise && now < times.sunrise.getTime()) {
       return 'koit'; // Dawn/Civil twilight
-    } else if (times.goldenHourEnd && now < times.goldenHourEnd.getTime()) {
+    }
+
+    // Morning golden hour (after sunrise, before goldenHourEnd)
+    if (times.goldenHourEnd && now < times.goldenHourEnd.getTime()) {
       return 'päikesetõus'; // Sunrise/Golden hour
-    } else if (times.solarNoon && Math.abs(now - times.solarNoon.getTime()) < 1800000) { // Within 30 mins of solar noon
+    }
+
+    // Solar noon (within 30 minutes)
+    if (times.solarNoon && Math.abs(now - times.solarNoon.getTime()) < 1800000) {
       return 'keskpäev'; // Midday
-    } else if (times.goldenHour && now >= times.goldenHour.getTime()) {
+    }
+
+    // Evening golden hour (after goldenHour starts, before sunset)
+    if (times.goldenHour && now >= times.goldenHour.getTime() && times.sunset && now < times.sunset.getTime()) {
       return 'kuldne tund'; // Golden hour
-    } else if (times.sunset && now >= times.sunset.getTime() && times.dusk && now < times.dusk.getTime()) {
+    }
+
+    // Sunset (between sunset and dusk)
+    if (times.sunset && now >= times.sunset.getTime() && times.dusk && now < times.dusk.getTime()) {
       return 'loojang'; // Sunset
-    } else if (times.dusk && now >= times.dusk.getTime() && times.nauticalDusk && now < times.nauticalDusk.getTime()) {
+    }
+
+    // Dusk (civil twilight)
+    if (times.dusk && now >= times.dusk.getTime() && times.nauticalDusk && now < times.nauticalDusk.getTime()) {
       return 'videvik'; // Dusk/Civil twilight
-    } else if (times.nauticalDusk && now >= times.nauticalDusk.getTime()) {
+    }
+
+    // Nautical dusk
+    if (times.nauticalDusk && now >= times.nauticalDusk.getTime() && times.night && now < times.night.getTime()) {
       return 'hämarik'; // Nautical twilight
-    } else if (this.isDayTime(date)) {
+    }
+
+    // Night time (after all twilight phases)
+    if (times.night && now >= times.night.getTime()) {
+      return 'öö'; // Night
+    }
+
+    // Fallback: use day/night determination
+    if (this.isDayTime(date)) {
       return 'päev'; // Day
     } else {
       return 'öö'; // Night
