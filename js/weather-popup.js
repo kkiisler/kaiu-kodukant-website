@@ -14,6 +14,8 @@ class WeatherPopup {
         this.isVisible = false;
         this.lastFetch = null;
         this.weatherData = null;
+        this.sunPosition = null;
+        this.sunTransitionTimer = null;
         this.updateInterval = 3600000; // Check for updates every hour
         this.init();
     }
@@ -48,6 +50,10 @@ class WeatherPopup {
                         <div class="spinner"></div>
                         <span>Laadin ilmateateid...</span>
                     </div>
+                </div>
+                <div class="weather-sun-info" id="weather-sun-info" style="display: none;">
+                    <span class="sun-state" id="sun-state"></span>
+                    <span class="sun-times" id="sun-times"></span>
                 </div>
                 <div class="weather-footer">
                     <span class="weather-location">📍 Kaiu, Raplamaa</span>
@@ -187,6 +193,25 @@ class WeatherPopup {
                     to { transform: rotate(360deg); }
                 }
 
+                .weather-sun-info {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 11px;
+                    color: #6b7280;
+                    padding: 8px 0;
+                    border-top: 1px solid #f3f4f6;
+                }
+
+                .sun-state {
+                    font-weight: 500;
+                    color: #EC5B29;
+                }
+
+                .sun-times {
+                    color: #9ca3af;
+                }
+
                 .weather-footer {
                     display: flex;
                     justify-content: space-between;
@@ -279,6 +304,12 @@ class WeatherPopup {
             this.weatherData = data;
             this.lastFetch = Date.now();
 
+            // Extract sun position data if available
+            if (data.sunPosition) {
+                this.sunPosition = data.sunPosition;
+                this.scheduleSunTransitionRefresh();
+            }
+
             // Save to local storage
             this.saveToLocalStorage('weatherData', data);
             this.saveToLocalStorage('lastFetch', this.lastFetch);
@@ -291,6 +322,9 @@ class WeatherPopup {
             const cachedData = this.loadFromLocalStorage('weatherData');
             if (cachedData) {
                 this.weatherData = cachedData;
+                if (cachedData.sunPosition) {
+                    this.sunPosition = cachedData.sunPosition;
+                }
                 return cachedData;
             }
 
@@ -333,6 +367,29 @@ class WeatherPopup {
         const timestampElement = document.getElementById('weather-timestamp');
         if (timestampElement && data.timestamp) {
             timestampElement.textContent = this.formatTimestamp(data.timestamp);
+        }
+
+        // Update sun position info if available
+        if (data.sunPosition) {
+            const sunInfoElement = document.getElementById('weather-sun-info');
+            const sunStateElement = document.getElementById('sun-state');
+            const sunTimesElement = document.getElementById('sun-times');
+
+            if (sunInfoElement && sunStateElement && sunTimesElement) {
+                // Show sun info section
+                sunInfoElement.style.display = 'flex';
+
+                // Update sun state
+                const stateText = this.getSunStateText();
+                if (stateText) {
+                    sunStateElement.textContent = stateText;
+                }
+
+                // Update sunrise/sunset times
+                const sunriseTime = this.formatSunTime(data.sunPosition.sunrise);
+                const sunsetTime = this.formatSunTime(data.sunPosition.sunset);
+                sunTimesElement.textContent = `☀️ ${sunriseTime} → 🌙 ${sunsetTime}`;
+            }
         }
     }
 
@@ -551,6 +608,74 @@ class WeatherPopup {
                 }
             });
         }
+    }
+
+    // Schedule automatic refresh at sunrise/sunset transitions
+    scheduleSunTransitionRefresh() {
+        // Clear any existing timer
+        if (this.sunTransitionTimer) {
+            clearTimeout(this.sunTransitionTimer);
+        }
+
+        if (!this.sunPosition || !this.sunPosition.nextTransition) {
+            return;
+        }
+
+        const nextTransition = this.sunPosition.nextTransition;
+        const minutesUntil = nextTransition.minutesUntil;
+
+        if (minutesUntil && minutesUntil > 0) {
+            // Schedule refresh 1 minute after transition for safety
+            const delayMs = (minutesUntil + 1) * 60 * 1000;
+
+            console.log(`Scheduling weather icon refresh at ${nextTransition.type} in ${minutesUntil} minutes`);
+
+            this.sunTransitionTimer = setTimeout(async () => {
+                console.log(`Sun transition occurred (${nextTransition.type}), refreshing weather icons...`);
+
+                // Fetch fresh weather data with new sun position
+                await this.fetchWeatherData();
+
+                // Update all trigger icons
+                await this.updateAllTriggerIcons();
+
+                // Update popup if it's visible
+                if (this.isVisible && this.weatherData) {
+                    this.updatePopupContent(this.weatherData);
+                }
+            }, delayMs);
+        }
+    }
+
+    // Get formatted sun state description in Estonian
+    getSunStateText() {
+        if (!this.sunPosition) return '';
+
+        const stateMap = {
+            'öö': 'Öö',
+            'koidik': 'Koidik',
+            'koit': 'Koit',
+            'päikesetõus': 'Päikesetõus',
+            'keskpäev': 'Keskpäev',
+            'päev': 'Päev',
+            'kuldne tund': 'Kuldne tund',
+            'loojang': 'Loojang',
+            'videvik': 'Videvik',
+            'hämarik': 'Hämarik'
+        };
+
+        return stateMap[this.sunPosition.sunState] || '';
+    }
+
+    // Format sunrise/sunset times for display
+    formatSunTime(dateString) {
+        if (!dateString) return '--:--';
+
+        const date = new Date(dateString);
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+
+        return `${hours}:${minutes}`;
     }
 }
 

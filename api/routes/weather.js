@@ -4,6 +4,7 @@ const router = express.Router();
 const database = require('../services/database');
 const weatherService = require('../services/weather');
 const aiBlurbGenerator = require('../services/ai-blurb');
+const sunPosition = require('../services/sunPosition');
 const { authenticateAdmin } = require('../middleware/auth');
 
 /**
@@ -14,6 +15,12 @@ router.get('/current', async (req, res) => {
   try {
     // Get latest blurb from database
     const latestBlurb = database.getLatestWeatherBlurb();
+
+    // Get current sun position data
+    const now = new Date();
+    const sunTimes = sunPosition.getSunTimes(now);
+    const nextTransition = sunPosition.getNextTransition(now);
+    const sunState = sunPosition.getSunStateDescription(now);
 
     if (!latestBlurb) {
       // No blurb exists yet, try to generate one
@@ -33,9 +40,16 @@ router.get('/current', async (req, res) => {
               blurb: newBlurb.blurb_text,
               temperature: newBlurb.temperature,
               conditions: newBlurb.conditions,
-              icon: weatherService.getWeatherIcon(newBlurb.conditions),
+              icon: weatherService.getWeatherIcon(newBlurb.conditions, now),
               timestamp: newBlurb.created_at,
-              isNew: true
+              isNew: true,
+              sunPosition: {
+                isDayTime: sunPosition.isDayTime(now),
+                sunState: sunState,
+                sunrise: sunTimes.sunrise,
+                sunset: sunTimes.sunset,
+                nextTransition: nextTransition
+              }
             }
           });
         }
@@ -50,21 +64,35 @@ router.get('/current', async (req, res) => {
           conditions: null,
           icon: '❓',
           timestamp: new Date().toISOString(),
-          isNew: false
+          isNew: false,
+          sunPosition: {
+            isDayTime: sunPosition.isDayTime(now),
+            sunState: sunState,
+            sunrise: sunTimes.sunrise,
+            sunset: sunTimes.sunset,
+            nextTransition: nextTransition
+          }
         }
       });
     }
 
-    // Return the latest blurb
+    // Return the latest blurb with sun position data
     res.json({
       success: true,
       data: {
         blurb: latestBlurb.blurb_text,
         temperature: latestBlurb.temperature,
         conditions: latestBlurb.conditions,
-        icon: weatherService.getWeatherIcon(latestBlurb.conditions),
+        icon: weatherService.getWeatherIcon(latestBlurb.conditions, now),
         timestamp: latestBlurb.created_at,
-        isNew: false
+        isNew: false,
+        sunPosition: {
+          isDayTime: sunPosition.isDayTime(now),
+          sunState: sunState,
+          sunrise: sunTimes.sunrise,
+          sunset: sunTimes.sunset,
+          nextTransition: nextTransition
+        }
       }
     });
   } catch (error) {

@@ -2,6 +2,7 @@
 // Fetches weather forecast data for Kaiu, Raplamaa
 
 const axios = require('axios');
+const sunPosition = require('./sunPosition');
 
 class WeatherService {
   constructor() {
@@ -225,32 +226,14 @@ class WeatherService {
   }
 
   /**
-   * Determine weather icon based on conditions
+   * Determine weather icon based on conditions and time of day
    * @param {string} phenomenon - Weather phenomenon in Estonian
+   * @param {Date} date - Optional date for time-based icon selection
    * @returns {string} Weather icon emoji
    */
-  getWeatherIcon(phenomenon) {
-    if (!phenomenon) return '❓';
-
-    const lowerPhenom = phenomenon.toLowerCase();
-
-    if (lowerPhenom.includes('selge')) return '☀️';
-    if (lowerPhenom.includes('päike')) return '☀️';
-    if (lowerPhenom.includes('vähene pilvisus')) return '🌤️';
-    if (lowerPhenom.includes('vahelduv pilvisus')) return '⛅';
-    if (lowerPhenom.includes('pilves')) return '☁️';
-    if (lowerPhenom.includes('vihm')) {
-      if (lowerPhenom.includes('tugev')) return '🌧️';
-      if (lowerPhenom.includes('hoog')) return '🌦️';
-      return '🌧️';
-    }
-    if (lowerPhenom.includes('lumi')) return '🌨️';
-    if (lowerPhenom.includes('lörtsi')) return '🌨️';
-    if (lowerPhenom.includes('äike')) return '⛈️';
-    if (lowerPhenom.includes('udu')) return '🌫️';
-    if (lowerPhenom.includes('tuisk')) return '🌨️';
-
-    return '☁️'; // Default to cloudy
+  getWeatherIcon(phenomenon, date = new Date()) {
+    // Use the sun position service for day/night-aware icons
+    return sunPosition.getWeatherIcon(phenomenon, date);
   }
 
   /**
