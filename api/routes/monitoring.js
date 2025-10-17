@@ -18,8 +18,9 @@ router.get('/status', async (req, res) => {
     const calendarStats = await syncHistory.calculateStats('calendar', 24);
     const galleryStats = await syncHistory.calculateStats('gallery', 24);
 
-    // Record current status
-    await syncHistory.checkAndRecordStatus();
+    // Don't record status here - let the actual syncs record their own status
+    // This prevents duplicate/incorrect entries in the history
+    // await syncHistory.checkAndRecordStatus();
 
     res.json({
       success: true,
