@@ -348,12 +348,12 @@ class WeatherPopup {
         // Update weather icon
         const iconElement = document.getElementById('weather-icon');
         if (iconElement) {
-            // If icon is already an emoji, use it directly
-            if (data.icon && (data.icon.includes('️') || data.icon.includes('☀') || data.icon.includes('☁') ||
-                data.icon.includes('🌧') || data.icon.includes('❄') || data.icon.includes('⛅'))) {
+            // Use the icon from the API response directly (backend now handles day/night)
+            if (data.icon) {
                 iconElement.textContent = data.icon;
             } else {
-                iconElement.textContent = this.getWeatherEmoji(data.icon || data.conditions);
+                // Fallback to client-side emoji mapping
+                iconElement.textContent = this.getWeatherEmoji(data.conditions);
             }
         }
 
@@ -568,13 +568,12 @@ class WeatherPopup {
         }
 
         if (this.weatherData) {
-            // If icon is already an emoji, use it directly
-            if (this.weatherData.icon && (this.weatherData.icon.includes('️') || this.weatherData.icon.includes('☀') ||
-                this.weatherData.icon.includes('☁') || this.weatherData.icon.includes('🌧') ||
-                this.weatherData.icon.includes('❄') || this.weatherData.icon.includes('⛅'))) {
+            // Use the icon from the API response directly (backend now handles day/night)
+            if (this.weatherData.icon) {
                 icon.textContent = this.weatherData.icon;
             } else {
-                icon.textContent = this.getWeatherEmoji(this.weatherData.icon || this.weatherData.conditions);
+                // Fallback to client-side emoji mapping
+                icon.textContent = this.getWeatherEmoji(this.weatherData.conditions);
             }
         }
     }
@@ -596,14 +595,12 @@ class WeatherPopup {
             iconIds.forEach(iconId => {
                 const icon = document.getElementById(iconId);
                 if (icon) {
-                    // If icon is already an emoji, use it directly
-                    if (this.weatherData.icon && (this.weatherData.icon.includes('️') ||
-                        this.weatherData.icon.includes('☀') || this.weatherData.icon.includes('☁') ||
-                        this.weatherData.icon.includes('🌧') || this.weatherData.icon.includes('❄') ||
-                        this.weatherData.icon.includes('⛅'))) {
+                    // Use the icon from the API response directly (backend now handles day/night)
+                    if (this.weatherData.icon) {
                         icon.textContent = this.weatherData.icon;
                     } else {
-                        icon.textContent = this.getWeatherEmoji(this.weatherData.icon || this.weatherData.conditions);
+                        // Fallback to client-side emoji mapping
+                        icon.textContent = this.getWeatherEmoji(this.weatherData.conditions);
                     }
                 }
             });
