@@ -188,90 +188,92 @@ class SunPositionService {
   }
 
   /**
-   * Get a formatted description of current sun state
+   * Get a culturally accurate Estonian time-of-day description
+   * Based on variable sunrise/sunset times and fixed cultural markers
    * @param {Date} date - The date/time to check
-   * @returns {string} Human-readable sun state
+   * @returns {string} Estonian time-of-day description
    */
   getSunStateDescription(date = new Date()) {
     const times = this.getSunTimes(date);
+
+    // Get times in milliseconds for comparison
     const now = date.getTime();
+    const sunrise = times.sunrise ? times.sunrise.getTime() : null;
+    const sunset = times.sunset ? times.sunset.getTime() : null;
 
-    // SunCalc times explanation:
-    // - nightEnd: End of night (morning astronomical twilight begins)
-    // - nauticalDawn: Morning nautical twilight begins
-    // - dawn: Morning civil twilight begins
-    // - sunrise: Sunrise
-    // - sunriseEnd: Sunrise ends
-    // - goldenHourEnd: Morning golden hour ends
-    // - solarNoon: Solar noon
-    // - goldenHour: Evening golden hour begins
-    // - sunsetStart: Sunset begins
-    // - sunset: Sunset
-    // - dusk: Evening civil twilight ends
-    // - nauticalDusk: Evening nautical twilight ends
-    // - night: Night begins (astronomical twilight ends)
-
-    // Night (before nightEnd or after night)
-    if (times.nightEnd && now < times.nightEnd.getTime()) {
-      return 'öö'; // Night
+    if (!sunrise || !sunset) {
+      // Fallback if sun times not available (shouldn't happen at this latitude)
+      return this.isDayTime(date) ? 'päev' : 'öö';
     }
 
-    // Astronomical twilight (morning: between nightEnd and nauticalDawn)
-    if (times.nauticalDawn && now < times.nauticalDawn.getTime()) {
-      return 'öö'; // Still dark enough to be considered night
+    // --- Algorithm Parameters ---
+    const DAWN_DURATION = 60 * 60 * 1000;  // 1 hour in milliseconds
+    const DUSK_DURATION = 60 * 60 * 1000;  // 1 hour in milliseconds
+
+    // --- 1. Define Variable Boundaries ---
+    // Koidik (dawn) starts 1 hour before sunrise
+    const koidikStart = sunrise - DAWN_DURATION;
+
+    // Night starts 1 hour after sunset (after videvik/dusk ends)
+    const nightStart = sunset + DUSK_DURATION;
+
+    // --- 2. Define Fixed Cultural Boundaries ---
+    // Create dates for fixed times today (in local Estonian time)
+    const dateLocal = new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Tallinn' }));
+
+    // Lõuna (Noon) - 12:00
+    const louna = new Date(dateLocal);
+    louna.setHours(12, 0, 0, 0);
+    const lounaTime = louna.getTime();
+
+    // Pärastlõuna split - 15:00
+    const pealelounaSplit = new Date(dateLocal);
+    pealelounaSplit.setHours(15, 0, 0, 0);
+    const pealelounaSplitTime = pealelounaSplit.getTime();
+
+    // Õhtu (Evening) start - 18:00
+    const ohtuStart = new Date(dateLocal);
+    ohtuStart.setHours(18, 0, 0, 0);
+    const ohtuStartTime = ohtuStart.getTime();
+
+    // --- 3. Execute Time-Check Logic (in order) ---
+
+    // A: ÖÖ (Night) - from end of dusk until start of dawn
+    // This period crosses midnight, so check both parts
+    if (now >= nightStart || now < koidikStart) {
+      return 'öö';
     }
 
-    // Nautical twilight (morning: between nauticalDawn and dawn)
-    if (times.dawn && now < times.dawn.getTime()) {
-      return 'koidik'; // Nautical twilight / early dawn
+    // B: KOIDIK (Dawn) - period just before sunrise
+    if (now >= koidikStart && now < sunrise) {
+      return 'koidik';
     }
 
-    // Civil twilight / Dawn (between dawn and sunrise)
-    if (times.sunrise && now < times.sunrise.getTime()) {
-      return 'koit'; // Dawn / civil twilight
+    // C: VIDEVIK (Dusk) - period just after sunset
+    // Check this before general daylight logic
+    if (now >= sunset && now < nightStart) {
+      return 'videvik';
     }
 
-    // Morning golden hour (between sunrise and goldenHourEnd)
-    if (times.goldenHourEnd && now < times.goldenHourEnd.getTime()) {
-      return 'päikesetõus'; // Sunrise / golden hour
+    // D: HOMMIK (Morning) - from sunrise until noon
+    if (now >= sunrise && now < lounaTime) {
+      return 'hommik';
     }
 
-    // Solar noon (within 30 minutes of solar noon)
-    if (times.solarNoon && Math.abs(now - times.solarNoon.getTime()) < 1800000) {
-      return 'keskpäev'; // Midday
+    // E: PÄEV (Day/Midday) - from noon until mid-afternoon
+    if (now >= lounaTime && now < pealelounaSplitTime) {
+      return 'päev';
     }
 
-    // Evening golden hour (between goldenHour and sunset)
-    if (times.goldenHour && now >= times.goldenHour.getTime() && times.sunset && now < times.sunset.getTime()) {
-      return 'kuldne tund'; // Golden hour
+    // F: PÄRASTLÕUNA (Afternoon) - from mid-afternoon until cultural evening
+    if (now >= pealelounaSplitTime && now < ohtuStartTime) {
+      return 'pärastlõuna';
     }
 
-    // Sunset (between sunset and dusk)
-    if (times.sunset && now >= times.sunset.getTime() && times.dusk && now < times.dusk.getTime()) {
-      return 'loojang'; // Sunset
-    }
-
-    // Civil twilight (evening: between dusk and nauticalDusk)
-    if (times.dusk && now >= times.dusk.getTime() && times.nauticalDusk && now < times.nauticalDusk.getTime()) {
-      return 'videvik'; // Dusk / civil twilight
-    }
-
-    // Nautical twilight (evening: between nauticalDusk and night)
-    if (times.nauticalDusk && now >= times.nauticalDusk.getTime() && times.night && now < times.night.getTime()) {
-      return 'hämarik'; // Nautical twilight
-    }
-
-    // Night (after night begins)
-    if (times.night && now >= times.night.getTime()) {
-      return 'öö'; // Night
-    }
-
-    // Fallback: use day/night determination based on civil twilight
-    if (this.isDayTime(date)) {
-      return 'päev'; // Day
-    } else {
-      return 'öö'; // Night
-    }
+    // G: ÕHTU (Evening) - after 18:00 but before sunset
+    // In winter, this period may not exist (sunset before 18:00)
+    // In summer, this is a long pleasant evening
+    return 'õhtu';
   }
 }
 

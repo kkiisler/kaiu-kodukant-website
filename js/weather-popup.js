@@ -651,14 +651,11 @@ class WeatherPopup {
         const stateMap = {
             'öö': 'Öö',
             'koidik': 'Koidik',
-            'koit': 'Koit',
-            'päikesetõus': 'Päikesetõus',
-            'keskpäev': 'Keskpäev',
+            'hommik': 'Hommik',
             'päev': 'Päev',
-            'kuldne tund': 'Kuldne tund',
-            'loojang': 'Loojang',
-            'videvik': 'Videvik',
-            'hämarik': 'Hämarik'
+            'pärastlõuna': 'Pärastlõuna',
+            'õhtu': 'Õhtu',
+            'videvik': 'Videvik'
         };
 
         return stateMap[this.sunPosition.sunState] || '';
