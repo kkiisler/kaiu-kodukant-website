@@ -196,39 +196,52 @@ class SunPositionService {
     const times = this.getSunTimes(date);
     const now = date.getTime();
 
-    // Check for different periods of the day (in chronological order)
+    // SunCalc times explanation:
+    // - nightEnd: End of night (morning astronomical twilight begins)
+    // - nauticalDawn: Morning nautical twilight begins
+    // - dawn: Morning civil twilight begins
+    // - sunrise: Sunrise
+    // - sunriseEnd: Sunrise ends
+    // - goldenHourEnd: Morning golden hour ends
+    // - solarNoon: Solar noon
+    // - goldenHour: Evening golden hour begins
+    // - sunsetStart: Sunset begins
+    // - sunset: Sunset
+    // - dusk: Evening civil twilight ends
+    // - nauticalDusk: Evening nautical twilight ends
+    // - night: Night begins (astronomical twilight ends)
 
-    // Night time (before dawn)
-    if (times.night && now < times.night.getTime()) {
+    // Night (before nightEnd or after night)
+    if (times.nightEnd && now < times.nightEnd.getTime()) {
       return 'öö'; // Night
     }
 
-    // Nautical dawn
+    // Astronomical twilight (morning: between nightEnd and nauticalDawn)
     if (times.nauticalDawn && now < times.nauticalDawn.getTime()) {
-      return 'öö'; // Still night
+      return 'öö'; // Still dark enough to be considered night
     }
 
-    // Dawn (civil twilight begins)
+    // Nautical twilight (morning: between nauticalDawn and dawn)
     if (times.dawn && now < times.dawn.getTime()) {
-      return 'koidik'; // Nautical twilight
+      return 'koidik'; // Nautical twilight / early dawn
     }
 
-    // Sunrise
+    // Civil twilight / Dawn (between dawn and sunrise)
     if (times.sunrise && now < times.sunrise.getTime()) {
-      return 'koit'; // Dawn/Civil twilight
+      return 'koit'; // Dawn / civil twilight
     }
 
-    // Morning golden hour (after sunrise, before goldenHourEnd)
+    // Morning golden hour (between sunrise and goldenHourEnd)
     if (times.goldenHourEnd && now < times.goldenHourEnd.getTime()) {
-      return 'päikesetõus'; // Sunrise/Golden hour
+      return 'päikesetõus'; // Sunrise / golden hour
     }
 
-    // Solar noon (within 30 minutes)
+    // Solar noon (within 30 minutes of solar noon)
     if (times.solarNoon && Math.abs(now - times.solarNoon.getTime()) < 1800000) {
       return 'keskpäev'; // Midday
     }
 
-    // Evening golden hour (after goldenHour starts, before sunset)
+    // Evening golden hour (between goldenHour and sunset)
     if (times.goldenHour && now >= times.goldenHour.getTime() && times.sunset && now < times.sunset.getTime()) {
       return 'kuldne tund'; // Golden hour
     }
@@ -238,22 +251,22 @@ class SunPositionService {
       return 'loojang'; // Sunset
     }
 
-    // Dusk (civil twilight)
+    // Civil twilight (evening: between dusk and nauticalDusk)
     if (times.dusk && now >= times.dusk.getTime() && times.nauticalDusk && now < times.nauticalDusk.getTime()) {
-      return 'videvik'; // Dusk/Civil twilight
+      return 'videvik'; // Dusk / civil twilight
     }
 
-    // Nautical dusk
+    // Nautical twilight (evening: between nauticalDusk and night)
     if (times.nauticalDusk && now >= times.nauticalDusk.getTime() && times.night && now < times.night.getTime()) {
       return 'hämarik'; // Nautical twilight
     }
 
-    // Night time (after all twilight phases)
+    // Night (after night begins)
     if (times.night && now >= times.night.getTime()) {
       return 'öö'; // Night
     }
 
-    // Fallback: use day/night determination
+    // Fallback: use day/night determination based on civil twilight
     if (this.isDayTime(date)) {
       return 'päev'; // Day
     } else {
