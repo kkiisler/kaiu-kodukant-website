@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!photo) return;
 
         lightboxImg.src = photo.src;
-        lightboxCaption.textContent = photo.caption || '';
+        lightboxCaption.textContent = '';
 
         // Update navigation buttons
         lightboxPrev.style.display = currentLightboxIndex > 0 ? 'block' : 'none';
