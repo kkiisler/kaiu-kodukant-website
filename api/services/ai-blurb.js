@@ -128,7 +128,7 @@ EMOJID: valikulised, max 1–2 kui sobivad loomulikult (☀️🌧️💨)
 
 KAASA LOOMULIKULT: temperatuurivahemik, sademete võimalus/maht, tuule suund ja kiirus, taeva iseloom (päike/pilved/vihm/udu), sobiv ajaviide või väike tähelepanek
 
-KOHALIK VIBE: väljendid nagu "kampsuniilm", "vihmapaus", "päike piilub" on head
+KOHALIK VIBE: väljendid nagu "kampsuniilm", "vihmapaus", "päike piilub" on head aga ära neid üle kasuta. Ole väljendite osas loov.
 
 AJAVÖÖND: tõlgenda ajatempleid kui Europe/Tallinn
 
