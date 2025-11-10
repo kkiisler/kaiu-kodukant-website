@@ -175,8 +175,9 @@ database.initialize()
 
     // Set up weather blurb generation cron job
     if (process.env.OPENAI_API_KEY) {
-      // Run every 4 hours: 0:00, 4:00, 8:00, 12:00, 16:00, 20:00
-      cron.schedule('0 */4 * * *', async () => {
+      // Run every 4 hours at: 0:00, 4:00, 8:00, 12:00, 16:00, 20:00 EET
+      // Explicitly list hours to avoid timezone edge cases with */4 pattern
+      cron.schedule('0 0,4,8,12,16,20 * * *', async () => {
         console.log('🌤️ Running scheduled weather blurb generation...');
         try {
           // Fetch weather data
@@ -200,7 +201,7 @@ database.initialize()
       }, {
         timezone: 'Europe/Tallinn'
       });
-      console.log('✅ Weather cron job scheduled (every 4 hours)');
+      console.log('✅ Weather cron job scheduled (every 4 hours at 0,4,8,12,16,20 EET)');
     } else {
       console.warn('⚠️ OpenAI API key not configured - weather blurbs disabled');
     }
