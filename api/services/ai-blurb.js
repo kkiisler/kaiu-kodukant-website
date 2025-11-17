@@ -172,7 +172,26 @@ VÄLJUND: tagasta ÜKS AINUKE ilmakirjutis (lihttekst), valmis kuvamiseks; MITTE
     if (weatherData.current) {
       prompt += `HETKE ILM:\n`;
       prompt += `- Temperatuur: ${weatherData.current.temperature}°C\n`;
+
+      // Add apparent temperature if available (from Open-Meteo)
+      if (weatherData.current.apparentTemperature !== undefined &&
+          weatherData.current.apparentTemperature !== null &&
+          weatherData.current.apparentTemperature !== weatherData.current.temperature) {
+        prompt += `- Tundub nagu: ${weatherData.current.apparentTemperature}°C\n`;
+      }
+
       prompt += `- Tingimused: ${weatherData.current.phenomenon}\n`;
+
+      // Add cloud cover if available
+      if (weatherData.current.cloudCover !== undefined && weatherData.current.cloudCover !== null) {
+        prompt += `- Pilvisus: ${weatherData.current.cloudCover}%\n`;
+      }
+
+      // Add humidity if available
+      if (weatherData.current.humidity !== undefined && weatherData.current.humidity !== null) {
+        prompt += `- Õhuniiskus: ${weatherData.current.humidity}%\n`;
+      }
+
       prompt += `- Tuul: ${weatherData.current.windSpeed} m/s ${weatherData.current.windDirection || ''}\n`;
       prompt += `- Sademed: ${weatherData.current.precipitation} mm\n\n`;
     }
@@ -180,8 +199,29 @@ VÄLJUND: tagasta ÜKS AINUKE ilmakirjutis (lihttekst), valmis kuvamiseks; MITTE
     if (weatherData.periods) {
       prompt += `JÄRGMISED 24 TUNDI:\n`;
       Object.values(weatherData.periods).forEach(period => {
-        if (period.data) {
-          prompt += `- ${period.period}: ${period.tempRange}, ${period.conditions}, sademed ${period.precipitation} mm\n`;
+        if (period.data !== null || period.tempRange) {
+          let periodInfo = `- ${period.period}: ${period.tempRange}`;
+
+          // Add apparent temperature range if significantly different
+          if (period.apparentTempRange && period.apparentTempRange !== period.tempRange) {
+            periodInfo += ` (tundub nagu ${period.apparentTempRange})`;
+          }
+
+          periodInfo += `, ${period.conditions}`;
+
+          // Add precipitation probability if available
+          if (period.precipProbability !== undefined && period.precipProbability !== null && period.precipProbability > 0) {
+            periodInfo += `, sademete tõenäosus ${period.precipProbability}%`;
+          }
+
+          periodInfo += `, sademed ${period.precipitation} mm`;
+
+          // Add cloud cover info if available
+          if (period.avgCloudCover !== undefined && period.avgCloudCover !== null) {
+            periodInfo += `, pilvisus ${period.avgCloudCover}%`;
+          }
+
+          prompt += periodInfo + '\n';
         }
       });
       prompt += '\n';
@@ -190,8 +230,23 @@ VÄLJUND: tagasta ÜKS AINUKE ilmakirjutis (lihttekst), valmis kuvamiseks; MITTE
     if (weatherData.summary) {
       prompt += `KOKKUVÕTE:\n`;
       prompt += `- Temperatuurivahemik: ${weatherData.summary.tempRange}\n`;
+
+      // Add max precipitation probability if available
+      if (weatherData.summary.maxPrecipProbability !== undefined &&
+          weatherData.summary.maxPrecipProbability !== null &&
+          weatherData.summary.maxPrecipProbability > 0) {
+        prompt += `- Maksimaalne sademete tõenäosus: ${weatherData.summary.maxPrecipProbability}%\n`;
+      }
+
       prompt += `- Sademeid kokku 24h: ${weatherData.summary.totalPrecipitation} mm\n`;
-      prompt += `- Üldised tingimused: ${weatherData.summary.dominantConditions}\n\n`;
+      prompt += `- Üldised tingimused: ${weatherData.summary.dominantConditions}\n`;
+
+      // Add data source quality indicator if available
+      if (weatherData.metadata?.agreementScore !== undefined && weatherData.metadata?.agreementScore !== null) {
+        prompt += `- Andmete usaldusväärsus: ${weatherData.metadata.agreementScore}% (mitu allikat kinnitavad)\n`;
+      }
+
+      prompt += '\n';
     }
 
     if (previousBlurbs.length > 0) {

@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const database = require('../services/database');
 const weatherService = require('../services/weather');
+const weatherAggregator = require('../services/weather-aggregator');
 const aiBlurbGenerator = require('../services/ai-blurb');
 const sunPosition = require('../services/sunPosition');
 const { authenticateAdmin } = require('../middleware/auth');
@@ -25,11 +26,10 @@ router.get('/current', async (req, res) => {
     if (!latestBlurb) {
       // No blurb exists yet, try to generate one
       if (aiBlurbGenerator.isConfigured()) {
-        // Fetch current weather
-        const forecastData = await weatherService.getForecast();
-        if (forecastData) {
-          const parsedData = weatherService.parseForecast(forecastData);
-          const formattedData = weatherService.formatForBlurbContext(parsedData);
+        // Fetch aggregated weather data from both sources
+        const aggregatedData = await weatherAggregator.getAggregatedForecast();
+        if (aggregatedData) {
+          const formattedData = weatherAggregator.formatForBlurbContext(aggregatedData);
 
           // Generate and save blurb
           const newBlurb = await aiBlurbGenerator.generateAndSaveBlurb(formattedData);
@@ -199,21 +199,23 @@ router.post('/generate', authenticateAdmin, async (req, res) => {
       });
     }
 
-    // Fetch fresh weather data
-    const forecastData = await weatherService.getForecast();
-    if (!forecastData) {
+    // Fetch aggregated weather data from both sources
+    const aggregatedData = await weatherAggregator.getAggregatedForecast();
+    if (!aggregatedData) {
       return res.status(502).json({
         success: false,
-        error: 'Failed to fetch weather data from Estonian Weather Service'
+        error: 'Failed to fetch weather data from all sources'
       });
     }
 
-    // Parse and format the data
-    const parsedData = weatherService.parseForecast(forecastData);
-    const formattedData = weatherService.formatForBlurbContext(parsedData);
+    // Format the data for AI blurb generation
+    const formattedData = weatherAggregator.formatForBlurbContext(aggregatedData);
 
-    // Cache the weather data
-    database.setWeatherCache('Kaiu, Raplamaa', forecastData, 1);
+    // Cache the aggregated weather data (store first available raw data)
+    const rawDataToCache = aggregatedData.sources?.estonian?.data ||
+                          aggregatedData.sources?.openMeteo?.data ||
+                          aggregatedData;
+    database.setWeatherCache('Kaiu, Raplamaa', rawDataToCache, 1);
 
     // Generate and save new blurb
     const newBlurb = await aiBlurbGenerator.generateAndSaveBlurb(formattedData);
@@ -304,6 +306,71 @@ router.get('/raw', authenticateAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch raw weather data'
+    });
+  }
+});
+
+/**
+ * GET /api/v1/weather/sources
+ * Get weather data from all sources for comparison (admin only)
+ * Shows data from Estonian Weather Service, Open-Meteo, and aggregated result
+ */
+router.get('/sources', authenticateAdmin, async (req, res) => {
+  try {
+    // Fetch aggregated data with all source details
+    const aggregatedData = await weatherAggregator.getAggregatedForecast();
+
+    // Get formatted versions for comparison
+    const estonianFormatted = aggregatedData.sources?.estonian?.available
+      ? weatherService.formatForBlurbContext(aggregatedData.sources.estonian.data)
+      : null;
+
+    const openMeteoService = require('../services/open-meteo');
+    const openMeteoFormatted = aggregatedData.sources?.openMeteo?.available
+      ? openMeteoService.formatForBlurbContext(aggregatedData.sources.openMeteo.data)
+      : null;
+
+    const aggregatedFormatted = weatherAggregator.formatForBlurbContext(aggregatedData);
+
+    res.json({
+      success: true,
+      data: {
+        timestamp: new Date().toISOString(),
+        sources: {
+          estonian: {
+            available: aggregatedData.sources?.estonian?.available || false,
+            raw: aggregatedData.sources?.estonian?.data || null,
+            formatted: estonianFormatted
+          },
+          openMeteo: {
+            available: aggregatedData.sources?.openMeteo?.available || false,
+            raw: aggregatedData.sources?.openMeteo?.data || null,
+            formatted: openMeteoFormatted
+          }
+        },
+        aggregated: {
+          raw: aggregatedData,
+          formatted: aggregatedFormatted
+        },
+        comparison: aggregatedData.comparison,
+        alerts: aggregatedData.alerts,
+        weights: {
+          current: {
+            openMeteo: 80,
+            estonian: 20
+          },
+          forecast: {
+            openMeteo: 50,
+            estonian: 50
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching weather sources:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch weather sources: ' + error.message
     });
   }
 });
