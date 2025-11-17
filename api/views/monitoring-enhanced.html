@@ -255,6 +255,20 @@
                 </div>
             </div>
 
+            <!-- Weather Sources Debug -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">🔍 Ilmaandmete allikad (Debug)</h3>
+                    <button onclick="loadWeatherSources()" class="text-sm bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded">
+                        🔄 Värskenda
+                    </button>
+                </div>
+
+                <div id="weatherSourcesContent">
+                    <p class="text-gray-500">Laadimine...</p>
+                </div>
+            </div>
+
             <!-- Weather History -->
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold mb-4">20 viimast ilmateadet</h3>
@@ -749,6 +763,208 @@
             }
         }
 
+        async function loadWeatherSources() {
+            const container = document.getElementById('weatherSourcesContent');
+            container.innerHTML = '<p class="text-gray-500">Laadimine...</p>';
+
+            try {
+                const response = await fetch(`/api/v1/weather/sources?t=${Date.now()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    displayWeatherSources(data.data);
+                } else {
+                    container.innerHTML = '<p class="text-red-500">Viga andmete laadimisel</p>';
+                }
+            } catch (error) {
+                console.error('Error loading weather sources:', error);
+                container.innerHTML = `<p class="text-red-500">Viga: ${error.message}</p>`;
+            }
+        }
+
+        function displayWeatherSources(data) {
+            const container = document.getElementById('weatherSourcesContent');
+
+            // Build the HTML
+            let html = `
+                <!-- Source Availability -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="p-4 rounded-lg ${data.sources.estonian.available ? 'bg-green-50' : 'bg-red-50'}">
+                        <div class="flex items-center justify-between">
+                            <span class="font-medium">Ilmateenistus</span>
+                            <span class="${data.sources.estonian.available ? 'text-green-600' : 'text-red-600'}">
+                                ${data.sources.estonian.available ? '✓ Ühendatud' : '✗ Ühenduseta'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-lg ${data.sources.openMeteo.available ? 'bg-green-50' : 'bg-red-50'}">
+                        <div class="flex items-center justify-between">
+                            <span class="font-medium">Open-Meteo</span>
+                            <span class="${data.sources.openMeteo.available ? 'text-green-600' : 'text-red-600'}">
+                                ${data.sources.openMeteo.available ? '✓ Ühendatud' : '✗ Ühenduseta'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-4 rounded-lg bg-blue-50">
+                        <div class="font-medium">Agregeeritud andmed</div>
+                        <div class="text-sm text-gray-600 mt-1">
+                            Allikas: ${data.aggregated.raw.source}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Comparison metrics
+            if (data.comparison) {
+                const score = data.comparison.agreementScore;
+                const scoreColor = score >= 90 ? 'text-green-600' : score >= 70 ? 'text-yellow-600' : 'text-red-600';
+
+                html += `
+                    <div class="mb-6">
+                        <h4 class="font-medium mb-3">Allikate võrdlus</h4>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-gray-700">Kokkulangevuse skoor:</span>
+                                <span class="text-2xl font-bold ${scoreColor}">${score}%</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <div class="text-gray-600 mb-1">Temperatuur</div>
+                                    <div class="font-mono">
+                                        ET: ${data.comparison.current.temperature.estonian}°C<br>
+                                        OM: ${data.comparison.current.temperature.openMeteo}°C<br>
+                                        Erinevus: ${data.comparison.current.temperature.difference}°C
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-600 mb-1">Tuule kiirus</div>
+                                    <div class="font-mono">
+                                        ET: ${data.comparison.current.windSpeed.estonian} m/s<br>
+                                        OM: ${data.comparison.current.windSpeed.openMeteo} m/s<br>
+                                        Erinevus: ${data.comparison.current.windSpeed.difference} m/s
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-600 mb-1">Sademed (24h)</div>
+                                    <div class="font-mono">
+                                        ET: ${data.comparison.summary.totalPrecipitation.estonian} mm<br>
+                                        OM: ${data.comparison.summary.totalPrecipitation.openMeteo} mm<br>
+                                        Erinevus: ${data.comparison.summary.totalPrecipitation.difference} mm
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Alerts
+            if (data.alerts && data.alerts.length > 0) {
+                html += '<div class="mb-6"><h4 class="font-medium mb-3">⚠️ Hoiatused</h4><div class="space-y-2">';
+                data.alerts.forEach(alert => {
+                    const bgColor = alert.severity === 'warning' ? 'bg-yellow-50' : 'bg-blue-50';
+                    const textColor = alert.severity === 'warning' ? 'text-yellow-800' : 'text-blue-800';
+                    html += `
+                        <div class="${bgColor} ${textColor} p-3 rounded-lg text-sm">
+                            <span class="font-medium">${alert.type}:</span> ${alert.message}
+                        </div>
+                    `;
+                });
+                html += '</div></div>';
+            }
+
+            // Weights
+            html += `
+                <div class="mb-6">
+                    <h4 class="font-medium mb-3">Kaalude konfiguratsioon</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="text-sm text-gray-600 mb-2">Hetke tingimused</div>
+                            <div class="space-y-1 text-sm">
+                                <div class="flex justify-between">
+                                    <span>Open-Meteo:</span>
+                                    <span class="font-mono">${data.weights.current.openMeteo}%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Ilmateenistus:</span>
+                                    <span class="font-mono">${data.weights.current.estonian}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="text-sm text-gray-600 mb-2">24h Prognoos</div>
+                            <div class="space-y-1 text-sm">
+                                <div class="flex justify-between">
+                                    <span>Open-Meteo:</span>
+                                    <span class="font-mono">${data.weights.forecast.openMeteo}%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Ilmateenistus:</span>
+                                    <span class="font-mono">${data.weights.forecast.estonian}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Aggregated current data
+            if (data.aggregated && data.aggregated.formatted && data.aggregated.formatted.current) {
+                const curr = data.aggregated.formatted.current;
+                html += `
+                    <div>
+                        <h4 class="font-medium mb-3">Agregeeritud hetkeandmed (AI-le sisendina)</h4>
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <div class="text-gray-600">Temperatuur</div>
+                                    <div class="font-mono text-lg">${curr.temperature}°C</div>
+                                </div>
+                                ${curr.apparentTemperature ? `
+                                <div>
+                                    <div class="text-gray-600">Tundub nagu</div>
+                                    <div class="font-mono text-lg">${curr.apparentTemperature}°C</div>
+                                </div>
+                                ` : ''}
+                                ${curr.cloudCover !== undefined && curr.cloudCover !== null ? `
+                                <div>
+                                    <div class="text-gray-600">Pilvisus</div>
+                                    <div class="font-mono text-lg">${curr.cloudCover}%</div>
+                                </div>
+                                ` : ''}
+                                ${curr.humidity !== undefined && curr.humidity !== null ? `
+                                <div>
+                                    <div class="text-gray-600">Niiskus</div>
+                                    <div class="font-mono text-lg">${curr.humidity}%</div>
+                                </div>
+                                ` : ''}
+                                <div>
+                                    <div class="text-gray-600">Tuul</div>
+                                    <div class="font-mono text-lg">${curr.windSpeed} m/s</div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-600">Sademed</div>
+                                    <div class="font-mono text-lg">${curr.precipitation} mm</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
         function logout() {
             localStorage.removeItem('adminToken');
             document.cookie = 'adminToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
@@ -766,6 +982,7 @@
 
         // Load data on page load
         loadMonitoringData();
+        loadWeatherSources();
 
         // Auto-refresh every 30 seconds
         setInterval(loadMonitoringData, 30000);
