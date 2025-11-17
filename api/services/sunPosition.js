@@ -239,8 +239,9 @@ class SunPositionService {
     // --- 3. Execute Time-Check Logic (in order) ---
 
     // A: ÖÖ (Night) - from end of dusk until start of dawn
-    // This period crosses midnight, so check both parts
-    if (now >= nightStart || now < koidikStart) {
+    // BUT: Only if it's before cultural evening time (18:00)
+    // This prevents "night" at 18:00-22:00 in winter when sun sets early
+    if ((now >= nightStart && now < ohtuStartTime) || now < koidikStart) {
       return 'öö';
     }
 
@@ -250,8 +251,8 @@ class SunPositionService {
     }
 
     // C: VIDEVIK (Dusk) - period just after sunset
-    // Check this before general daylight logic
-    if (now >= sunset && now < nightStart) {
+    // Only if before cultural evening time
+    if (now >= sunset && now < nightStart && now < ohtuStartTime) {
       return 'videvik';
     }
 
@@ -270,10 +271,18 @@ class SunPositionService {
       return 'pärastlõuna';
     }
 
-    // G: ÕHTU (Evening) - after 18:00 but before sunset
-    // In winter, this period may not exist (sunset before 18:00)
-    // In summer, this is a long pleasant evening
-    return 'õhtu';
+    // G: ÕHTU (Evening) - from 18:00 until late evening (22:00)
+    // This is a cultural period that overrides solar "night" in winter
+    const lateEveningEnd = new Date(dateLocal);
+    lateEveningEnd.setHours(22, 0, 0, 0);
+    const lateEveningEndTime = lateEveningEnd.getTime();
+
+    if (now >= ohtuStartTime && now < lateEveningEndTime) {
+      return 'õhtu';
+    }
+
+    // H: ÖÖ (Night) - after late evening (22:00) regardless of sun position
+    return 'öö';
   }
 }
 
