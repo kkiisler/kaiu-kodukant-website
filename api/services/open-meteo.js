@@ -50,7 +50,8 @@ class OpenMeteoService {
         'cloud_cover',
         'pressure_msl'
       ].join(','),
-      timezone: 'GMT' // We'll convert to Estonian time ourselves
+      timezone: 'GMT', // We'll convert to Estonian time ourselves
+      wind_speed_unit: 'ms' // Request wind speed in m/s to match Estonian Weather Service
     };
 
     let lastError = null;
@@ -255,7 +256,7 @@ class OpenMeteoService {
 
     if (hasSnow) conditions.push('lumi');
     if (hasRain) conditions.push('vihm');
-    if (hasShowers) conditions.push('vihmahoog');
+    if (hasShowers) conditions.push('hoovihm');
 
     // Check cloud cover
     const avgCloudCover = hours.reduce((sum, h) => sum + (h.cloudCover || 0), 0) / hours.length;
