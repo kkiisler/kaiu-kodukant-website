@@ -112,7 +112,7 @@ function renderSubmissions(submissions) {
 
     tbody.innerHTML = submissions.map(submission => {
         const date = new Date(submission.submitted_at).toLocaleString('et-EE');
-        const type = submission.type === 'membership' ? 'Liikmestaotlus' : 'Kontaktivorm';
+        const type = submission.type === 'membership' ? 'Liikmetaotlus' : 'Kontaktivorm';
         const typeColor = submission.type === 'membership' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
         const score = submission.recaptcha_score || 0;
         const scoreColor = score >= 0.7 ? 'text-green-600' : score >= 0.5 ? 'text-yellow-600' : 'text-red-600';

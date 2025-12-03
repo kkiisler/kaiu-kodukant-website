@@ -89,7 +89,7 @@ router.post('/membership', recaptcha.verifyMiddleware('membership'), async (req,
     // Success response
     res.json({
       success: true,
-      message: 'Liikmestaotlus on edukalt esitatud! Võtame sinuga peagi ühendust.',
+      message: 'Liikmetaotlus on edukalt esitatud! Võtame sinuga peagi ühendust.',
       submissionId: submissionId
     });
 

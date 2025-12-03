@@ -40,7 +40,7 @@ const sendMembershipNotification = async (data) => {
 
   const { name, email, recaptcha_score, submitted_at } = data;
 
-  const subject = 'Uus liikmestaotlus MTÜ Kaiu Kodukant';
+  const subject = 'Uus liikmetaotlus MTÜ Kaiu Kodukant';
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -64,7 +64,7 @@ const sendMembershipNotification = async (data) => {
     <body>
       <div class="container">
         <div class="header">
-          <h2 style="margin: 0;">Uus liikmestaotlus</h2>
+          <h2 style="margin: 0;">Uus liikmetaotlus</h2>
         </div>
         <div class="content">
           <div class="field">
@@ -99,7 +99,7 @@ const sendMembershipNotification = async (data) => {
   `;
 
   const textContent = `
-Uus liikmestaotlus MTÜ Kaiu Kodukant
+Uus liikmetaotlus MTÜ Kaiu Kodukant
 
 Nimi: ${name}
 E-post: ${email}

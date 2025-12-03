@@ -243,7 +243,7 @@ function setLoadingState(button, isLoading) {
         button.innerHTML = '<span class="spinner"></span> Saadan...';
     } else {
         button.disabled = false;
-        const text = button.id.includes('membership') ? 'Saada liikmestaotlus' : 'Saada sõnum';
+        const text = button.id.includes('membership') ? 'Saada liikmetaotlus' : 'Saada sõnum';
         button.innerHTML = `<span>${text}</span>`;
     }
 }
