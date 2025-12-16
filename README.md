@@ -57,8 +57,8 @@ graph TD
 ```
 
 ### Frontend Stack
-- **Framework**: Vanilla HTML5, CSS3, JavaScript (no build process)
-- **Styling**: Tailwind CSS (CDN) + Custom CSS
+- **Framework**: Vanilla HTML5, CSS3, JavaScript
+- **Styling**: Tailwind CSS (compiled via CLI) + Custom CSS
 - **Calendar**: FullCalendar.js
 - **Gallery**: Custom lightbox implementation
 - **Forms**: Native HTML5 validation + JavaScript
@@ -98,15 +98,19 @@ kaiumtu/
 │
 ├── 🎨 Frontend Assets
 │   ├── css/
-│   │   └── styles.css          # Custom styles
+│   │   ├── styles.css          # Custom styles (legacy)
+│   │   └── output.css          # Compiled Tailwind (generated)
+│   ├── src/
+│   │   └── input.css           # Tailwind source + custom styles
 │   ├── js/
 │   │   ├── config.js           # Central configuration
 │   │   ├── common.js           # Shared functionality
 │   │   ├── calendar.js         # Calendar integration
 │   │   ├── gallery.js          # Gallery & lightbox
 │   │   └── forms.js            # Form handling
-│   └── components/
-│       └── footer.html         # Reusable footer
+│   ├── components/
+│   │   └── footer.html         # Reusable footer
+│   └── tailwind.config.js      # Tailwind configuration
 │
 ├── 🔧 Backend API
 │   ├── api/
@@ -176,12 +180,26 @@ kaiumtu/
 git clone https://github.com/kkiisler/kaiu-kodukant-website.git
 cd kaiu-kodukant-website
 
+# Install dependencies and build CSS
+npm install
+npm run build:css
+
+# Or use watch mode for development
+npm run watch:css
+
 # Serve frontend locally (choose one)
 python3 -m http.server 8080        # Python
 npx serve                           # Node.js
 php -S localhost:8080               # PHP
 
 # Visit http://localhost:8080
+```
+
+### CSS Build Commands
+
+```bash
+npm run build:css   # Build minified CSS for production
+npm run watch:css   # Watch and rebuild CSS on changes
 ```
 
 ### Production Deployment
@@ -329,7 +347,8 @@ docker compose up -d
 - **First Contentful Paint**: < 1s
 - **Time to Interactive**: < 2s
 - **Lighthouse Score**: 95+ overall
-- **Bundle Size**: < 50KB CSS, < 100KB JS (excluding libraries)
+- **CSS Bundle**: ~25KB minified (Tailwind CLI, only used classes)
+- **JS Bundle**: < 100KB (excluding libraries)
 
 ## 🔒 Security
 
