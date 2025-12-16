@@ -42,6 +42,9 @@ node_modules/
 dist/
 build/
 
+# Tailwind CSS output (generated during build)
+css/output.css
+
 # Docker volumes and data
 docker/caddy_data/
 docker/caddy_config/

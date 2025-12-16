@@ -1,5 +1,25 @@
 # Multi-stage build for MTÜ Kaiu Kodukant Website
-# Build stage with variable substitution
+
+# Stage 1: Build Tailwind CSS
+FROM node:20-alpine AS css-builder
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci || npm install
+
+# Copy source files needed for Tailwind
+COPY tailwind.config.js ./
+COPY src/ ./src/
+COPY pages/ ./pages/
+COPY components/ ./components/
+COPY js/ ./js/
+
+# Build CSS
+RUN npx tailwindcss -i ./src/input.css -o ./css/output.css --minify
+
+# Stage 2: Variable substitution
 FROM alpine:3.18 AS builder
 
 # Build arguments for configuration
@@ -9,6 +29,9 @@ ARG RECAPTCHA_SITE_KEY
 # Copy all website files
 WORKDIR /app
 COPY . .
+
+# Copy built CSS from css-builder stage
+COPY --from=css-builder /app/css/output.css /app/css/output.css
 
 # Debug: Show build args
 RUN echo "Build args received:" && \
@@ -35,7 +58,7 @@ RUN if [ -n "$GOOGLE_APPS_SCRIPT_URL" ] && [ "$GOOGLE_APPS_SCRIPT_URL" != "" ]; 
 # Verify substitution (for debugging)
 RUN echo "=== Config.js after substitution ===" && cat /app/js/config.js
 
-# Production stage with Caddy
+# Stage 3: Production with Caddy
 FROM caddy:2.7-alpine
 
 # Copy processed static files from builder

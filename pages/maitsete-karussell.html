@@ -5,66 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maitsete Karussell - MTÜ Kaiu Kodukant</title>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com/"></script>
-
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Import centralized Tailwind config -->
-    <script src="/js/tailwind-config.js"></script>
-    <script>
-        tailwind.config = window.tailwindConfig;
-    </script>
-
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="/css/styles.css">
-
-    <style>
-        /* Custom animations and gradients */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .animate-float {
-            animation: float 3s ease-in-out infinite;
-        }
-
-        .gradient-text {
-            background: linear-gradient(135deg, #D26911, #E8A760);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* Custom nav styles with new colors */
-        .nav-link {
-            color: #68766E;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: #D26911;
-        }
-
-        .nav-link.active {
-            color: #D26911;
-            font-weight: 600;
-        }
-
-        /* Custom card hover effects */
-        .hover-lift {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .hover-lift:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 30px rgba(136, 51, 34, 0.15);
-        }
-    </style>
+    <!-- Compiled Tailwind CSS + Custom Styles -->
+    <link rel="stylesheet" href="/css/output.css">
 </head>
 <body class="bg-silk text-cascades">
     <!-- Header placeholder -->

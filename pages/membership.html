@@ -5,17 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Saa liikmeks - MTÜ Kaiu Kodukant</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com/"></script>
-    
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <!-- Configuration -->
     <script src="/js/config.js"></script>
-    
+
     <!-- reCAPTCHA script - Loaded dynamically with configured key -->
     <script>
         // Load reCAPTCHA with the configured site key
@@ -27,26 +24,9 @@
             console.warn('reCAPTCHA site key not configured');
         }
     </script>
-    
-    <!-- Tailwind Configuration -->
-    <script src="/js/tailwind-config.js"></script>
-    <script>
-        tailwind.config = window.tailwindConfig;
-    </script>
 
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="/css/styles.css">
-
-    <style>
-        /* Animation styles for floating elements */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        .animate-float {
-            animation: float 3s ease-in-out infinite;
-        }
-    </style>
+    <!-- Compiled Tailwind CSS + Custom Styles -->
+    <link rel="stylesheet" href="/css/output.css">
 </head>
 <body class="bg-silk text-cascades">
 
