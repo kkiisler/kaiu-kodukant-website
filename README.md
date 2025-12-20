@@ -45,12 +45,11 @@ graph TD
     D --> F[Resend Email]
     D --> G[reCAPTCHA]
 
-    H[Google Calendar] --> I[Apps Script]
-    J[Google Drive] --> I
-    I --> K[S3 Storage]
+    H[Google Calendar] --> D
+    J[Google Drive] --> D
+    D --> K[S3 Storage]
 
     C --> K
-    D --> K
 
     L[Admin] --> M[Admin Dashboard]
     M --> D
@@ -79,27 +78,29 @@ graph TD
 - **Monitoring**: Health checks and status dashboard
 
 ### Content Sync Pipeline
-- **Google Apps Script** runs on schedule (every 5-10 minutes)
-- **Calendar Sync**: Google Calendar → S3 JSON files
-- **Gallery Sync**: Google Drive folders → S3 images + metadata
+- **Node.js API** handles sync via scheduled tasks or manual triggers
+- **Calendar Sync**: Google Calendar API → S3 JSON files
+- **Gallery Sync**: Google Drive API → S3 images + metadata (with Sharp image processing)
 - **Version Control**: Timestamps in version.json for cache busting
+- **Legacy**: Google Apps Script code preserved in `apps-script/` as backup
 
 ## 📁 Project Structure
 
 ```
 kaiumtu/
-├── 📄 HTML Pages (Root)
-│   ├── index.html              # Homepage
-│   ├── events.html             # Events calendar
-│   ├── gallery.html            # Photo gallery
-│   ├── about.html              # About us
-│   ├── contact.html            # Contact form
-│   └── membership.html         # Membership registration
+├── 📄 HTML Pages
+│   └── pages/
+│       ├── index.html              # Homepage
+│       ├── events.html             # Events calendar
+│       ├── gallery.html            # Photo gallery
+│       ├── about.html              # About us
+│       ├── contact.html            # Contact form
+│       ├── membership.html         # Membership registration
+│       └── maitsete-karussell.html # Special event page
 │
 ├── 🎨 Frontend Assets
 │   ├── css/
-│   │   ├── styles.css          # Custom styles (legacy)
-│   │   └── output.css          # Compiled Tailwind (generated)
+│   │   └── styles.css          # Custom styles
 │   ├── src/
 │   │   └── input.css           # Tailwind source + custom styles
 │   ├── js/
@@ -107,48 +108,55 @@ kaiumtu/
 │   │   ├── common.js           # Shared functionality
 │   │   ├── calendar.js         # Calendar integration
 │   │   ├── gallery.js          # Gallery & lightbox
-│   │   └── forms.js            # Form handling
+│   │   ├── gallery-s3.js       # S3 gallery functions
+│   │   ├── forms-api.js        # API form handling
+│   │   ├── forms-success.js    # Form success handling
+│   │   └── weather-popup.js    # Weather widget
 │   ├── components/
 │   │   └── footer.html         # Reusable footer
+│   ├── media/                  # Local media assets
 │   └── tailwind.config.js      # Tailwind configuration
 │
 ├── 🔧 Backend API
-│   ├── api/
-│   │   ├── server.js           # Express server
-│   │   ├── config/             # Configuration
-│   │   ├── routes/             # API endpoints
-│   │   │   ├── admin.js        # Admin routes
-│   │   │   ├── forms.js        # Form submission
-│   │   │   └── monitoring.js   # System monitoring
-│   │   ├── services/           # Business logic
-│   │   │   ├── database.js     # SQLite operations
-│   │   │   ├── email.js        # Resend integration
-│   │   │   ├── s3-client.js    # S3 operations
-│   │   │   └── syncHistory.js  # Sync monitoring
-│   │   ├── middleware/         # Express middleware
-│   │   │   ├── auth.js         # JWT authentication
-│   │   │   └── rate-limit.js   # Rate limiting
-│   │   └── views/              # Admin dashboard HTML
-│   │       ├── admin/          # Dashboard pages
-│   │       └── assets/         # Dashboard assets
+│   └── api/
+│       ├── server.js           # Express server
+│       ├── config/             # Configuration
+│       ├── routes/             # API endpoints
+│       │   ├── admin.js        # Admin routes
+│       │   ├── forms.js        # Form submission
+│       │   ├── calendar.js     # Calendar sync
+│       │   ├── gallery.js      # Gallery sync
+│       │   ├── weather.js      # Weather API
+│       │   └── monitoring.js   # System monitoring
+│       ├── services/           # Business logic
+│       │   ├── database.js     # SQLite operations
+│       │   ├── email.js        # Resend integration
+│       │   ├── s3-client.js    # S3 operations
+│       │   ├── calendar-sync.js # Google Calendar sync
+│       │   ├── gallery-sync.js  # Google Drive sync
+│       │   └── syncHistory.js  # Sync monitoring
+│       ├── middleware/         # Express middleware
+│       │   ├── auth.js         # JWT authentication
+│       │   └── rate-limit.js   # Rate limiting
+│       └── views/              # Admin dashboard HTML
 │
-├── ☁️ Google Apps Script
-│   ├── apps-script/
-│   │   ├── calendar-sync.gs         # Calendar → S3 sync
-│   │   ├── gallery-sync-incremental.gs # Gallery → S3 sync
-│   │   ├── drive-change-trigger.gs   # Change detection
-│   │   ├── s3-utils.gs              # S3 upload utilities
-│   │   ├── config.gs                # Script configuration
-│   │   └── triggers-setup.gs        # Automated triggers
+├── ☁️ Google Apps Script (Legacy/Backup)
+│   └── apps-script/
+│       ├── calendar-sync.gs         # Calendar → S3 sync
+│       ├── gallery-sync-incremental.gs # Gallery → S3 sync
+│       ├── s3-utils.gs              # S3 upload utilities
+│       ├── config.gs                # Script configuration
+│       └── README.md                # Setup instructions
 │
 ├── 🐳 Docker Configuration
-│   ├── docker/
-│   │   ├── docker-compose.yml       # Service orchestration
-│   │   ├── Dockerfile               # Web service (Caddy)
-│   │   ├── api/Dockerfile           # API service
-│   │   ├── Caddyfile.prod          # Production config
-│   │   ├── deploy.sh                # Deployment script
-│   │   └── .env.example             # Environment template
+│   └── docker/
+│       ├── docker-compose.yml       # Service orchestration
+│       ├── Dockerfile               # Web service (Caddy)
+│       ├── api/                     # API Dockerfile
+│       ├── Caddyfile               # Development config
+│       ├── Caddyfile.prod          # Production config
+│       ├── deploy.sh                # Deployment script
+│       └── .env.example             # Environment template
 │
 ├── 📚 Documentation
 │   ├── README.md                    # This file
@@ -157,9 +165,8 @@ kaiumtu/
 │   ├── SETUP.md                     # Initial setup guide
 │   └── planning/                    # Architecture docs
 │
-└── 🧪 Testing
-    ├── test-calendar.html           # Calendar testing
-    └── test-gallery.html            # Gallery testing
+└── 🧪 Testing & Archive
+    └── archive/                     # Old/test files
 ```
 
 ## 🚀 Getting Started
@@ -258,18 +265,20 @@ CONTACT_SPREADSHEET_ID=xxxxxxxxxxxxx
 GOOGLE_SERVICE_ACCOUNT={"type":"service_account"...}
 ```
 
-### Google Apps Script Configuration
+### Content Sync Configuration
 
-1. Open [Google Apps Script](https://script.google.com)
-2. Create new project
-3. Copy files from `apps-script/` folder
-4. Configure Script Properties:
-   - `CALENDAR_ID`: Your Google Calendar ID
-   - `GALLERY_FOLDER_ID`: Google Drive folder ID
-   - `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
-5. Set up triggers:
-   - `syncCalendar`: Every 5 minutes
-   - `checkForGalleryChanges`: Every 10 minutes
+The Node.js API handles calendar and gallery synchronization. Configure in `.env`:
+
+```bash
+# Google API (for Calendar and Drive sync)
+GOOGLE_API_KEY=your-google-api-key
+GOOGLE_CALENDAR_ID=your-calendar-id@group.calendar.google.com
+GOOGLE_DRIVE_FOLDER_ID=your-drive-folder-id
+
+# Sync intervals are configured in the API
+```
+
+**Note**: Legacy Google Apps Script code is preserved in `apps-script/` folder for reference. See [apps-script/README.md](apps-script/README.md) for details.
 
 ## 📊 Monitoring & Administration
 
@@ -336,10 +345,11 @@ docker compose up -d
 | Issue | Solution |
 |-------|----------|
 | Forms not submitting | Check reCAPTCHA keys and API health |
-| Calendar not updating | Verify Apps Script triggers and S3 credentials |
-| Gallery images missing | Check Google Drive permissions and sync logs |
+| Calendar not updating | Check Google API key, calendar ID, and API sync logs |
+| Gallery images missing | Check Google API key, Drive folder ID, and sync status in monitoring dashboard |
 | Email not sending | Verify Resend API key and email configuration |
 | Admin login fails | Check JWT_SECRET and password hash in .env |
+| Sync failing | Check `/api/calendar/status` and `/api/gallery/status` endpoints |
 
 ## 📈 Performance
 
