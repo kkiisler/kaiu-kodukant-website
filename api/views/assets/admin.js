@@ -112,8 +112,14 @@ function renderSubmissions(submissions) {
 
     tbody.innerHTML = submissions.map(submission => {
         const date = new Date(submission.submitted_at).toLocaleString('et-EE');
-        const type = submission.type === 'membership' ? 'Liikmetaotlus' : 'Kontaktivorm';
-        const typeColor = submission.type === 'membership' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800';
+        let type, typeColor;
+        if (submission.type === 'membership') {
+            type = submission.member_type === 'toetajaliige' ? 'Toetajaliige' : 'Liige';
+            typeColor = submission.member_type === 'toetajaliige' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
+        } else {
+            type = 'Kontaktivorm';
+            typeColor = 'bg-green-100 text-green-800';
+        }
         const score = submission.recaptcha_score || 0;
         const scoreColor = score >= 0.7 ? 'text-green-600' : score >= 0.5 ? 'text-yellow-600' : 'text-red-600';
 
