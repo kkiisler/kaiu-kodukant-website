@@ -52,9 +52,11 @@ function initializeMembershipForm(form) {
         hideMessage(messageDiv);
 
         // Get form data
+        const memberTypeInput = form.querySelector('input[name="memberType"]:checked');
         const formData = {
             name: form.querySelector('#member-name').value.trim(),
-            email: form.querySelector('#member-email').value.trim()
+            email: form.querySelector('#member-email').value.trim(),
+            memberType: memberTypeInput ? memberTypeInput.value : ''
         };
 
         // Validate
@@ -162,6 +164,18 @@ function initializeContactForm(form) {
 
 function validateMembershipForm(data) {
     let isValid = true;
+
+    // Validate member type
+    const memberTypeError = document.getElementById('memberType-error');
+    const memberTypeContainer = memberTypeError?.previousElementSibling;
+    if (!data.memberType) {
+        if (memberTypeError) memberTypeError.style.display = 'block';
+        if (memberTypeContainer) memberTypeContainer.classList.add('form-input-error');
+        isValid = false;
+    } else {
+        if (memberTypeError) memberTypeError.style.display = 'none';
+        if (memberTypeContainer) memberTypeContainer.classList.remove('form-input-error');
+    }
 
     // Validate name
     const nameInput = document.getElementById('member-name');

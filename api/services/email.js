@@ -38,7 +38,8 @@ const sendMembershipNotification = async (data) => {
     return { sent: false, reason: 'Not configured' };
   }
 
-  const { name, email, recaptcha_score, submitted_at } = data;
+  const { name, email, member_type, recaptcha_score, submitted_at } = data;
+  const memberTypeLabel = member_type === 'toetajaliige' ? 'Toetajaliige' : 'Liige';
 
   const subject = 'Uus liikmetaotlus MTÜ Kaiu Kodukant';
 
@@ -67,6 +68,10 @@ const sendMembershipNotification = async (data) => {
           <h2 style="margin: 0;">Uus liikmetaotlus</h2>
         </div>
         <div class="content">
+          <div class="field">
+            <div class="label">Liikmetüüp:</div>
+            <div class="value"><strong>${memberTypeLabel}</strong></div>
+          </div>
           <div class="field">
             <div class="label">Nimi:</div>
             <div class="value">${escapeHtml(name)}</div>
@@ -101,6 +106,7 @@ const sendMembershipNotification = async (data) => {
   const textContent = `
 Uus liikmetaotlus MTÜ Kaiu Kodukant
 
+Liikmetüüp: ${memberTypeLabel}
 Nimi: ${name}
 E-post: ${email}
 Aeg: ${new Date(submitted_at).toLocaleString('et-EE')}

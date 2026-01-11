@@ -36,6 +36,7 @@ const createTables = () => {
       submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       name TEXT NOT NULL,
       email TEXT NOT NULL,
+      member_type TEXT DEFAULT 'liige',
       recaptcha_score REAL,
       ip_address TEXT,
       user_agent TEXT,
@@ -43,6 +44,13 @@ const createTables = () => {
       synced_at DATETIME
     )
   `);
+
+  // Add member_type column if it doesn't exist (for existing databases)
+  try {
+    db.exec(`ALTER TABLE membership_submissions ADD COLUMN member_type TEXT DEFAULT 'liige'`);
+  } catch (e) {
+    // Column already exists, ignore error
+  }
 
   // Contact submissions table
   db.exec(`
@@ -170,8 +178,8 @@ const createIndexes = () => {
 // Form submission functions
 const addMembershipSubmission = (data) => {
   const stmt = db.prepare(`
-    INSERT INTO membership_submissions (name, email, recaptcha_score, ip_address, user_agent)
-    VALUES (@name, @email, @recaptcha_score, @ip_address, @user_agent)
+    INSERT INTO membership_submissions (name, email, member_type, recaptcha_score, ip_address, user_agent)
+    VALUES (@name, @email, @member_type, @recaptcha_score, @ip_address, @user_agent)
   `);
 
   const result = stmt.run(data);

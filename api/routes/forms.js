@@ -10,13 +10,22 @@ const config = require('../config');
 // Membership form submission
 router.post('/membership', recaptcha.verifyMiddleware('membership'), async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, memberType } = req.body;
 
     // Validate required fields
-    if (!name || !email) {
+    if (!name || !email || !memberType) {
       return res.status(400).json({
         error: 'Missing required fields',
-        message: 'Nimi ja e-post on kohustuslikud'
+        message: 'Nimi, e-post ja liikmetüüp on kohustuslikud'
+      });
+    }
+
+    // Validate member type
+    const validMemberTypes = ['liige', 'toetajaliige'];
+    if (!validMemberTypes.includes(memberType)) {
+      return res.status(400).json({
+        error: 'Invalid member type',
+        message: 'Palun vali kehtiv liikmetüüp'
       });
     }
 
@@ -52,6 +61,7 @@ router.post('/membership', recaptcha.verifyMiddleware('membership'), async (req,
     const submissionData = {
       name: name.trim(),
       email: email.toLowerCase().trim(),
+      member_type: memberType,
       recaptcha_score: req.recaptchaScore || 0,
       ip_address: req.ip,
       user_agent: req.get('user-agent') || 'Unknown'

@@ -99,6 +99,27 @@
                     <div class="form-container">
                         <form id="membership-form">
                             <div class="form-field">
+                                <label class="form-label">Liikmetüüp *</label>
+                                <div class="flex flex-col gap-3 mt-2">
+                                    <label class="flex items-start gap-3 p-4 border-2 border-brand-border rounded-xl cursor-pointer hover:border-cinnamon transition-colors has-[:checked]:border-cinnamon has-[:checked]:bg-cinnamon/5">
+                                        <input type="radio" name="memberType" value="liige" required class="mt-1 w-5 h-5 text-cinnamon accent-cinnamon">
+                                        <div>
+                                            <span class="font-semibold text-kofta">Liige</span>
+                                            <p class="text-sm text-sirocco mt-1">Täieõiguslik liige hääleõigusega üldkoosolekul</p>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-start gap-3 p-4 border-2 border-brand-border rounded-xl cursor-pointer hover:border-apricot transition-colors has-[:checked]:border-apricot has-[:checked]:bg-apricot/5">
+                                        <input type="radio" name="memberType" value="toetajaliige" class="mt-1 w-5 h-5 text-apricot accent-apricot">
+                                        <div>
+                                            <span class="font-semibold text-kofta">Toetajaliige</span>
+                                            <p class="text-sm text-sirocco mt-1">Samad hüved kui liikmetel, kuid hääleõiguseta üldkoosolekul</p>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="form-error" id="memberType-error">Palun vali liikmetüüp.</div>
+                            </div>
+
+                            <div class="form-field">
                                 <label for="member-name" class="form-label">Nimi *</label>
                                 <input type="text" id="member-name" name="name" required class="form-input">
                                 <div class="form-error">Palun sisesta oma nimi.</div>
