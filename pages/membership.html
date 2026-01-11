@@ -100,19 +100,20 @@
                         <form id="membership-form">
                             <div class="form-field">
                                 <label class="form-label">Liikmetüüp *</label>
-                                <div class="flex flex-col gap-3 mt-2">
+                                <p class="text-sm text-sirocco mb-4">MTÜ Kaiu Kodukant põhikiri eristab kahte liikmetüüpi. Mõlemal on võrdne õigus osaleda kõigil üritustel ja tegevustes ning saada infot ühingu tegemiste kohta.</p>
+                                <div class="flex flex-col gap-3">
                                     <label class="flex items-start gap-3 p-4 border-2 border-brand-border rounded-xl cursor-pointer hover:border-cinnamon transition-colors has-[:checked]:border-cinnamon has-[:checked]:bg-cinnamon/5">
                                         <input type="radio" name="memberType" value="liige" required class="mt-1 w-5 h-5 text-cinnamon accent-cinnamon">
                                         <div>
                                             <span class="font-semibold text-kofta">Liige</span>
-                                            <p class="text-sm text-sirocco mt-1">Täieõiguslik liige hääleõigusega üldkoosolekul</p>
+                                            <p class="text-sm text-sirocco mt-1">Täieõiguslik liige, kellel on hääleõigus üldkoosolekul. Liikmed osalevad ühingu juhtimises ja otsuste langetamises.</p>
                                         </div>
                                     </label>
                                     <label class="flex items-start gap-3 p-4 border-2 border-brand-border rounded-xl cursor-pointer hover:border-apricot transition-colors has-[:checked]:border-apricot has-[:checked]:bg-apricot/5">
                                         <input type="radio" name="memberType" value="toetajaliige" class="mt-1 w-5 h-5 text-apricot accent-apricot">
                                         <div>
                                             <span class="font-semibold text-kofta">Toetajaliige</span>
-                                            <p class="text-sm text-sirocco mt-1">Samad hüved kui liikmetel, kuid hääleõiguseta üldkoosolekul</p>
+                                            <p class="text-sm text-sirocco mt-1">Toetajaliige on füüsiline või juriidiline isik, kes soovib ühingut materiaalselt toetada. Toetajaliikmel on samad hüved, kuid üldkoosolekul hääleõigus puudub.</p>
                                         </div>
                                     </label>
                                 </div>
