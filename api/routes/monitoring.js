@@ -118,10 +118,18 @@ async function getS3SyncStatus() {
       // Try to get gallery counts from albums.json
       const albumsUrl = `${config.S3_ENDPOINT}/${config.S3_BUCKET}/gallery/albums.json`;
       const albumsResponse = await axios.get(albumsUrl, { timeout: 3000 });
-      if (albumsResponse.data && Array.isArray(albumsResponse.data)) {
-        albumsCount = albumsResponse.data.length;
-        photosCount = albumsResponse.data.reduce((total, album) =>
-          total + (album.photos?.length || 0), 0);
+      const data = albumsResponse.data;
+      // Handle both old format (array) and new format ({ albums: [], metadata: {} })
+      if (data) {
+        if (Array.isArray(data)) {
+          albumsCount = data.length;
+          photosCount = data.reduce((total, album) =>
+            total + (album.photos?.length || 0), 0);
+        } else if (data.albums && Array.isArray(data.albums)) {
+          albumsCount = data.albums.length;
+          photosCount = data.metadata?.totalPhotos || data.albums.reduce((total, album) =>
+            total + (album.photoCount || album.photos?.length || 0), 0);
+        }
       }
     } catch (e) {
       console.log('Could not fetch gallery counts:', e.message);

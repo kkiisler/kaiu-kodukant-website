@@ -171,18 +171,28 @@ class S3UploadService {
 
   /**
    * Update version metadata file
+   * Updates the shared version.json file with the latest sync timestamp
    * @param {string} type - Sync type (calendar or gallery)
    * @returns {Promise<Object>} Upload result
    */
   async updateVersionFile(type) {
-    const versionData = {
-      lastSync: new Date().toISOString(),
-      type,
-      version: '1.0.0',
-      source: 'node-backend'
-    };
+    const versionKey = 'metadata/version.json';
+    let currentVersion = {};
 
-    return this.uploadJSON(`metadata/${type}-version.json`, versionData);
+    // Try to fetch existing version.json
+    try {
+      const response = await axios.get(`${this.endpoint}/${this.bucket}/${versionKey}`, { timeout: 5000 });
+      currentVersion = response.data || {};
+    } catch (e) {
+      console.log('Could not fetch existing version.json, creating new one');
+    }
+
+    // Update the timestamp for the specific type
+    const now = Date.now();
+    currentVersion[type] = now;
+    currentVersion.lastUpdated = new Date().toISOString();
+
+    return this.uploadJSON(versionKey, currentVersion);
   }
 
   /**
