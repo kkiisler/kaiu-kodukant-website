@@ -167,6 +167,7 @@ class GallerySyncService {
   async resizeImage(imageBuffer, width) {
     try {
       return await sharp(imageBuffer)
+        .rotate() // Auto-rotate based on EXIF orientation (fixes portrait photos)
         .resize(width, null, {
           withoutEnlargement: true,
           fit: 'inside'
