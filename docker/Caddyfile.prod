@@ -194,3 +194,46 @@ www.{$DOMAIN_NAME} {
 	# Metrics endpoint (optional)
 	# metrics /metrics
 }
+
+# kaiukriisiplaan.ee vhost — lisatakse G9-s olemasolevasse
+# kaiu-kodukant-website docker/Caddyfile.prod faili (sama Caddy konteiner,
+# TLS tuleb automaatselt Let's Encryptiga nagu teistel vhostidel).
+#
+# Turvapäised seab AINULT see vhost; API Helmetit ei kasuta (G0 otsus,
+# docs/05). Nõuded: docs/02-turvalisus.md.
+#
+kaiukriisiplaan.ee {
+	encode gzip
+
+	header {
+		# HSTS ≥ 6 kuud (docs/02: max-age >= 15552000)
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# API ja admin SPA tulevad kriisiplaan-api konteinerist (compose-võrk).
+	# Isiku- ja terviseandmetega vastused ei tohi jääda vahemällu.
+	handle /api/* {
+		header Cache-Control "no-store"
+		reverse_proxy kriisiplaan-api:3000
+	}
+	handle /admin* {
+		header Cache-Control "no-store"
+		reverse_proxy kriisiplaan-api:3000
+	}
+
+	# Staatiline Astro build (volume, vt docs/04)
+	handle {
+		root * /srv/kaiukriisiplaan
+		file_server
+	}
+}
+
+# www → apex (CNAME kinnitatud 2026-07-31: www.kaiukriisiplaan.ee → apex)
+www.kaiukriisiplaan.ee {
+	redir https://kaiukriisiplaan.ee{uri} permanent
+}
