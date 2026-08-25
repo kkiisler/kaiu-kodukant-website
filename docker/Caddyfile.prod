@@ -84,10 +84,18 @@
 
 	# Cache static assets aggressively
 	@static {
-		path *.css *.js *.jpg *.jpeg *.png *.gif *.svg *.ico *.woff *.woff2 *.ttf *.eot
+		path *.jpg *.jpeg *.png *.gif *.svg *.ico *.woff *.woff2 *.ttf *.eot
 	}
 	header @static {
 		Cache-Control "public, max-age=31536000, immutable"
+	}
+
+	# CSS and JS are rebuilt under the same filename, so they must revalidate
+	@code_assets {
+		path *.css *.js
+	}
+	header @code_assets {
+		Cache-Control "public, max-age=3600, must-revalidate"
 	}
 
 	# Cache HTML files for shorter period
