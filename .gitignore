@@ -65,3 +65,5 @@ backup/
 # Local configuration overrides
 *.local.js
 *.local.html
+# Local working materials (source documents, extracts)
+tmp/
