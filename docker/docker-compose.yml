@@ -24,7 +24,9 @@ services:
       - caddy_config:/config
       - /home/kkiisler/kaiukriisiplaan/dist:/srv/kaiukriisiplaan:ro
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      # Port 8080 is Caddy's internal plain-HTTP listener. Port 80 redirects to
+      # HTTPS, where the TLS handshake against "localhost" has no matching cert.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
       interval: 30s
       timeout: 3s
       retries: 3

@@ -124,7 +124,18 @@ www.{$DOMAIN_NAME:localhost} {
 	redir https://{$DOMAIN_NAME:localhost}{uri} permanent
 }
 
-# Health check endpoint
+# Internal healthcheck endpoints (plain HTTP, not redirected to HTTPS)
 :8080 {
-	respond /health "OK" 200
+	root * /usr/share/caddy
+
+	# Liveness: Caddy itself is up
+	handle /health {
+		respond "OK" 200
+	}
+
+	# Readiness: the site files are mounted and actually served
+	handle {
+		rewrite / /pages/index.html
+		file_server
+	}
 }

@@ -192,43 +192,59 @@ deploy_containers() {
     print_success "Containers started"
 }
 
+# Read container state without parsing pretty-printed JSON. docker inspect
+# writes '"Status": "running"' with a space, so a grep for '"Status":"running"'
+# never matches and every container looks stopped.
+container_state() {
+    docker inspect --format '{{.State.Status}}' "$1" 2>/dev/null
+}
+
+# Empty when the container declares no healthcheck.
+container_health() {
+    docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$1" 2>/dev/null
+}
+
+# Poll the container's own healthcheck. Polling http://localhost:80 from the
+# host proved nothing: Caddy answers with a 308 to HTTPS and curl treats that
+# as success, so the wait passed even when the site was broken.
+wait_for_container_health() {
+    local label="$1" container="$2" health i
+
+    echo -n "  Checking $label"
+    if [[ -z "$container" ]]; then
+        echo -e " ${RED}✗${NC}"
+        print_warning "$label container not found"
+        return
+    fi
+
+    for i in {1..30}; do
+        health=$(container_health "$container")
+        if [[ "$health" == "healthy" ]]; then
+            echo -e " ${GREEN}✓${NC}"
+            return
+        fi
+        if [[ -z "$health" ]] && [[ "$(container_state "$container")" == "running" ]]; then
+            # No healthcheck declared; running is the best signal available.
+            echo -e " ${GREEN}✓${NC} (no healthcheck)"
+            return
+        fi
+        echo -n "."
+        sleep 2
+    done
+
+    echo -e " ${RED}✗${NC}"
+    print_warning "$label did not become healthy in time (state: $(container_state "$container"), health: ${health:-none})"
+}
+
 wait_for_health() {
     print_step "Waiting for services to be healthy..."
 
-    # Wait for web service
     if [[ "$API_ONLY" != true ]]; then
-        echo -n "  Checking web service"
-        for i in {1..30}; do
-            if curl -sf http://localhost:80 > /dev/null 2>&1; then
-                echo -e " ${GREEN}✓${NC}"
-                break
-            fi
-            echo -n "."
-            sleep 2
-        done
-
-        if [[ $i -eq 30 ]]; then
-            echo -e " ${RED}✗${NC}"
-            print_warning "Web service did not become healthy in time"
-        fi
+        wait_for_container_health "web service" "$($DOCKER_COMPOSE ps -q web 2>/dev/null)"
     fi
 
-    # Wait for API service
     if [[ "$WEB_ONLY" != true ]]; then
-        echo -n "  Checking API service"
-        for i in {1..30}; do
-            if curl -sf http://localhost:3000/health > /dev/null 2>&1; then
-                echo -e " ${GREEN}✓${NC}"
-                break
-            fi
-            echo -n "."
-            sleep 2
-        done
-
-        if [[ $i -eq 30 ]]; then
-            echo -e " ${RED}✗${NC}"
-            print_warning "API service did not become healthy in time"
-        fi
+        wait_for_container_health "API service" "$($DOCKER_COMPOSE ps -q api 2>/dev/null)"
     fi
 }
 
@@ -265,18 +281,26 @@ show_status() {
     print_step "Service URLs"
 
     if [[ -n "$WEB_CONTAINER" ]] && [[ "$API_ONLY" != true ]]; then
-        if docker inspect $WEB_CONTAINER | grep -q '"Status":"running"'; then
+        if [[ "$(container_state "$WEB_CONTAINER")" == "running" ]]; then
             echo -e "  Website:     ${GREEN}https://$DOMAIN_NAME${NC}"
+            WEB_HEALTH=$(container_health "$WEB_CONTAINER")
+            if [[ -n "$WEB_HEALTH" ]] && [[ "$WEB_HEALTH" != "healthy" ]]; then
+                echo -e "               ${YELLOW}healthcheck: $WEB_HEALTH${NC}"
+            fi
         else
             echo -e "  Website:     ${RED}Not running${NC}"
         fi
     fi
 
     if [[ -n "$API_CONTAINER" ]] && [[ "$WEB_ONLY" != true ]]; then
-        if docker inspect $API_CONTAINER | grep -q '"Status":"running"'; then
+        if [[ "$(container_state "$API_CONTAINER")" == "running" ]]; then
             echo -e "  API:         ${GREEN}https://api.$DOMAIN_NAME${NC}"
             echo -e "  API Health:  ${GREEN}https://api.$DOMAIN_NAME/health${NC}"
             echo -e "  Admin Panel: ${GREEN}https://api.$DOMAIN_NAME/admin${NC}"
+            API_HEALTH=$(container_health "$API_CONTAINER")
+            if [[ -n "$API_HEALTH" ]] && [[ "$API_HEALTH" != "healthy" ]]; then
+                echo -e "               ${YELLOW}healthcheck: $API_HEALTH${NC}"
+            fi
         else
             echo -e "  API:         ${RED}Not running${NC}"
         fi

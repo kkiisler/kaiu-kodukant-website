@@ -196,12 +196,20 @@ www.{$DOMAIN_NAME} {
 	redir https://{$DOMAIN_NAME}{uri} permanent
 }
 
-# Health check endpoint (internal)
+# Internal healthcheck endpoints (plain HTTP, not redirected to HTTPS)
 :8080 {
-	respond /health "OK" 200
-	
-	# Metrics endpoint (optional)
-	# metrics /metrics
+	root * /usr/share/caddy
+
+	# Liveness: Caddy itself is up
+	handle /health {
+		respond "OK" 200
+	}
+
+	# Readiness: the site files are mounted and actually served
+	handle {
+		rewrite / /pages/index.html
+		file_server
+	}
 }
 
 # kaiukriisiplaan.ee vhost — lisatakse G9-s olemasolevasse
