@@ -19,6 +19,7 @@
 		path /membership
 		path /contact
 		path /maitsete-karussell
+		path /toetused
 	}
 	rewrite @pages /pages{path}.html
 
