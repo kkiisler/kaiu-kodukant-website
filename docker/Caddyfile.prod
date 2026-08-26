@@ -22,6 +22,11 @@
 	}
 	rewrite @pages /pages{path}.html
 
+	# Tolerate a trailing slash: /toetused/ redirects to /toetused.
+	# Keep this list in sync with the @pages matcher above.
+	@pages_slash path_regexp pageslash ^/(about|events|gallery|membership|contact|maitsete-karussell|toetused)/$
+	redir @pages_slash /{re.pageslash.1} 301
+
 	# S3 Proxy for calendar events (bypasses CORS)
 	handle /api/calendar/events.json {
 		reverse_proxy https://s3.pilw.io {
