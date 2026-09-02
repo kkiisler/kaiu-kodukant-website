@@ -24,9 +24,9 @@ const CALENDAR_CONFIG = {
   // Calendar ID for MTÜ Kaiu Kodukant (from public calendar URL)
   calendarId: 'a0b18dc4b7e4b9b40858746a7edddaa51b41014085ba2f4b2f89bf038ac13f12@group.calendar.google.com',
 
-  // Fetch events from 1 month back to 6 months forward
+  // Fetch events from 1 month back to 12 months forward
   monthsBack: 1,
-  monthsForward: 6
+  monthsForward: 12
 };
 
 // Gallery Configuration (for Phase 2)

@@ -126,7 +126,7 @@ setupTriggers(false);
 CALENDAR_CONFIG = {
   calendarId: 'your_calendar_id@group.calendar.google.com',
   monthsBack: 1,    // Fetch events from 1 month ago
-  monthsForward: 6  // Fetch events up to 6 months ahead
+  monthsForward: 12 // Fetch events up to 12 months ahead
 }
 ```
 

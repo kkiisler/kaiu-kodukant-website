@@ -12,7 +12,7 @@ class CalendarSyncService {
     this.apiKey = config.GOOGLE_API_KEY;
     this.calendarId = config.GOOGLE_CALENDAR_ID;
     this.monthsBack = config.CALENDAR_MONTHS_BACK || 1;
-    this.monthsForward = config.CALENDAR_MONTHS_FORWARD || 6;
+    this.monthsForward = config.CALENDAR_MONTHS_FORWARD || 12;
 
     // Initialize Google Calendar API client
     this.calendar = google.calendar({

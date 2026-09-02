@@ -54,7 +54,7 @@ module.exports = {
   GOOGLE_CALENDAR_ID: process.env.GOOGLE_CALENDAR_ID || '',
   GOOGLE_DRIVE_FOLDER_ID: process.env.GOOGLE_DRIVE_FOLDER_ID || '',
   CALENDAR_MONTHS_BACK: parseInt(process.env.CALENDAR_MONTHS_BACK) || 1,
-  CALENDAR_MONTHS_FORWARD: parseInt(process.env.CALENDAR_MONTHS_FORWARD) || 6,
+  CALENDAR_MONTHS_FORWARD: parseInt(process.env.CALENDAR_MONTHS_FORWARD) || 12,
   GALLERY_BATCH_SIZE: parseInt(process.env.GALLERY_BATCH_SIZE) || 10,
   GALLERY_MAX_RUNTIME: parseInt(process.env.GALLERY_MAX_RUNTIME) || 300, // seconds
 };
