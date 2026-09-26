@@ -23,6 +23,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
       - /home/kkiisler/kaiukriisiplaan/dist:/srv/kaiukriisiplaan:ro
+      - /home/kkiisler/kaiusammud/dist:/srv/kaiusammud:ro
     healthcheck:
       # Port 8080 is Caddy's internal plain-HTTP listener. Port 80 redirects to
       # HTTPS, where the TLS handshake against "localhost" has no matching cert.

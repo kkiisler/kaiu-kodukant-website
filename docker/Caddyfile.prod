@@ -261,3 +261,92 @@ kaiukriisiplaan.ee {
 www.kaiukriisiplaan.ee {
 	redir https://kaiukriisiplaan.ee{uri} permanent
 }
+# The vhost block for kaiusammud.ee.
+#
+# This file is not read by anything here. It is the text to paste into
+# kaiu-kodukant-website/docker/Caddyfile.prod, kept in this repository so the
+# site's own configuration is reviewable next to the code it serves. Copy it
+# whole, and take a .bak copy of the target file first.
+#
+# It follows the kaiukriisiplaan block in that same file: same header set,
+# same no-store on the API, same static handle. Two mounts the other
+# repository needs alongside it:
+#   - /home/kkiisler/kaiusammud/dist:/srv/kaiusammud:ro on the web service
+#   - nothing else; the API container joins the existing docker_web network
+#
+# Three of the four things here exist because stage 10's security review said
+# the app cannot do them itself: the body cap, frame-ancestors, and an
+# X-Forwarded-For that cannot be forged.
+#
+# There is deliberately no www.kaiusammud.ee block yet. The CNAME does not
+# exist, and a site block for a name that does not resolve makes Caddy ask
+# Let's Encrypt for a certificate it can never get, over and over. Add the
+# block together with the DNS record, the way the kaiukriisiplaan pair was
+# added, and note the date here.
+
+kaiusammud.ee {
+	encode gzip
+
+	# The upload route refuses anything over 12 MB, but only after the body
+	# is in memory. This refuses it at the edge, and it also covers a request
+	# that lies about its Content-Length.
+	request_body {
+		max_size 13MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# Only this one directive, on purpose. The page's own policy is a meta
+		# element that Astro builds with a hash per inline script, and a
+		# second policy here would be intersected with it: a script-src line
+		# without those hashes would block every island and leave a page that
+		# renders once and then does nothing. A meta element cannot carry
+		# frame-ancestors, so that one lives here and only that one.
+		Content-Security-Policy "frame-ancestors 'none'"
+		-Server
+	}
+
+	# The service worker decides how long every other file is cached, so it
+	# must not be cached itself.
+	@sw path /sw.js
+	header @sw Cache-Control "no-cache"
+
+	# Everything under /_astro carries a content hash in its filename.
+	@assets path /_astro/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	# Pages and every other unhashed file: revalidate on every visit, which
+	# costs a 304 when nothing changed. Without a Cache-Control the browser
+	# picked its own lifetime from Last-Modified and kept serving a page from
+	# before a deploy for hours (seen live 2026-09-26: old JavaScript against
+	# a new API). The API has its own no-store below.
+	@pages not path /_astro/* /api/* /sw.js
+	header @pages Cache-Control "no-cache"
+
+	# Steps, names and screenshots. The API sets no-store on every response
+	# itself; this says it again at the edge, as the kaiukriisiplaan block
+	# does, so a future proxy cache cannot be talked into holding them.
+	handle /api/* {
+		header Cache-Control "no-store"
+		reverse_proxy kaiusammud-api:8787 {
+			# Set rather than let a client's own value ride along. The app
+			# reads the rightmost hop, so Caddy's default of appending would
+			# also be correct, but this way a forged list never reaches the
+			# app and the rate limiter cannot be talked out of its counting.
+			#
+			# `caddy validate` prints "Unnecessary header_up X-Forwarded-For"
+			# for this line. The warning is about passing a header through,
+			# which is not what this is doing, so it stays.
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	handle {
+		root * /srv/kaiusammud
+		try_files {path} {path}/index.html
+		file_server
+	}
+}
