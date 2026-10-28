@@ -29,6 +29,13 @@
 	@pages_slash path_regexp pageslash ^/(about|events|gallery|membership|contact|maitsete-karussell|toetused|privaatsus|tingimused)/$
 	redir @pages_slash /{re.pageslash.1} 301
 
+	# Grant project subpages: /toetused/<slug> serves pages/toetused/<slug>.html.
+	# A trailing slash redirects to the canonical form, like the pages above.
+	@toetus_project path_regexp toetus ^/toetused/([a-z0-9-]+)$
+	rewrite @toetus_project /pages/toetused/{re.toetus.1}.html
+	@toetus_slash path_regexp toetusslash ^/toetused/([a-z0-9-]+)/$
+	redir @toetus_slash /toetused/{re.toetusslash.1} 301
+
 	# S3 Proxy for calendar events (bypasses CORS)
 	handle /api/calendar/events.json {
 		reverse_proxy https://s3.pilw.io {
